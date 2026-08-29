@@ -1,0 +1,4 @@
+# Ignore local/tool-generated clutter only.
+.agents/
+.puku-cli/
+*.user.toml
