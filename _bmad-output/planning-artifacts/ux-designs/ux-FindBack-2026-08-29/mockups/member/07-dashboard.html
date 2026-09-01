@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--fb-space-4); margin-bottom: var(--fb-space-6); }
+    @media (max-width: 768px) { .fb-stat-row { grid-template-columns: 1fr 1fr; } }
+    .fb-stat { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-4); }
+    .fb-stat__num { font-size: 28px; font-weight: 700; line-height: 1; }
+    .fb-stat__label { font-size: 13px; color: var(--fb-on-surface-variant); margin-top: 2px; }
+    .fb-action-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--fb-space-4); }
+    @media (max-width: 768px) { .fb-action-grid { grid-template-columns: 1fr; } }
+    .fb-action-card { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-5); }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="01-listings-anon.html">Lost &amp; Found</a>
+      <a href="07-my-reports.html">My reports</a>
+      <a href="10-my-claims.html">My claims</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions">
+      <a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Report an item</a>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1" class="fb-page">
+    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-3);">Welcome back, Maya.</h1>
+    <p class="fb-helper" style="margin-bottom: var(--fb-space-6);">Here's what's happening with your reports and claims.</p>
+
+    <div class="fb-stat-row">
+      <div class="fb-stat">
+        <div class="fb-stat__num">2</div>
+        <div class="fb-stat__label">My open reports</div>
+      </div>
+      <div class="fb-stat">
+        <div class="fb-stat__num">1</div>
+        <div class="fb-stat__label">Pending claims</div>
+      </div>
+      <div class="fb-stat">
+        <div class="fb-stat__num">1</div>
+        <div class="fb-stat__label">Approved claim</div>
+      </div>
+      <div class="fb-stat">
+        <div class="fb-stat__num">3</div>
+        <div class="fb-stat__label">Total returned</div>
+      </div>
+    </div>
+
+    <h2 class="fb-h3" style="margin-bottom: var(--fb-space-4);">Quick actions</h2>
+    <div class="fb-action-grid">
+      <div class="fb-action-card">
+        <h3 class="fb-h4" style="margin-bottom: var(--fb-space-2);">Report a lost item</h3>
+        <p>Tell us what you lost and we'll match it against found reports.</p>
+        <p style="margin-top: var(--fb-space-3);"><a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Start a lost report</a></p>
+      </div>
+      <div class="fb-action-card">
+        <h3 class="fb-h4" style="margin-bottom: var(--fb-space-2);">Report a found item</h3>
+        <p>Turn in something you found so its owner can find it.</p>
+        <p style="margin-top: var(--fb-space-3);"><a href="15-report-found.html" class="fb-btn fb-btn--secondary fb-btn--sm">Start a found report</a></p>
+      </div>
+    </div>
+
+    <h2 class="fb-h3" style="margin: var(--fb-space-8) 0 var(--fb-space-4);">Recent activity</h2>
+    <ul class="fb-stack" style="list-style: none; padding: 0; margin: 0;">
+      <li class="fb-card">
+        <div class="fb-row fb-row--between">
+          <div>
+            <strong>Your claim on "Brown leather wallet" was approved.</strong>
+            <p style="margin: var(--fb-space-1) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">Mar 17, 11:30 — by Riley P.</p>
+          </div>
+          <a href="05-item-detail-claimant.html" class="fb-btn fb-btn--secondary fb-btn--sm">View</a>
+        </div>
+      </li>
+      <li class="fb-card">
+        <div class="fb-row fb-row--between">
+          <div>
+            <strong>You submitted a claim on "Brown leather wallet".</strong>
+            <p style="margin: var(--fb-space-1) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">Mar 17, 09:14</p>
+          </div>
+          <a href="13-claim-detail.html" class="fb-btn fb-btn--secondary fb-btn--sm">View claim</a>
+        </div>
+      </li>
+    </ul>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">Member dashboard (Maya)</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="../public/02-login.html">← Previous</a>
+        <a href="../index.html">All journeys</a>
+        <a href="02-listings-member.html">Next →</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

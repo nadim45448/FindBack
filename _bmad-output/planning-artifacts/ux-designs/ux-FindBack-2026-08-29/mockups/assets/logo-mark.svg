@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" aria-label="FindBack" role="img">
+  <!--
+    FindBack standalone mark — Pin + Recovery Arrow + Item.
+    Tells the journey: Lost → Found → Back to Owner.
+
+    Construction (64×64):
+      • Pin head — rounded teardrop centered at (28, 26), point at (28, 50).
+        Stroke = currentColor (terracotta on light, brighter accent on dark).
+      • Item   — rounded-rectangle package silhouette at (20, 18, 16, 12).
+        Filled in the contrasting surface color so the item sits inside the pin.
+      • Arrow  — curved stroke from inside the pin (above the item) arcing
+        up-and-right past the pin's edge to an arrowhead at (54, 16).
+        Communicates "recovery / return to owner" rather than a generic
+        forward arrow.
+
+    Renders in currentColor so light/dark themes set the foreground via CSS
+    (.fb-topbar__brand { color: var([fb-logo-color]); }).
+    The item is a stroke-only rounded rectangle (no fill), so the page
+    surface shows through and the mark reads on both light and dark.
+    Use via <img src="assets/logo-mark.svg"> or inline SVG with class="fb-logo-mark".
+  -->
+  <!-- Item: rounded-rectangle package silhouette.
+       Stroke-only mark: no fill (transparent) so the page surface shows
+       through inside the pin. This keeps the mark readable on both light
+       and dark backgrounds with a single currentColor value. -->
+  <rect x="20" y="18" width="16" height="12" rx="2.5" ry="2.5"
+        fill="none" stroke="currentColor" stroke-width="2.25" stroke-linejoin="round"/>
+  <!-- Item: tape line down the middle to read as a wrapped item -->
+  <line x1="28" y1="18" x2="28" y2="30" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"/>
+
+  <!-- Pin head: teardrop circle with a soft point at the bottom -->
+  <path d="M28 6
+           a16 16 0 0 1 16 16
+           c0 8 -7 14 -11 22
+           c-1.5 3 -2.5 5 -5 6
+           c-2.5 -1 -3.5 -3 -5 -6
+           c-4 -8 -11 -14 -11 -22
+           a16 16 0 0 1 16 -16 z"
+        fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+
+  <!-- Recovery arrow: curves up and right, exits the pin head with arrowhead -->
+  <path d="M28 24
+           C 36 24, 44 22, 50 18"
+        fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <!-- Arrowhead -->
+  <path d="M50 18 l-6 0.5 m6 -0.5 l-1.5 -5.5"
+        fill="none" stroke="currentColor" stroke-width="3"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

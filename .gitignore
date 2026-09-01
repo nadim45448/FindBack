@@ -2,3 +2,6 @@
 .agents/
 .puku-cli/
 *.user.toml
+.gemini/
+design-process/
+_wds-learn/

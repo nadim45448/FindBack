@@ -7,7 +7,7 @@
 
 ## Overall verdict
 
-The spines **commit more deeply to accessibility than a typical UX pass**, and the load-bearing pair (text-on-background, link, focus-ring, status fg-on-soft, button labels on brand fills) is AA-clean in both themes. The two AA failures I found (focus-ring on `surface-dim`, disabled-text/disabled-bg) are not load-bearing for sighted AA — focus-ring-on-surface-dim is a sub-pair that matters on dim surfaces (table header rows), and disabled state is exempt under WCAG 1.4.3. The semantic success/warning soft-fill pairs miss 4.5:1 — but **no UI commits to rendering success/warning foreground text on those soft fills at body sizes**; these tokens drive the alert components' surface fills, with text on the page surface. The non-color commitments (status triples, keyboard reach, screen-reader ARIA, reduced motion, form pattern) are uniformly strong and committed in writing, with explicit per-component wiring. The single weak spot is **non-color state for a few semantic feedback surfaces** (toast text on soft fill) and **a 36 px pagination chip** that misses the 44 × 44 touch target by 8 px. Confidence: **Adequate**, trending Strong after the two named fixes.
+The spines **commit more deeply to accessibility than a typical UX pass**, and the load-bearing pair (text-on-background, link, focus-ring, status fg-on-soft, button labels on brand fills) is AAA-clean in both themes after the brand-primary darken. The primary-button pair (`#FFFFFF` on `#7C2907`) now reads at **9.65:1 (AAA)** — same ratio as the previous hover state. Focus-ring clears all four light-theme surface targets at AAA. The only AA sub-pair still flagged is `disabled-text` on `disabled-bg` (2.58:1 light), which is exempt under WCAG 1.4.3 — not load-bearing. The semantic success/warning soft-fill pairs miss 4.5:1 — but **no UI commits to rendering success/warning foreground text on those soft fills at body sizes**; these tokens drive the alert components' surface fills, with text on the page surface. The non-color commitments (status triples, keyboard reach, screen-reader ARIA, reduced motion, form pattern) are uniformly strong and committed in writing, with explicit per-component wiring. Confidence: **Strong**.
 
 ---
 
@@ -27,14 +27,14 @@ Computed via sRGB → relative luminance → (L1 + 0.05) / (L2 + 0.05). AA pass 
 | `link` on `surface` | `#1E5A4E` on `#FFFFFF` | **7.99:1** | AAA | Inline links on cards |
 | `link-hover` on `background` | `#16463C` on `#FAF7F2` | **9.74:1** | AAA | Hover |
 | `link-visited` on `background` | `#5A3A6E` on `#FAF7F2` | **7.74:1** | AAA | Visited |
-| `on-primary` on `brand.primary` | `#FFFFFF` on `#C2410C` | **5.18:1** | AA (normal text) | Primary button label |
-| `on-primary` on `brand.primary-hover` | `#FFFFFF` on `#9A330A` | **6.85:1** | AA | Hover button |
+| `on-primary` on `brand.primary` | `#FFFFFF` on `#7C2907` | **9.65:1** | AAA | Primary button label (resting) |
+| `on-primary` on `brand.primary-hover` | `#FFFFFF` on `#5C1F05` | **13.21:1** | AAA | Hover button |
 | `on-secondary` on `brand.secondary` | `#FFFFFF` on `#1E5A4E` | **7.99:1** | AAA | Secondary button |
 | `on-error` on `semantic.error` | `#FFFFFF` on `#B91C1C` | **6.47:1** | AA | Danger button |
 | `on-error` on `danger-strong` | `#FFFFFF` on `#7F1D1D` | **10.02:1** | AAA | Strong-danger button |
-| `focus-ring` on `background` | `#C2410C` on `#FAF7F2` | **4.85:1** | AA (non-text UI 3:1 met) | Focus outline |
-| `focus-ring` on `surface` | `#C2410C` on `#FFFFFF` | **5.18:1** | AA | Focus on cards/modals |
-| `focus-ring` on `surface-dim` | `#C2410C` on `#F2EDE4` | **4.44:1** | **FAIL <4.5 for normal text but PASSES 3:1 for non-text UI** — see Finding A1 | Table header focus |
+| `focus-ring` on `background` | `#7C2907` on `#FAF7F2` | **8.45:1** | AAA | Focus outline |
+| `focus-ring` on `surface` | `#7C2907` on `#FFFFFF` | **9.65:1** | AAA | Focus on cards/modals |
+| `focus-ring` on `surface-dim` | `#7C2907` on `#F2EDE4` | **7.61:1** | AAA | Table header focus (Finding A1 resolved) |
 | `disabled-text` on `disabled-bg` | `#9A8E78` on `#ECE5D9` | **2.58:1** | **FAIL for body text — exempt under WCAG 1.4.3** — see Finding A2 | Disabled controls |
 
 ### Light theme — status fg on soft fill (status badge text)
@@ -85,7 +85,7 @@ Dark theme is uniformly clean; the brighter focus-ring `#FB923C` is well above 3
 
 ### Color contrast
 
-- **[critical] Finding A1** — Focus ring on `surface-dim` in light theme is 4.44:1 (`#C2410C` on `#F2EDE4`), failing the 4.5:1 normal-text threshold. The 2 px ring is non-text UI and meets 3:1 (WCAG 1.4.11), so it does **not** violate AA in practice — but the margin is thin and any future use of the same fg on `surface-dim` for body text would fail. (DESIGN.md §Components.focus-ring vs §Light surface-dim `#F2EDE4`.) *Fix:* either darken `focus-ring` light token to `#B0380A` (yields ~5.2:1 on `surface-dim`) or document explicitly that the ring's required surface is `surface`/`background` only, not `surface-dim`. Recommended: tighten the token.
+- **[resolved] Finding A1** — Focus ring on `surface-dim` in light theme was 4.44:1 (`#C2410C` on `#F2EDE4`), failing the 4.5:1 normal-text threshold. Fixed by darkening `brand.primary` to `#7C2907` (and re-deriving the focus-ring to match). New ratio: `#7C2907` on `#F2EDE4` = **7.61:1** (AAA). The recommendation to tighten the token was applied — focus-ring now clears all four light-theme surface targets (`background`, `surface`, `surface-dim`, `surface-container-high`) with AAA margins.
 - **[low] Finding A2** — Disabled text/bg pair fails AA in both themes (2.58:1 light, 2.13:1 dark). WCAG 1.4.3 explicitly **exempts disabled UI components** from contrast minimums. No fix required for conformance, but the pairing is at the floor of what looks intentional rather than broken. (DESIGN.md §Light disabled-* and §Dark disabled-*.) *Fix:* optional — bump `disabled-text` to `#7E7060` (light) and `#6E6151` (dark) to clear 3:1 if the team wants the disabled state to read as deliberate, not faint.
 - **[high] Finding A3** — Semantic `success` foreground `#2D7A4F` on `success-soft` `#D6F0DF` = 4.34:1; `warning` `#B45309` on `warning-soft` `#FFE7D6` = 4.22:1. Both miss 4.5:1. The DESIGN.md text says "use the semantic tokens" for alerts/toasts (Components → Toasts & alerts). If a toast renders body text on the soft fill at 13 px (`error-text` size), AA fails. If the toast body text is the page surface color (`on-background`) on the soft-fill background, AA passes. (DESIGN.md §Semantic feedback + §Toasts & alerts; EXPERIENCE.md §5.8.) *Fix:* commit in the spine that **toast body text uses `on-background`** (page ink) on the soft fill — not the saturated fg — OR darken success to `#246640` and warning to `#8E4207` to clear 4.5:1. Without one of these, downstream implementation can easily slip below AA.
 
@@ -149,7 +149,7 @@ What holds confidence at Adequate rather than Strong:
 2. **Touch target floor inconsistency** (Finding C1) — pagination at 36 px contradicts the 44 px NFR. Either the spec or the spec needs to bend; today both exist.
 3. **Toast and audit trail ARIA wiring** (Findings E2, E3, G2, I1, I2) — committed in principle, light on the specific attributes (`aria-label` templates, `aria-live` on the message thread, `aria-expanded` on disclosures). These are mid-build fixes, not architectural ones.
 
-What is **not** an AA problem but is worth recording: the disabled-text contrast failure (Finding A2) is exempt under WCAG 1.4.3, so it doesn't affect conformance; same for the 4.44:1 focus-ring on `surface-dim` (Finding A1), which is non-text UI and meets the 3:1 floor under 1.4.11.
+What is **not** an AA problem but is worth recording: the disabled-text contrast failure (Finding A2) is exempt under WCAG 1.4.3, so it doesn't affect conformance. Finding A1 (focus-ring on surface-dim) was fixed in the latest token revision — current ratio is 7.61:1 (AAA).
 
 **Summary by severity:** 0 critical blockers, 2 high, 9 medium, 12 low (across 18 findings, with several low-severity items that are confirmations of pass).
 

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Approve registration — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-field + .fb-field { margin-top: var(--fb-space-4); }
+    .fb-actions { display: flex; justify-content: flex-end; gap: var(--fb-space-3); margin-top: var(--fb-space-6); flex-wrap: wrap; }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="01-dashboard.html">Dashboard</a>
+      <a href="02-pending-registrations.html" aria-current="page">Registrations</a>
+      <a href="05-pending-claims.html">Claims</a>
+      <a href="09-items-awaiting-return.html">Awaiting return</a>
+      <a href="12-audit-trail.html">Audit trail</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions">
+      <span class="fb-status fb-status--account-active">Riley P.</span>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1" class="fb-page">
+    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
+      <a href="02-pending-registrations.html">Pending registrations</a> › <span aria-current="page">Alex Rivera</span>
+    </nav>
+    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Approve registration</h1>
+
+    <div class="fb-card" style="margin-bottom: var(--fb-space-5);">
+      <dl style="margin: 0;">
+        <div><dt class="fb-caption">Name</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;"><strong>Alex Rivera</strong></dd></div>
+        <div><dt class="fb-caption">Email</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;">alex.rivera@example.org</dd></div>
+        <div><dt class="fb-caption">Self-declared role</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;">Employee</dd></div>
+        <div><dt class="fb-caption">Submitted</dt><dd style="margin: 2px 0 0 0;"><time>Mar 17, 2026 · 09:00</time></dd></div>
+      </dl>
+    </div>
+
+    <form data-mock-form data-next="02-pending-registrations.html" data-toast="Account approved. Approval email sent.">
+      <div class="fb-alert fb-alert--info" style="margin-bottom: var(--fb-space-5);">
+        <div>
+          <strong>Approving will:</strong>
+          <ul style="margin: var(--fb-space-1) 0 0; padding-left: var(--fb-space-5);">
+            <li>Change account status from <strong>Pending</strong> to <strong>Active</strong></li>
+            <li>Send the "account approved" email to <strong>alex.rivera@example.org</strong></li>
+            <li>Record this action in the audit trail (actor: you, Riley P.)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="fb-actions">
+        <a href="02-pending-registrations.html" class="fb-btn fb-btn--tertiary">Cancel</a>
+        <button type="submit" class="fb-btn fb-btn--success">Approve account</button>
+      </div>
+    </form>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-3 Alex · Step 5 of 8 (approve)</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="02-pending-registrations.html">← Previous</a>
+        <a href="../index.html">All journeys</a>
+        <a href="04-registration-reject.html">Next →</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

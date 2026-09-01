@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FindBack — Return lost items to their people</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-hero {
+      max-width: var(--fb-container-max);
+      margin: 0 auto;
+      padding: var(--fb-space-16) var(--fb-page-margin) var(--fb-space-12);
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: var(--fb-space-12);
+      align-items: center;
+    }
+    @media (max-width: 900px) {
+      .fb-hero { grid-template-columns: 1fr; gap: var(--fb-space-8); padding-top: var(--fb-space-10); }
+    }
+    .fb-hero__eyebrow {
+      display: inline-block;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--fb-brand-secondary);
+      background: var(--fb-brand-secondary-soft);
+      padding: var(--fb-space-1) var(--fb-space-3);
+      border-radius: var(--fb-radius-full);
+      margin-bottom: var(--fb-space-4);
+    }
+    .fb-hero__title {
+      font-size: clamp(32px, 5vw, 44px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin: 0 0 var(--fb-space-5);
+      color: var(--fb-on-bg);
+    }
+    .fb-hero__lede {
+      font-size: 17px;
+      line-height: 1.55;
+      color: var(--fb-on-surface-variant);
+      margin: 0 0 var(--fb-space-8);
+      max-width: 540px;
+    }
+    .fb-hero__cta-row { display: flex; gap: var(--fb-space-3); flex-wrap: wrap; margin-bottom: var(--fb-space-5); }
+    .fb-hero__browse { font-size: 14px; color: var(--fb-link); }
+    .fb-hero__browse:hover { color: var(--fb-link-hover); text-decoration: underline; }
+    .fb-hero__art {
+      background: var(--fb-surface);
+      border: 1px solid var(--fb-border-subtle);
+      border-radius: var(--fb-radius-xl);
+      padding: var(--fb-space-8);
+      box-shadow: var(--fb-elev-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 4 / 3;
+    }
+    .fb-hero__art img { width: 60%; max-width: 220px; height: auto; color: var(--fb-brand-primary); }
+    .fb-how {
+      max-width: var(--fb-container-max);
+      margin: 0 auto;
+      padding: var(--fb-space-12) var(--fb-page-margin);
+    }
+    .fb-how__title { font-size: 24px; font-weight: 600; text-align: center; margin: 0 0 var(--fb-space-8); }
+    .fb-how__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--fb-space-6); }
+    @media (max-width: 768px) { .fb-how__grid { grid-template-columns: 1fr; gap: var(--fb-space-4); } }
+    .fb-how__step {
+      background: var(--fb-surface);
+      border: 1px solid var(--fb-border-subtle);
+      border-radius: var(--fb-radius-lg);
+      padding: var(--fb-space-6);
+      text-align: center;
+    }
+    .fb-how__num {
+      width: 44px; height: 44px;
+      margin: 0 auto var(--fb-space-4);
+      border-radius: var(--fb-radius-full);
+      background: var(--fb-brand-primary-soft);
+      color: var(--fb-brand-primary);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 18px;
+    }
+    .fb-how__step-title { font-size: 16px; font-weight: 600; margin: 0 0 var(--fb-space-2); }
+    .fb-how__step-body { font-size: 14px; color: var(--fb-on-surface-variant); margin: 0; line-height: 1.55; }
+
+    .fb-mockup-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--fb-surface);
+      border-top: 1px solid var(--fb-border-subtle);
+      padding: var(--fb-space-3) var(--fb-page-margin);
+      z-index: var(--fb-z-sticky);
+      font-size: 13px;
+    }
+    .fb-mockup-nav__inner {
+      max-width: var(--fb-container-max);
+      margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--fb-space-4);
+    }
+    .fb-mockup-nav__journey { color: var(--fb-on-surface-variant); font-weight: 500; }
+    .fb-mockup-nav__links { display: flex; gap: var(--fb-space-4); }
+    @media (max-width: 640px) { .fb-mockup-nav__journey { display: none; } }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="../member/01-listings-anon.html">Lost &amp; Found</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions">
+      <a href="02-login.html" class="fb-btn fb-btn--secondary fb-btn--sm">Log in</a>
+      <a href="03-register.html" class="fb-btn fb-btn--primary fb-btn--sm">Register</a>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section class="fb-hero" aria-labelledby="hero-title">
+      <div>
+        <span class="fb-hero__eyebrow">For our community</span>
+        <h1 id="hero-title" class="fb-hero__title">FindBack helps our organization return lost items to their members.</h1>
+        <p class="fb-hero__lede">
+          Report a lost or found item, browse what's already been turned in, and let an administrator help connect you with the right person. Simple, accountable, and built for the way our community already looks out for each other.
+        </p>
+        <div class="fb-hero__cta-row">
+          <a href="03-register.html" class="fb-btn fb-btn--primary fb-btn--lg">Create an account</a>
+          <a href="02-login.html" class="fb-btn fb-btn--secondary fb-btn--lg">Sign in</a>
+        </div>
+        <a href="../member/01-listings-anon.html" class="fb-hero__browse">Browse Lost &amp; Found →</a>
+      </div>
+      <div class="fb-hero__art" aria-hidden="true">
+        <img src="../assets/logo-mark-light.svg" alt="" class="fb-mark-img fb-mark-img--mark-light">
+        <img src="../assets/logo-mark-dark.svg" alt="" class="fb-mark-img fb-mark-img--mark-dark" aria-hidden="true">
+      </div>
+    </section>
+
+    <section class="fb-how" aria-labelledby="how-title">
+      <h2 id="how-title" class="fb-how__title">How FindBack works</h2>
+      <div class="fb-how__grid">
+        <div class="fb-how__step">
+          <div class="fb-how__num" aria-hidden="true">1</div>
+          <h3 class="fb-how__step-title">Report</h3>
+          <p class="fb-how__step-body">Tell us what you've lost or found. Add a photo if you can. Reports are visible to other members right away.</p>
+        </div>
+        <div class="fb-how__step">
+          <div class="fb-how__num" aria-hidden="true">2</div>
+          <h3 class="fb-how__step-title">Match</h3>
+          <p class="fb-how__step-body">If you spot something that's yours, submit a claim with a reason and identifying details. The report's owner is notified by email.</p>
+        </div>
+        <div class="fb-how__step">
+          <div class="fb-how__num" aria-hidden="true">3</div>
+          <h3 class="fb-how__step-title">Return</h3>
+          <p class="fb-how__step-body">An administrator reviews each claim, approves the right one, and records the physical handoff. The item status moves to Returned.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation">
+    <div class="fb-mockup-nav__inner">
+      <span class="fb-mockup-nav__journey">Pre-journey — anonymous entry</span>
+      <div class="fb-mockup-nav__links">
+        <a href="01-landing.html" aria-disabled="true" style="opacity:0.4; pointer-events:none;">← Previous</a>
+        <a href="../index.html">All journeys</a>
+        <a href="02-login.html">Next →</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

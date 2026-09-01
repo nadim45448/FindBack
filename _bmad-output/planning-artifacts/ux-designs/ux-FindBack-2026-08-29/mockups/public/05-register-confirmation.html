@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registration received — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-auth-shell { min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center; padding: var(--fb-space-8) var(--fb-page-margin); }
+    .fb-confirm { max-width: 480px; width: 100%; background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-8); box-shadow: var(--fb-elev-1); text-align: center; }
+    .fb-confirm__icon { width: 56px; height: 56px; border-radius: var(--fb-radius-full); background: var(--fb-success-soft); color: var(--fb-success); display: inline-flex; align-items: center; justify-content: center; margin-bottom: var(--fb-space-4); font-size: 24px; }
+    .fb-confirm h1 { font-size: 24px; font-weight: 700; margin: 0 0 var(--fb-space-3); }
+    .fb-confirm p { color: var(--fb-on-surface-variant); margin: 0 0 var(--fb-space-3); }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions">
+      <a href="02-login.html" class="fb-btn fb-btn--primary fb-btn--sm">Sign in</a>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <div class="fb-auth-shell">
+      <div class="fb-confirm">
+        <div class="fb-confirm__icon" aria-hidden="true">✓</div>
+        <h1>Registration received</h1>
+        <p>Thanks, Alex. Your account has been created and is now <strong>pending administrator approval</strong>.</p>
+        <p>You'll receive an email at <strong>alex.rivera@example.org</strong> once an administrator has reviewed your request. Until then, your account cannot report items or submit claims.</p>
+        <div style="margin-top: var(--fb-space-6);">
+          <a href="02-login.html" class="fb-btn fb-btn--primary">Sign in to your account</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-3 Alex · Step 2 of 8</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="03-register.html">← Previous</a>
+        <a href="../index.html">All journeys</a>
+        <a href="05-pending-account.html">Next →</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

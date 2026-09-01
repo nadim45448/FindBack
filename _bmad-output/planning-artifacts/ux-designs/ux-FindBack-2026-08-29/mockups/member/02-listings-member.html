@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lost &amp; Found — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-filters { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-4); display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: var(--fb-space-3); margin-bottom: var(--fb-space-5); }
+    @media (max-width: 900px) { .fb-filters { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .fb-filters { grid-template-columns: 1fr; } }
+    .fb-filters .fb-field__label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fb-on-surface-variant); }
+    .fb-table tbody tr { cursor: pointer; }
+    .fb-table tbody tr td:first-child { font-weight: 600; }
+    .fb-cell-meta { color: var(--fb-on-surface-variant); font-size: 13px; }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="01-listings-anon.html" aria-current="page">Lost &amp; Found</a>
+      <a href="07-my-reports.html">My reports</a>
+      <a href="10-my-claims.html">My claims</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions">
+      <span class="fb-status" style="margin-right: var(--fb-space-2);"><span class="fb-status fb-status--account-active">Maya C.</span></span>
+      <a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Report an item</a>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1" class="fb-page">
+    <div class="fb-row fb-row--between" style="margin-bottom: var(--fb-space-5); flex-wrap: wrap; gap: var(--fb-space-3);">
+      <h1 class="fb-h2">Lost &amp; Found</h1>
+      <p class="fb-helper">38 active reports · showing first 5</p>
+    </div>
+
+    <form class="fb-filters" aria-label="Filter reports" onsubmit="event.preventDefault();">
+      <div>
+        <label class="fb-field__label" for="kw">Search</label>
+        <input class="fb-input" type="search" id="kw" name="kw" placeholder="Keyword (name or description)">
+      </div>
+      <div>
+        <label class="fb-field__label" for="cat">Category</label>
+        <select class="fb-select" id="cat" name="cat">
+          <option value="">All</option>
+          <option>Wallet</option>
+          <option>Bag</option>
+          <option>Electronics</option>
+          <option>Keys</option>
+          <option>Clothing</option>
+          <option>Books/Notebooks</option>
+          <option>Identification</option>
+          <option>Water Bottle</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label class="fb-field__label" for="loc">Location</label>
+        <select class="fb-select" id="loc" name="loc">
+          <option value="">All</option>
+          <option>Main Library</option>
+          <option>Science Building</option>
+          <option>Student Center</option>
+          <option>North Quad</option>
+          <option>Rec Center</option>
+        </select>
+      </div>
+      <div>
+        <label class="fb-field__label" for="type">Type</label>
+        <select class="fb-select" id="type" name="type">
+          <option value="">Both</option>
+          <option>Lost</option>
+          <option>Found</option>
+        </select>
+      </div>
+      <div>
+        <label class="fb-field__label" for="status">Status</label>
+        <select class="fb-select" id="status" name="status">
+          <option value="">Active only</option>
+          <option>Open</option>
+          <option>Claim Requested</option>
+          <option>Claim Approved</option>
+          <option>Returned</option>
+          <option>Closed</option>
+        </select>
+      </div>
+    </form>
+
+    <table class="fb-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Category</th>
+          <th>Date</th>
+          <th>Location</th>
+          <th>Type</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr onclick="window.location.href='03-item-detail-anon.html';">
+          <td data-label="Item">Brown leather wallet<span class="fb-cell-meta"> · ID 1004</span></td>
+          <td data-label="Category">Wallet</td>
+          <td data-label="Date"><time>Mar 16</time></td>
+          <td data-label="Location">Main Library</td>
+          <td data-label="Type"><span class="fb-type-badge fb-type-badge--found">Found</span></td>
+          <td data-label="Status"><span class="fb-status fb-status--report-claimrequested">Claim Requested</span></td>
+        </tr>
+        <tr>
+          <td data-label="Item">Black iPhone 14<span class="fb-cell-meta"> · ID 1003</span></td>
+          <td data-label="Category">Electronics</td>
+          <td data-label="Date"><time>Mar 12</time></td>
+          <td data-label="Location">Science Building</td>
+          <td data-label="Type"><span class="fb-type-badge fb-type-badge--found">Found</span></td>
+          <td data-label="Status"><span class="fb-status fb-status--report-claimrequested">Claim Requested</span></td>
+        </tr>
+        <tr>
+          <td data-label="Item">Set of keys with red lanyard<span class="fb-cell-meta"> · ID 1002</span></td>
+          <td data-label="Category">Keys</td>
+          <td data-label="Date"><time>Mar 11</time></td>
+          <td data-label="Location">Student Center</td>
+          <td data-label="Type"><span class="fb-type-badge fb-type-badge--found">Found</span></td>
+          <td data-label="Status"><span class="fb-status fb-status--report-open">Open</span></td>
+        </tr>
+        <tr>
+          <td data-label="Item">Blue North Face backpack<span class="fb-cell-meta"> · ID 1001</span></td>
+          <td data-label="Category">Bag</td>
+          <td data-label="Date"><time>Mar 10</time></td>
+          <td data-label="Location">North Quad</td>
+          <td data-label="Type"><span class="fb-type-badge fb-type-badge--lost">Lost</span></td>
+          <td data-label="Status"><span class="fb-status fb-status--report-open">Open</span></td>
+        </tr>
+        <tr>
+          <td data-label="Item">Black umbrella<span class="fb-cell-meta"> · ID 1000</span></td>
+          <td data-label="Category">Other</td>
+          <td data-label="Date"><time>Mar 8</time></td>
+          <td data-label="Location">Rec Center</td>
+          <td data-label="Type"><span class="fb-type-badge fb-type-badge--found">Found</span></td>
+          <td data-label="Status"><span class="fb-status fb-status--report-open">Open</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="fb-row fb-row--between" style="margin-top: var(--fb-space-5); font-size: 13px; color: var(--fb-on-surface-variant);">
+      <span>Showing 5 of 38 active reports</span>
+      <div class="fb-row">
+        <a href="#" aria-disabled="true" style="opacity: 0.4; pointer-events: none;">‹ Prev</a>
+        <span>Page 1 of 8</span>
+        <a href="#">Next ›</a>
+      </div>
+    </div>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-1 Maya · Step 3 of 13</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="01-listings-anon.html">← Previous</a>
+        <a href="../index.html">All journeys</a>
+        <a href="03-item-detail-member.html">Next →</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

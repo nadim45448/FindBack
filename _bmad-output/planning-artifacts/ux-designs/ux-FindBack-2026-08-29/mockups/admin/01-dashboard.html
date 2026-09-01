@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin dashboard — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-page { max-width: var(--fb-container-wide); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--fb-space-4); margin-bottom: var(--fb-space-6); }
+    @media (max-width: 768px) { .fb-stat-row { grid-template-columns: 1fr 1fr; } }
+    .fb-stat { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-4); }
+    .fb-stat__num { font-size: 32px; font-weight: 700; line-height: 1; }
+    .fb-stat__label { font-size: 13px; color: var(--fb-on-surface-variant); margin-top: 4px; }
+    .fb-stat--alert { border-color: var(--fb-warning); background: var(--fb-warning-soft); }
+    .fb-queue-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--fb-space-4); }
+    @media (max-width: 900px) { .fb-queue-grid { grid-template-columns: 1fr; } }
+    .fb-queue-card { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-4); }
+    .fb-queue-card__count { font-size: 28px; font-weight: 700; color: var(--fb-brand-primary); margin: 0; }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="01-dashboard.html" aria-current="page">Dashboard</a>
+      <a href="02-pending-registrations.html">Registrations</a>
+      <a href="05-pending-claims.html">Claims</a>
+      <a href="09-items-awaiting-return.html">Awaiting return</a>
+      <a href="12-audit-trail.html">Audit trail</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions">
+      <span class="fb-status fb-status--account-active" style="margin-right: var(--fb-space-2);">Riley P.</span>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1" class="fb-page">
+    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-3);">Administrator dashboard</h1>
+    <p class="fb-helper" style="margin-bottom: var(--fb-space-6);">Riley P. · <time>Mar 17, 2026 · 11:00</time></p>
+
+    <div class="fb-stat-row">
+      <div class="fb-stat fb-stat--alert">
+        <div class="fb-stat__num">3</div>
+        <div class="fb-stat__label">Pending registrations</div>
+      </div>
+      <div class="fb-stat fb-stat--alert">
+        <div class="fb-stat__num">2</div>
+        <div class="fb-stat__label">Pending claims</div>
+      </div>
+      <div class="fb-stat">
+        <div class="fb-stat__num">4</div>
+        <div class="fb-stat__label">Items awaiting return</div>
+      </div>
+      <div class="fb-stat">
+        <div class="fb-stat__num">142</div>
+        <div class="fb-stat__label">Active reports</div>
+      </div>
+    </div>
+
+    <h2 class="fb-h3" style="margin-bottom: var(--fb-space-4);">Queues</h2>
+    <div class="fb-queue-grid">
+      <a href="02-pending-registrations.html" class="fb-queue-card" style="text-decoration: none; color: inherit;">
+        <p class="fb-queue-card__count">3</p>
+        <h3 style="margin: var(--fb-space-1) 0 0; color: var(--fb-on-surface);">Pending registrations</h3>
+        <p style="margin: var(--fb-space-2) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">3 awaiting review · oldest: 18 hours</p>
+      </a>
+      <a href="05-pending-claims.html" class="fb-queue-card" style="text-decoration: none; color: inherit;">
+        <p class="fb-queue-card__count">2</p>
+        <h3 style="margin: var(--fb-space-1) 0 0; color: var(--fb-on-surface);">Pending claims</h3>
+        <p style="margin: var(--fb-space-2) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">2 awaiting decision · 1 has competing claims</p>
+      </a>
+      <a href="09-items-awaiting-return.html" class="fb-queue-card" style="text-decoration: none; color: inherit;">
+        <p class="fb-queue-card__count">4</p>
+        <h3 style="margin: var(--fb-space-1) 0 0; color: var(--fb-on-surface);">Items awaiting return</h3>
+        <p style="margin: var(--fb-space-2) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">4 approved claims · 2 waiting &gt;24h</p>
+      </a>
+      <a href="12-audit-trail.html" class="fb-queue-card" style="text-decoration: none; color: inherit;">
+        <p class="fb-queue-card__count">∞</p>
+        <h3 style="margin: var(--fb-space-1) 0 0; color: var(--fb-on-surface);">Audit trail</h3>
+        <p style="margin: var(--fb-space-2) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">All administrative actions · append-only</p>
+      </a>
+    </div>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 1 of 12</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="../index.html">All journeys</a>
+        <a href="02-pending-registrations.html">Next →</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

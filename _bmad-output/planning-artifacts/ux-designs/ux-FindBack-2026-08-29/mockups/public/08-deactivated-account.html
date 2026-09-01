@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Account deactivated — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-banner { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-5) var(--fb-page-margin) 0; }
+    .fb-banner__inner { display: flex; gap: var(--fb-space-3); align-items: flex-start; background: var(--fb-surface-container); border: 1px solid var(--fb-border-strong); border-radius: var(--fb-radius-md); padding: var(--fb-space-4); }
+    .fb-banner__icon { font-size: 20px; color: var(--fb-on-surface-variant); margin-top: 2px; }
+    .fb-banner__body { flex: 1; font-size: 14px; color: var(--fb-on-bg); }
+    .fb-banner__body strong { display: block; font-size: 15px; margin-bottom: var(--fb-space-2); }
+    .fb-page { padding-top: var(--fb-space-8); }
+    .fb-status-row { display: inline-flex; align-items: center; gap: var(--fb-space-2); }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="../member/01-listings-anon.html">Lost &amp; Found</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions">
+      <span class="fb-status-row"><span class="fb-status fb-status--account-deactivated" aria-label="Account status: deactivated">Deactivated</span></span>
+      <a href="01-landing.html" class="fb-btn fb-btn--tertiary fb-btn--sm" data-mock-confirm="Sign out of FindBack?">Sign out</a>
+    </div>
+  </header>
+
+  <div class="fb-banner">
+    <div class="fb-banner__inner" role="status">
+      <span class="fb-banner__icon" aria-hidden="true">🔒</span>
+      <div class="fb-banner__body">
+        <strong>Your account is deactivated.</strong>
+        <p style="margin: 0;">A FindBack administrator has deactivated your account. You can no longer sign in to FindBack. Your past reports and claims remain in our records for administrators but are no longer visible to other members.</p>
+        <p style="margin-top: var(--fb-space-3); margin-bottom: 0;">If you'd like to appeal this decision, please contact a FindBack administrator through your normal channels.</p>
+      </div>
+    </div>
+  </div>
+
+  <main id="main" tabindex="-1" class="fb-page fb-page--narrow">
+    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Sign in unavailable</h1>
+    <div class="fb-card">
+      <h2 class="fb-h3" style="margin-bottom: var(--fb-space-3);">What you can do</h2>
+      <p>You can still browse the public summary listing without signing in.</p>
+      <p style="margin-top: var(--fb-space-4);">
+        <a href="../member/01-listings-anon.html" class="fb-btn fb-btn--secondary">Browse Lost &amp; Found</a>
+      </p>
+    </div>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">State variant — deactivated</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="07-rejected-account.html">← Previous</a>
+        <a href="../index.html">All journeys</a>
+        <a href="../member/01-listings-anon.html">Next →</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

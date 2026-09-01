@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit report — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-field + .fb-field { margin-top: var(--fb-space-5); }
+    .fb-actions { display: flex; justify-content: flex-end; gap: var(--fb-space-3); margin-top: var(--fb-space-6); flex-wrap: wrap; }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="01-listings-anon.html">Lost &amp; Found</a>
+      <a href="07-my-reports.html" aria-current="page">My reports</a>
+      <a href="10-my-claims.html">My claims</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions">
+      <a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Report an item</a>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1" class="fb-page">
+    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
+      <a href="07-my-reports.html">My reports</a> › <span aria-current="page">Edit "Brown leather wallet"</span>
+    </nav>
+    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Edit found report</h1>
+
+    <form data-mock-form data-next="07-my-reports.html" data-toast="Report updated.">
+      <div class="fb-field">
+        <label class="fb-field__label" for="name">Item name <span class="fb-req" aria-hidden="true">*</span></label>
+        <input class="fb-input" type="text" id="name" name="name" value="Brown leather wallet" required minlength="1" maxlength="80">
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="cat">Category <span class="fb-req" aria-hidden="true">*</span></label>
+        <select class="fb-select" id="cat" name="cat" required>
+          <option>Wallet</option>
+          <option>Bag</option>
+          <option>Electronics</option>
+          <option>Keys</option>
+          <option>Clothing</option>
+          <option>Books/Notebooks</option>
+          <option>Identification</option>
+          <option>Water Bottle</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="desc">Description <span class="fb-req" aria-hidden="true">*</span></label>
+        <textarea class="fb-textarea" id="desc" name="desc" required minlength="10" maxlength="2000">Bifold wallet in dark brown leather, slightly worn. Looks like it had been sitting on a study table. I picked it up near the end of the day.</textarea>
+        <div class="fb-field__counter" aria-live="polite">142 / 2000</div>
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="date">Date found <span class="fb-req" aria-hidden="true">*</span></label>
+        <input class="fb-input" type="date" id="date" name="date" value="2026-03-16" required>
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="loc">Location (campus area) <span class="fb-req" aria-hidden="true">*</span></label>
+        <select class="fb-select" id="loc" name="loc" required>
+          <option>Main Library</option>
+          <option>Science Building</option>
+          <option>Student Center</option>
+          <option>North Quad</option>
+          <option>Rec Center</option>
+        </select>
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="place">Exact place <span class="fb-sensitive-flag">Sensitive</span></label>
+        <input class="fb-input" type="text" id="place" name="place" value="2nd floor reading room, Table 7, west window" maxlength="200">
+        <p class="fb-field__help">Visible to authenticated members and administrators. Other members don't see this until they have a relationship to your item.</p>
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="ident">Identifying details <span class="fb-sensitive-flag">Sensitive</span></label>
+        <textarea class="fb-textarea" id="ident" name="ident" maxlength="500">Embossed initials "MC" on the inside right pocket</textarea>
+      </div>
+      <div class="fb-actions">
+        <a href="07-my-reports.html" class="fb-btn fb-btn--tertiary">Cancel</a>
+        <button type="submit" class="fb-btn fb-btn--primary">Save changes</button>
+      </div>
+    </form>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-2 Sam · Step 6 of 8 (edit report)</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="07-my-reports.html">← Previous</a>
+        <a href="../index.html">All journeys</a>
+        <a href="10-my-claims.html">Next →</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

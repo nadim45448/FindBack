@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Awaiting return — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="01-dashboard.html">Dashboard</a>
+      <a href="02-pending-registrations.html">Registrations</a>
+      <a href="05-pending-claims.html">Claims</a>
+      <a href="09-items-awaiting-return.html" aria-current="page">Awaiting return</a>
+      <a href="12-audit-trail.html">Audit trail</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions">
+      <span class="fb-status fb-status--account-active">Riley P.</span>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1" class="fb-page">
+    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Items awaiting physical return</h1>
+
+    <table class="fb-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Approved claimant</th>
+          <th>Approved on</th>
+          <th>Waiting</th>
+          <th class="fb-table__actions"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Item"><strong>Brown leather wallet</strong></td>
+          <td data-label="Approved claimant">Maya C.</td>
+          <td data-label="Approved on"><time>Mar 17, 11:30</time></td>
+          <td data-label="Waiting">2h 30m</td>
+          <td class="fb-table__actions"><a href="10-confirm-returned-default.html" class="fb-btn fb-btn--primary fb-btn--sm">Confirm returned</a></td>
+        </tr>
+        <tr>
+          <td data-label="Item"><strong>Black iPhone 14</strong></td>
+          <td data-label="Approved claimant">Devon K.</td>
+          <td data-label="Approved on"><time>Mar 13, 14:20</time></td>
+          <td data-label="Waiting">3 days</td>
+          <td class="fb-table__actions"><a href="11-confirm-returned-substitute.html" class="fb-btn fb-btn--primary fb-btn--sm">Confirm returned</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 10 of 12</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="08-claim-reject.html">← Previous</a>
+        <a href="../index.html">All journeys</a>
+        <a href="10-confirm-returned-default.html">Next →</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>

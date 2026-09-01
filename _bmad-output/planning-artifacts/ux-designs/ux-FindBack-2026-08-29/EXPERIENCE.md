@@ -235,12 +235,27 @@ Visual specs live in `{DESIGN.md → Components}`. This section owns the *behavi
 **Behavioral rules.**
 
 - **One primary button per view.** If a screen has two competing primary actions, demote the secondary to `secondary` or move it into a menu.
+- **Topbar Register / Sign in CTAs must read as buttons in the resting state.** Use `primary` style (filled, brand surface, on-brand text) — not `tertiary`. A tertiary topbar CTA disappears into the navigation labels and only becomes legible on hover, which fails the "visible at rest" expectation for an entry-point action. When a page already has a primary in its main content (e.g., the form's submit button), the topbar CTA is exempt from the "one primary per view" rule because it lives in a separate region (topbar vs content) and serves a different audience (anonymous vs already-filling-the-form). See `§5.2 Topbar` for the topbar's component treatment.
 - **Destructive actions require explicit confirmation.** Confirmation uses a **modal dialog** that names the consequence, not a confirm() call. See Section 7.6.
 - **Loading state.** Buttons enter a disabled + spinner state while the action is in flight (the `executing` state from `{components.button.state.executing}`). The button label remains visible (e.g., "Submitting…").
 - **Disabled state.** Disabled buttons explain why on focus (tooltip or `aria-describedby`) for screen reader users.
 - **Touch target.** Min 44 × 44 px (PRD NFR accessibility, Section 11).
 
-### 5.2 Inputs & textareas
+### 5.2 Topbar (anonymous + auth-flow pages)
+
+On public / auth-flow pages (`/`, `/login`, `/register`, `/forgot`, `/forgot-sent`, `/pending`, `/rejected`, `/deactivated`), the topbar exposes two actions to the anonymous visitor:
+
+| Action | Style | Why |
+|---|---|---|
+| Browse Lost &amp; Found (primary nav link) | plain text link | Browse is exploration, not conversion — it does not require a button. |
+| Sign in (when not the dominant CTA on the page) | `primary` button | Entry-point to an existing account. Must be legible at rest. |
+| Register (when the dominant CTA) | `primary` button | Account creation is the conversion target — must read as a button, not as a quiet label. |
+
+**Why primary, not tertiary.** A tertiary topbar CTA has no border, no fill, and shares its color with the surrounding nav labels. It disappears into the navigation chrome and only becomes legible on hover — which fails the resting-state legibility expectation for an entry-point action. A primary button (filled, brand surface, on-brand text) reads as a button without interaction. The "one primary per view" rule (`§5.1`) is **explicitly exempted** for topbar CTAs: the topbar and the page content are different regions serving different audiences (entry-point for anonymous visitors vs. the in-flow action for the form-filler).
+
+**Where the tertiary topbar CTA pattern is acceptable.** On authenticated pages (member/admin), the topbar exposes account chrome (`Account ▾`, `Theme`, `Logout`) which is genuinely low-emphasis — those stay `tertiary`.
+
+### 5.3 Inputs & textareas
 
 - **Labels are persistent.** Labels sit above the input, never as floating placeholders. Helper text sits below the label, before the input. Error text replaces helper text on validation failure.
 - **Required indicator.** A single character asterisk (`*`) on the label is *visually* required. The HTML `required` attribute and `aria-required="true"` carry the programmatic meaning. (PRD accessibility NFR.)
@@ -249,17 +264,17 @@ Visual specs live in `{DESIGN.md → Components}`. This section owns the *behavi
 - **Search input.** Single text input on the listing page. Submits on Enter or after 400 ms of inactivity (debounced). Includes a `clear` icon-button when non-empty.
 - **Autocomplete / autocorrect.** Off for emails, dates, and category names. Off for search input to avoid noisy matching.
 
-### 5.3 Selects
+### 5.4 Selects
 
 - **Native `<select>`** for category, location, type, and relationship (PRD FR-8, FR-24). These are short, fixed lists; native controls get keyboard, screen reader, and mobile support for free.
 - **Custom select** for status filters with 5+ options, where the visual treatment of the status badge should carry into the option label.
 
-### 5.4 Checkboxes & radio
+### 5.5 Checkboxes & radio
 
 - **Checkbox.** Authorization affirmation on substitute receiver (PRD FR-24). The checkbox label is the full affirmation sentence, not a bare "I confirm".
 - **Radio group.** Lost vs Found on the report form. (Implemented as a tab/step 1 to keep the visual treatment of the two types distinct — see Section 8.3.) For relationship (Friend, Family Member, Colleague, Classmate, Other), use a radio group.
 
-### 5.5 Cards (Listing card, Item card, Queue row)
+### 5.6 Cards (Listing card, Item card, Queue row)
 
 The listing card is a wide card on desktop, stacked on mobile. Visual treatment uses tokens `{colors.light.surface}` with `{rounded.lg}` and `{elevation.1}`. On hover/focus, lifts to `{elevation.2}` (a *visual* lift only; do not move the layout).
 
@@ -273,13 +288,13 @@ Each card surfaces:
 
 No image, no exact location, no reporter name (PRD FR-38).
 
-### 5.6 Tables (administrator queues)
+### 5.7 Tables (administrator queues)
 
 Administrator queues (Pending Registrations, Pending Claims, Awaiting Return) use a table layout on desktop and collapse to stacked rows on mobile. Sortable columns: submission time (default), claim/item ID. Action column is right-aligned and exposes the primary action directly (Approve, Review, Confirm Returned).
 
 Accessibility: `<th scope="col">`, sortable headers announced as "Sort by {column}, ascending/descending", keyboard navigable rows, and row focus moves to a focusable action when present.
 
-### 5.7 Status badges & indicators
+### 5.8 Status badges & indicators
 
 Every status uses three cues — color, icon, text label (PRD NFR accessibility). Mapping:
 
@@ -302,12 +317,12 @@ Status icons render in the icon-color token from each status entry (slightly mor
 
 Semantic feedback colors (success / warning / error / info) are separate from status colors — see `{DESIGN.md → Semantic Colors}`. Toast and alert body text uses `colors.{theme}.on-background` (page ink) on the soft fill — not the saturated `semantic.*` foreground — to keep AA on every variant (DESIGN.md §Color contrast & safety).
 
-### 5.8 Alerts & toasts
+### 5.9 Alerts & toasts
 
 - **Inline alerts.** Long-lived, contextually anchored (e.g., a member-facing success banner after a report is submitted).
 - **Toasts.** Transient feedback for non-blocking actions (e.g., "Filters cleared"). Auto-dismiss after 4 s, with a manual dismiss control. Toasts are `role="status"` (polite) or `role="alert"` (assertive) per WCAG.
 
-### 5.9 Modals & dialogs
+### 5.10 Modals & dialogs
 
 Used only when the consequence must be visible before the user commits. Examples: confirm delete, confirm withdraw, confirm approve-with-auto-reject, confirm Returned. Each modal:
 - Names the action verb in the heading ("Withdraw this report?").
@@ -316,22 +331,22 @@ Used only when the consequence must be visible before the user commits. Examples
 - Is focus-trapped and dismissible with Escape (cancel default).
 - Returns focus to the originating element on close.
 
-### 5.10 Dropdowns & menus
+### 5.11 Dropdowns & menus
 
 Used for `Report ▾` (Lost / Found), `Account ▾` (Profile, Theme, Logout), and `Admin ▾` queues. Single-level menus. Selected option is shown in the trigger.
 
-### 5.11 Pagination
+### 5.12 Pagination
 
 Listings paginate at 20 items per page. Pagination control sits below the listing. URL reflects the page (`?page=2`) so deep links work. Keyboard-accessible.
 
-### 5.12 File/image upload
+### 5.13 File/image upload
 
 - **Trigger.** A drop zone plus a button (both lead to the same picker).
 - **Accept.** JPEG, PNG, WebP (PRD FR-8).
 - **Size.** Up to 5 MB. Validation on the client (UX) and the server (architecture).
 - **Behavior.** After file selection: thumbnail preview with a remove button. Progress indicator while uploading. After success: image preview persists with an edit affordance. Errors show inline below the thumbnail with a retry button.
 
-### 5.13 Empty, loading, error states
+### 5.14 Empty, loading, error states
 
 Every screen has all four.
 
@@ -1023,9 +1038,13 @@ Validation runs **client-side for UX feedback** and **server-side for authoritat
 UX-decided in the Discovery step:
 
 - **Initial.** Respects `prefers-color-scheme` at first visit.
-- **Toggle.** "Theme" appears in the Account menu, with three options: `System`, `Light`, `Dark`.
+- **Toggle placement.** The theme toggle is an **icon button in the topbar** of every page, present on all surfaces (anonymous listings, member pages, admin pages). It is not inside the Account menu — topbar placement was chosen so the toggle is reachable without first opening an account menu, and so the same control is available at every auth state.
+- **Toggle UI.** A single 44×44 icon button. The icon reflects the currently active state: **sun** for Light, **moon** for Dark, **half-filled circle** for System. Clicking the icon opens a popover menu (`role="menu"`) directly below the button (right-aligned) with three `menuitemradio` items: `System`, `Light`, `Dark`. The active item is highlighted via `aria-checked="true"` and the `--fb-brand-primary-soft` background.
+- **Accessibility.** The trigger has `aria-haspopup="menu"`, `aria-expanded`, and `aria-label="Theme: <state>. Click to change."` (updated as the state changes). Menu items are keyboard-navigable (Tab to enter, Arrow Up/Down to move, Home/End for first/last, Enter to select, Escape to close). Escape returns focus to the trigger.
+- **Close behavior.** Click an item to select and close. Click outside the menu to close. Press Escape to close.
 - **Persistence.** Choice is stored in `localStorage` (key: `findback.theme`). The choice persists across sessions and overrides the OS preference.
-- **No FOUC.** The theme is set as an inline `<html data-theme>` attribute before the page renders, so the initial paint matches the user's preference. Tokens in DESIGN.md are bound to `[data-theme="light"]` and `[data-theme="dark"]`.
+- **No FOUC.** The theme is set as an inline `<html data-theme>` attribute before the page renders, so the initial paint matches the user's preference. Tokens in DESIGN.md are bound to `[data-theme="light"]` and `[data-theme="dark"]`. Note: the menu items in the toggle popover use a separate `data-theme-option` attribute (not `data-theme`) so the global `[data-theme="dark"]` / `[data-theme="light"]` token selectors don't accidentally re-theme a row whose label happens to be "Light" or "Dark".
+- **OS-change listener.** When the user's OS theme changes AND the FindBack preference is `System`, the page re-resolves automatically. No user action required.
 - **Logo.** The logo is theme-aware: it ships in two variants (`logo-light`, `logo-dark`) and the layout swaps them based on `data-theme`.
 - **Focus states.** Focus rings are visible in both themes (sufficient contrast against each background).
 - **Hover/active.** Hover and active states are defined per-theme in `{DESIGN.md → Colors}`.
@@ -1049,7 +1068,7 @@ PRD §10 declares **WCAG 2.1 AA** as the design target. UX-implementation checkl
 ### 20.2 Color contrast
 
 - **Text on background.** ≥ 4.5:1 for body text, ≥ 3:1 for large text (18 pt / 14 pt bold).
-- **Status indicators.** Never rely on color alone — every status has a text label and an icon (Section 5.7).
+- **Status indicators.** Never rely on color alone — every status has a text label and an icon (Section 5.8).
 - **Both themes meet AA contrast.** DESIGN.md defines both light and dark tokens with AA contrast as the constraint.
 
 ### 20.3 Screen readers
@@ -1229,7 +1248,7 @@ This section is the **rubric walker Pass 1 reference** for downstream consumers 
 |---|---|
 | Simple | §1.2; one primary action per screen; native controls; helper text concise |
 | Trustworthy | §11.4 (visibility is intentional); audit trail visible to admins; no silent state changes |
-| Clear | §5.7 (every status has color + icon + text); §4.2 (canonical status labels) |
+| Clear | §5.8 (every status has color + icon + text); §4.2 (canonical status labels) |
 
 ### 24.4 PRD-author decisions
 

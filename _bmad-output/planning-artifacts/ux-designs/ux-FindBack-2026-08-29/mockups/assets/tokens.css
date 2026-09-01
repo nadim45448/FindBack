@@ -1,0 +1,1048 @@
+/* ============================================================================
+   FindBack Design Tokens — shared by every mockup.
+   Source of truth: ../../../DESIGN.md
+   ----------------------------------------------------------------------------
+   Theme switching: <html data-theme="light|dark">. Initial theme is set inline
+   before first paint (in each page's head) based on localStorage + system pref.
+   ============================================================================ */
+
+/* ---------- Brand (theme-independent) ---------- */
+:root {
+  --fb-brand-primary: #7C2907;
+  --fb-brand-primary-hover: #5C1F05;
+  --fb-brand-primary-active: #3D1403;
+  --fb-brand-primary-soft: #FFE7D6;
+  /* on-primary is set per-theme below: dark text on light, light text on dark. */
+
+  --fb-brand-secondary: #1E5A4E;
+  --fb-brand-secondary-hover: #16463C;
+  --fb-brand-secondary-soft: #D6EBE5;
+  --fb-on-secondary: #FFFFFF;
+
+  /* ---------- Semantic feedback ---------- */
+  --fb-success: #2D7A4F;
+  --fb-success-soft: #D6F0DF;
+  --fb-on-success: #FFFFFF;
+
+  --fb-warning: #B45309;
+  --fb-warning-soft: #FFE7D6;
+  --fb-on-warning: #FFFFFF;
+
+  --fb-error: #B91C1C;
+  --fb-error-soft: #FDE2E2;
+  --fb-on-error: #FFFFFF;
+
+  --fb-info: #1E5A8E;
+  --fb-info-soft: #D6E8F5;
+  --fb-on-info: #FFFFFF;
+
+  /* ---------- Status tokens (per STATUS, all 12) ---------- */
+  --fb-status-report-open-fg: #7C2907;
+  --fb-status-report-open-soft: #FFE7D6;
+  --fb-status-report-open-icon: #7C2907;
+
+  --fb-status-report-claimrequested-fg: #7C2907;
+  --fb-status-report-claimrequested-soft: #FFE7D6;
+  --fb-status-report-claimrequested-icon: #7C2907;
+
+  --fb-status-report-claimapproved-fg: #7C2D12;
+  --fb-status-report-claimapproved-soft: #FEF3C7;
+  --fb-status-report-claimapproved-icon: #B45309;
+
+  --fb-status-report-returned-fg: #1E5A4E;
+  --fb-status-report-returned-soft: #D6EBE5;
+  --fb-status-report-returned-icon: #2D7A4F;
+
+  --fb-status-report-closed-fg: #5C5246;
+  --fb-status-report-closed-soft: #ECE5D9;
+  --fb-status-report-closed-icon: #9A8E78;
+
+  --fb-status-claim-pending-fg: #7C2D12;
+  --fb-status-claim-pending-soft: #FEF3C7;
+  --fb-status-claim-pending-icon: #B45309;
+
+  --fb-status-claim-approved-fg: #1E5A4E;
+  --fb-status-claim-approved-soft: #D6EBE5;
+  --fb-status-claim-approved-icon: #2D7A4F;
+
+  --fb-status-claim-rejected-fg: #7F1D1D;
+  --fb-status-claim-rejected-soft: #FDE2E2;
+  --fb-status-claim-rejected-icon: #B91C1C;
+
+  --fb-status-account-pending-fg: #7C2D12;
+  --fb-status-account-pending-soft: #FEF3C7;
+  --fb-status-account-pending-icon: #B45309;
+
+  --fb-status-account-active-fg: #1E5A4E;
+  --fb-status-account-active-soft: #D6EBE5;
+  --fb-status-account-active-icon: #2D7A4F;
+
+  --fb-status-account-rejected-fg: #7F1D1D;
+  --fb-status-account-rejected-soft: #FDE2E2;
+  --fb-status-account-rejected-icon: #B91C1C;
+
+  --fb-status-account-deactivated-fg: #5C5246;
+  --fb-status-account-deactivated-soft: #ECE5D9;
+  --fb-status-account-deactivated-icon: #9A8E78;
+
+  /* ---------- Typography (system font stack) ---------- */
+  --fb-font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* ---------- Spacing (4 px base) ---------- */
+  --fb-unit: 4px;
+  --fb-space-1: 4px;
+  --fb-space-2: 8px;
+  --fb-space-3: 12px;
+  --fb-space-4: 16px;
+  --fb-space-5: 20px;
+  --fb-space-6: 24px;
+  --fb-space-8: 32px;
+  --fb-space-10: 40px;
+  --fb-space-12: 48px;
+  --fb-space-16: 64px;
+
+  /* ---------- Radii ---------- */
+  --fb-radius-sm: 6px;
+  --fb-radius: 10px;
+  --fb-radius-md: 12px;
+  --fb-radius-lg: 16px;
+  --fb-radius-xl: 20px;
+  --fb-radius-full: 9999px;
+
+  /* ---------- Layout ---------- */
+  --fb-container-max: 1024px;
+  --fb-container-narrow: 640px;
+  --fb-container-wide: 1280px;
+  --fb-page-margin: 32px;
+
+  /* ---------- Motion ---------- */
+  --fb-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --fb-ease-emphasis: cubic-bezier(0.3, 0, 0.1, 1);
+  --fb-dur-fast: 120ms;
+  --fb-dur-base: 200ms;
+  --fb-dur-slow: 320ms;
+
+  /* ---------- Z layers ---------- */
+  --fb-z-base: 1;
+  --fb-z-sticky: 100;
+  --fb-z-modal-backdrop: 200;
+  --fb-z-modal: 201;
+  --fb-z-toast: 300;
+}
+
+/* ---------- LIGHT theme ---------- */
+:root,
+[data-theme="light"] {
+  --fb-bg: #FAF7F2;
+  --fb-surface: #FFFFFF;
+  --fb-surface-dim: #F2EDE4;
+  --fb-surface-raised: #FFFFFF;
+  --fb-surface-container-low: #F7F2EA;
+  --fb-surface-container: #F2EDE4;
+  --fb-surface-container-high: #ECE5D9;
+  --fb-surface-overlay: rgba(0, 0, 0, 0.5);
+
+  --fb-on-bg: #1F1B16;
+  --fb-on-surface: #1F1B16;
+  --fb-on-surface-variant: #5C5246;
+
+  --fb-border-subtle: #E7DFD1;
+  --fb-border-default: #D1C5B0;
+  --fb-border-strong: #9A8E78;
+
+  --fb-focus-ring: #7C2907;
+  --fb-focus-ring-offset: #FAF7F2;
+
+  --fb-disabled-bg: #ECE5D9;
+  --fb-disabled-text: #9A8E78;
+
+  --fb-link: #1E5A4E;
+  --fb-link-hover: #16463C;
+  --fb-link-visited: #5A3A6E;
+
+  /* on-primary: white text on the deep terracotta fill. With the brand-primary
+     darkened to #7C2907, white-on-terracotta has luminance contrast ~9.6:1 —
+     the same punch as the previous hover state, available in the resting state. */
+  --fb-on-primary: #FFFFFF;
+
+  /* Elevation (warm-tinted shadows) */
+  --fb-elev-0: none;
+  --fb-elev-1: 0 1px 2px 0 rgba(31, 27, 22, 0.06), 0 1px 3px 0 rgba(31, 27, 22, 0.04);
+  --fb-elev-2: 0 2px 4px 0 rgba(31, 27, 22, 0.08), 0 4px 8px 0 rgba(31, 27, 22, 0.04);
+  --fb-elev-3: 0 4px 8px 0 rgba(31, 27, 22, 0.10), 0 8px 16px 0 rgba(31, 27, 22, 0.06);
+  --fb-elev-4: 0 8px 16px 0 rgba(31, 27, 22, 0.12), 0 16px 32px 0 rgba(31, 27, 22, 0.08);
+
+  /* Logo: deeper terracotta on light to match the brand-primary fill */
+  --fb-logo-color: #7C2907;
+}
+
+/* ---------- DARK theme ---------- */
+[data-theme="dark"] {
+  --fb-bg: #161310;
+  --fb-surface: #211C18;
+  --fb-surface-dim: #1B1613;
+  --fb-surface-raised: #2A241F;
+  --fb-surface-container-low: #1F1A16;
+  --fb-surface-container: #251F1A;
+  --fb-surface-container-high: #2D2620;
+  --fb-surface-overlay: rgba(0, 0, 0, 0.7);
+
+  --fb-on-bg: #F5EFE5;
+  --fb-on-surface: #F5EFE5;
+  --fb-on-surface-variant: #C4B8A4;
+
+  --fb-border-subtle: #2D2620;
+  --fb-border-default: #3D352C;
+  --fb-border-strong: #5C5246;
+
+  --fb-focus-ring: #FB923C;
+  --fb-focus-ring-offset: #161310;
+
+  --fb-disabled-bg: #251F1A;
+  --fb-disabled-text: #5C5246;
+
+  --fb-link: #7BC9B5;
+  --fb-link-hover: #A1DCCB;
+  --fb-link-visited: #C2A1D5;
+
+  /* Brand: shift to brighter accent so secondary buttons and active-nav
+     pills render with enough contrast on dark surfaces. */
+  --fb-brand-primary: #FB923C;
+  --fb-brand-primary-hover: #FFB875;
+  --fb-brand-primary-active: #FBA86C;
+  --fb-brand-primary-soft: #3A1F0E;
+  --fb-on-primary: #1F1B16;          /* dark text on bright terracotta */
+  --fb-brand-secondary: #7BC9B5;
+  --fb-brand-secondary-hover: #A1DCCB;
+  --fb-brand-secondary-soft: #16302A;
+  --fb-on-secondary: #1F1B16;
+
+  /* Semantic feedback (dark-tuned: brighter fg, deep fills) */
+  --fb-success: #2D7A4F;
+  --fb-success-soft: #16302A;
+  --fb-on-success: #F5EFE5;
+  --fb-warning: #FBBF77;
+  --fb-warning-soft: #3A2A14;
+  --fb-on-warning: #1F1B16;
+  --fb-error: #FCA5A5;
+  --fb-error-soft: #3A1414;
+  --fb-on-error: #1F1B16;
+  --fb-info: #93C5FD;
+  --fb-info-soft: #142B45;
+  --fb-on-info: #1F1B16;
+
+  --fb-elev-0: none;
+  --fb-elev-1: 0 1px 2px 0 rgba(0, 0, 0, 0.4), 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  --fb-elev-2: 0 2px 4px 0 rgba(0, 0, 0, 0.5), 0 4px 8px 0 rgba(0, 0, 0, 0.3);
+  --fb-elev-3: 0 4px 8px 0 rgba(0, 0, 0, 0.6), 0 8px 16px 0 rgba(0, 0, 0, 0.4);
+  --fb-elev-4: 0 8px 16px 0 rgba(0, 0, 0, 0.7), 0 16px 32px 0 rgba(0, 0, 0, 0.5);
+
+  /* Logo: warm white. The mark is stroke-only and renders cleanly on dark;
+     the wordmark text "FindBack" reads with ~14:1 contrast on --fb-surface. */
+  --fb-logo-color: #F5EFE5;
+
+  /* Soften status soft-fills slightly for dark mode readability */
+  --fb-status-claim-pending-soft: #3A2A14;
+  --fb-status-claim-pending-fg: #FBBF77;
+  --fb-status-report-open-soft: #3A1F0E;
+  --fb-status-report-open-fg: #FB923C;
+  --fb-status-report-claimrequested-soft: #3A1F0E;
+  --fb-status-report-claimrequested-fg: #FB923C;
+  --fb-status-report-claimapproved-soft: #3A2A14;
+  --fb-status-report-claimapproved-fg: #FBBF77;
+  --fb-status-report-returned-soft: #16302A;
+  --fb-status-report-returned-fg: #7BC9B5;
+  --fb-status-report-closed-soft: #2D2620;
+  --fb-status-report-closed-fg: #C4B8A4;
+  --fb-status-claim-approved-soft: #16302A;
+  --fb-status-claim-approved-fg: #7BC9B5;
+  --fb-status-claim-rejected-soft: #3A1414;
+  --fb-status-claim-rejected-fg: #FCA5A5;
+  --fb-status-account-pending-soft: #3A2A14;
+  --fb-status-account-pending-fg: #FBBF77;
+  --fb-status-account-active-soft: #16302A;
+  --fb-status-account-active-fg: #7BC9B5;
+  --fb-status-account-rejected-soft: #3A1414;
+  --fb-status-account-rejected-fg: #FCA5A5;
+  --fb-status-account-deactivated-soft: #2D2620;
+  --fb-status-account-deactivated-fg: #C4B8A4;
+}
+
+/* ---------- Reset + base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+html {
+  font-family: var(--fb-font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--fb-on-bg);
+  background: var(--fb-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body { min-height: 100vh; }
+
+a {
+  color: var(--fb-link);
+  text-decoration: none;
+}
+a:hover { color: var(--fb-link-hover); text-decoration: underline; }
+/* Visited-link color must NOT leak into button-styled anchors. Browsers
+   apply :visited at the end of the cascade, so it overrides .fb-btn--primary's
+   white text on firebrick buttons that the user has already visited —
+   producing unreadable pale-lavender text on dark firebrick (verified on
+   Brave; also reproducible in Chrome if the page is reloaded from history).
+   Scope :visited to text-only anchors by excluding the .fb-btn class. */
+a:visited:not(.fb-btn) { color: var(--fb-link-visited); }
+
+/* Visible focus everywhere — WCAG 2.4.7 */
+*:focus { outline: none; }
+*:focus-visible {
+  outline: 2px solid var(--fb-focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Skip-to-content */
+.fb-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: var(--fb-space-2);
+  background: var(--fb-brand-primary);
+  color: var(--fb-on-primary);
+  padding: var(--fb-space-2) var(--fb-space-4);
+  border-radius: var(--fb-radius);
+  font-weight: 600;
+  z-index: 999;
+}
+.fb-skip-link:focus { left: var(--fb-space-4); }
+
+/* ---------- Typography helpers ---------- */
+.fb-display { font-size: 32px; font-weight: 700; line-height: 1.2; letter-spacing: -0.015em; margin: 0; }
+.fb-h1 { font-size: 32px; font-weight: 700; line-height: 1.2; letter-spacing: -0.015em; margin: 0; }
+.fb-h2 { font-size: 24px; font-weight: 600; line-height: 1.25; margin: 0; }
+.fb-h3 { font-size: 20px; font-weight: 600; line-height: 1.3; margin: 0; }
+.fb-h4 { font-size: 16px; font-weight: 600; line-height: 1.4; margin: 0; }
+.fb-body { font-size: 15px; line-height: 1.55; margin: 0; }
+.fb-body-lg { font-size: 17px; line-height: 1.55; margin: 0; }
+.fb-body-sm { font-size: 13px; line-height: 1.5; margin: 0; }
+.fb-caption { font-size: 12px; line-height: 1.4; margin: 0; color: var(--fb-on-surface-variant); }
+.fb-label { font-size: 14px; font-weight: 500; line-height: 1.4; margin: 0; }
+.fb-label-caps {
+  font-size: 12px; font-weight: 600; line-height: 1.4;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  margin: 0; color: var(--fb-on-surface-variant);
+}
+.fb-helper { font-size: 13px; line-height: 1.4; color: var(--fb-on-surface-variant); margin: 0; }
+.fb-error-text { font-size: 13px; font-weight: 500; line-height: 1.4; color: var(--fb-error); margin: 0; }
+
+/* ---------- Layout helpers ---------- */
+.fb-page {
+  max-width: var(--fb-container-max);
+  margin: 0 auto;
+  padding: var(--fb-space-8) var(--fb-page-margin);
+}
+.fb-page--narrow { max-width: var(--fb-container-narrow); }
+.fb-page--wide { max-width: var(--fb-container-wide); }
+.fb-stack { display: flex; flex-direction: column; gap: var(--fb-space-4); }
+.fb-stack--lg { gap: var(--fb-space-6); }
+.fb-stack--xl { gap: var(--fb-space-8); }
+.fb-row { display: flex; align-items: center; gap: var(--fb-space-3); }
+.fb-row--between { justify-content: space-between; }
+.fb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--fb-space-5);
+}
+
+/* ---------- Top bar ---------- */
+.fb-topbar {
+  position: sticky;
+  top: 0;
+  height: 64px;
+  background: var(--fb-surface);
+  border-bottom: 1px solid var(--fb-border-subtle);
+  z-index: var(--fb-z-sticky);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--fb-page-margin);
+  gap: var(--fb-space-6);
+}
+.fb-topbar__brand { display: flex; align-items: center; gap: var(--fb-space-3); }
+
+/* Logo: dual-<img> theme switching.
+   Why this approach instead of CSS mask-image or currentColor on the SVG:
+   - When an SVG is loaded via <img src="...">, the SVG renders in an
+     isolated context. `currentColor` inside the SVG does NOT inherit the
+     host element's CSS color — it resolves to the user-agent default
+     (typically black). CSS mask-image can recolor via background-color, but
+     it depends on the SVG rendering with opaque pixels, which is fragile
+     when stroke-only marks are scaled down.
+   - Solution: each topbar renders two <img> elements pointing to the
+     -light and -dark SVG variants (which have hard-coded colors). CSS
+     toggles which one is visible based on [data-theme]. No host-CSS
+     propagation needed; each variant simply renders as a normal image.
+   - The .fb-mark-img utility class uses the same technique for hero art. */
+.fb-topbar__brand img { display: block; height: 32px; width: auto; }
+
+/* Show the LIGHT variant by default; hide the DARK variant. */
+.fb-topbar__brand .fb-logo-light { display: block; }
+.fb-topbar__brand .fb-logo-dark { display: none; }
+/* In dark theme, flip. */
+[data-theme="dark"] .fb-topbar__brand .fb-logo-light { display: none; }
+[data-theme="dark"] .fb-topbar__brand .fb-logo-dark { display: block; }
+
+/* Same dual-<img> technique for hero art and other in-content logos.
+   Per-variant modifier class picks which SVG file each <img> points to. */
+.fb-mark-img { display: block; max-width: 100%; }
+.fb-mark-img--mark-light { display: block; }
+.fb-mark-img--mark-dark { display: none; }
+[data-theme="dark"] .fb-mark-img--mark-light { display: none; }
+[data-theme="dark"] .fb-mark-img--mark-dark { display: block; }
+.fb-topbar__nav { display: flex; align-items: center; gap: var(--fb-space-2); margin-left: var(--fb-space-6); }
+.fb-topbar__nav a {
+  padding: var(--fb-space-2) var(--fb-space-3);
+  border-radius: var(--fb-radius);
+  color: var(--fb-on-surface);
+  font-weight: 500;
+}
+.fb-topbar__nav a:hover { background: var(--fb-surface-container-high); text-decoration: none; }
+.fb-topbar__nav a[aria-current="page"] { background: var(--fb-brand-primary-soft); color: var(--fb-brand-primary); }
+.fb-topbar__spacer { flex: 1; }
+.fb-topbar__actions { display: flex; align-items: center; gap: var(--fb-space-2); }
+.fb-topbar__admin-link {
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--fb-brand-secondary);
+  padding: var(--fb-space-1) var(--fb-space-3);
+  border: 1px solid var(--fb-brand-secondary);
+  border-radius: var(--fb-radius-full);
+}
+
+/* Mobile nav: collapse to hamburger */
+.fb-topbar__menu-btn { display: none; }
+@media (max-width: 768px) {
+  .fb-topbar__nav { display: none; }
+  .fb-topbar__menu-btn {
+    display: inline-flex;
+    width: 44px; height: 44px;
+    align-items: center; justify-content: center;
+    background: transparent; border: none;
+    color: var(--fb-on-surface); cursor: pointer;
+    border-radius: var(--fb-radius);
+  }
+  .fb-topbar__menu-btn:hover { background: var(--fb-surface-container-high); }
+}
+
+/* ---------- Buttons ---------- */
+.fb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--fb-space-2);
+  height: 44px;
+  min-width: 44px;
+  padding: 0 var(--fb-space-4);
+  border-radius: var(--fb-radius-md);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--fb-dur-fast) var(--fb-ease-standard),
+              color var(--fb-dur-fast) var(--fb-ease-standard),
+              border-color var(--fb-dur-fast) var(--fb-ease-standard);
+}
+.fb-btn:hover { text-decoration: none; }
+.fb-btn:disabled { cursor: not-allowed; }
+
+.fb-btn--sm { height: 32px; padding: 0 var(--fb-space-3); font-size: 13px; }
+.fb-btn--lg { height: 48px; padding: 0 var(--fb-space-5); font-size: 16px; }
+.fb-btn--primary.fb-btn--lg { font-weight: 700; }
+
+.fb-btn--primary {
+  background: var(--fb-brand-primary);
+  color: var(--fb-on-primary);
+  font-weight: 600;
+}
+/* :visited must not recolor button labels — see comment on a:visited above */
+.fb-btn--primary:visited,
+.fb-btn--primary:hover,
+.fb-btn--primary:active { color: var(--fb-on-primary); }
+.fb-btn--primary:hover { background: var(--fb-brand-primary-hover); }
+.fb-btn--primary:active { background: var(--fb-brand-primary-active); }
+.fb-btn--primary:disabled { background: var(--fb-disabled-bg); color: var(--fb-disabled-text); }
+
+.fb-btn--secondary {
+  background: var(--fb-surface);
+  color: var(--fb-brand-primary);
+  border-color: var(--fb-border-default);
+}
+.fb-btn--secondary:visited,
+.fb-btn--secondary:hover,
+.fb-btn--secondary:active { color: var(--fb-brand-primary); }
+.fb-btn--secondary:hover { background: var(--fb-brand-primary-soft); }
+.fb-btn--secondary:disabled { background: var(--fb-disabled-bg); color: var(--fb-disabled-text); border-color: var(--fb-border-subtle); }
+
+/* Dark-mode: brighten the secondary button border so the button outline
+   reads on a dark surface. --fb-border-default is intentionally dim for
+   inline form fields; the button outline needs more presence. */
+[data-theme="dark"] .fb-btn--secondary {
+  border-color: var(--fb-border-strong);
+}
+[data-theme="dark"] .fb-btn--secondary:hover { border-color: var(--fb-brand-primary); }
+
+.fb-btn--tertiary {
+  background: transparent;
+  color: var(--fb-on-surface-variant);
+}
+.fb-btn--tertiary:hover { background: var(--fb-surface-container-high); color: var(--fb-on-surface); }
+
+/* Tertiary button in the topbar should read more like a primary action link
+   (the Register / Landing page call-to-action). Use the on-surface color
+   so it has AA contrast against the topbar surface. */
+.fb-topbar .fb-btn--tertiary { color: var(--fb-on-surface); }
+.fb-topbar .fb-btn--tertiary:hover { color: var(--fb-brand-primary); }
+
+.fb-btn--danger {
+  background: var(--fb-error);
+  color: var(--fb-on-error);
+}
+.fb-btn--danger:hover { background: #991818; }
+.fb-btn--danger:disabled { background: var(--fb-disabled-bg); color: var(--fb-disabled-text); }
+
+.fb-btn--danger-strong {
+  background: #7F1D1D;
+  color: var(--fb-on-error);
+}
+.fb-btn--danger-strong:hover { background: #641111; }
+
+.fb-btn--success {
+  background: var(--fb-success);
+  color: var(--fb-on-success);
+}
+.fb-btn--success:hover { background: #246640; }
+
+.fb-btn[aria-busy="true"] { cursor: progress; opacity: 0.85; }
+.fb-btn__spinner {
+  width: 16px; height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: fb-spin 0.7s linear infinite;
+}
+@keyframes fb-spin { to { transform: rotate(360deg); } }
+
+/* ---------- Forms ---------- */
+.fb-field { display: flex; flex-direction: column; gap: var(--fb-space-2); }
+.fb-field__label { font-size: 14px; font-weight: 500; }
+.fb-field__label .fb-req { color: var(--fb-error); margin-left: 2px; }
+.fb-field__help { font-size: 13px; color: var(--fb-on-surface-variant); }
+.fb-field__error { font-size: 13px; font-weight: 500; color: var(--fb-error); }
+.fb-field__counter { font-size: 12px; color: var(--fb-on-surface-variant); text-align: right; font-variant-numeric: tabular-nums; }
+.fb-field__counter--warn { color: var(--fb-warning); }
+
+.fb-input,
+.fb-textarea,
+.fb-select {
+  font-family: inherit;
+  font-size: 15px;
+  height: 44px;
+  padding: 0 var(--fb-space-4);
+  background: var(--fb-surface);
+  color: var(--fb-on-surface);
+  border: 1px solid var(--fb-border-default);
+  border-radius: var(--fb-radius-md);
+  transition: border-color var(--fb-dur-fast), box-shadow var(--fb-dur-fast);
+  width: 100%;
+}
+.fb-textarea {
+  height: auto;
+  min-height: 96px;
+  padding: var(--fb-space-3) var(--fb-space-4);
+  resize: vertical;
+  line-height: 1.55;
+}
+.fb-input:focus,
+.fb-textarea:focus,
+.fb-select:focus {
+  border-color: var(--fb-focus-ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fb-focus-ring) 25%, transparent);
+}
+.fb-input[aria-invalid="true"],
+.fb-textarea[aria-invalid="true"],
+.fb-select[aria-invalid="true"] {
+  border-color: var(--fb-error);
+}
+.fb-input:disabled { background: var(--fb-disabled-bg); color: var(--fb-disabled-text); }
+
+.fb-checkbox,
+.fb-radio {
+  width: 20px; height: 20px;
+  accent-color: var(--fb-brand-primary);
+  cursor: pointer;
+}
+.fb-checkbox-row,
+.fb-radio-row {
+  display: flex; align-items: center; gap: var(--fb-space-2);
+  font-size: 15px;
+}
+
+/* Date input shares form styles; icon is browser-native. */
+
+.fb-sensitive-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--fb-space-2);
+  border-radius: var(--fb-radius-full);
+  background: var(--fb-warning-soft);
+  color: var(--fb-warning);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  margin-left: var(--fb-space-2);
+}
+[data-theme="dark"] .fb-sensitive-flag {
+  background: color-mix(in srgb, var(--fb-warning) 30%, transparent);
+  color: var(--fb-warning);
+}
+
+/* ---------- Cards ---------- */
+.fb-card {
+  background: var(--fb-surface);
+  border-radius: var(--fb-radius-lg);
+  padding: var(--fb-space-5);
+  box-shadow: var(--fb-elev-1);
+  border: 1px solid var(--fb-border-subtle);
+}
+.fb-card--interactive { cursor: pointer; transition: box-shadow var(--fb-dur-base), transform var(--fb-dur-base); }
+.fb-card--interactive:hover { box-shadow: var(--fb-elev-2); }
+.fb-card--interactive:focus-within { box-shadow: var(--fb-elev-2); }
+.fb-card__title { font-size: 16px; font-weight: 600; margin: 0; }
+
+/* ---------- Status badges (12 statuses) ---------- */
+.fb-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px var(--fb-space-3);
+  border-radius: var(--fb-radius-full);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.fb-status::before {
+  content: "";
+  display: inline-block;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: currentColor;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 14px 14px;
+  mask-size: 14px 14px;
+  flex-shrink: 0;
+}
+/* Status icons: simple inline SVG mask */
+.fb-status--open::before { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='9'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='9'/></svg>"); }
+.fb-status--claim-requested::before { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-6l-2 3h-4l-2-3H2'/><path d='M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 12h-6l-2 3h-4l-2-3H2'/><path d='M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z'/></svg>"); }
+.fb-status--claim-approved::before { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"); }
+.fb-status--returned::before { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='10'/><polyline points='9 12 11 14 15 10'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='10'/><polyline points='9 12 11 14 15 10'/></svg>"); }
+.fb-status--closed::before { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><rect x='2' y='4' width='20' height='5' rx='1'/><path d='M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9'/><line x1='10' y1='13' x2='14' y2='13'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><rect x='2' y='4' width='20' height='5' rx='1'/><path d='M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9'/><line x1='10' y1='13' x2='14' y2='13'/></svg>"); }
+.fb-status--pending::before { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M5 22h14'/><path d='M5 2h14'/><path d='M17 22v-4a4 4 0 0 0-4-4H9'/><path d='M7 2v4a4 4 0 0 0 4 4h2'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M5 22h14'/><path d='M5 2h14'/><path d='M17 22v-4a4 4 0 0 0-4-4H9'/><path d='M7 2v4a4 4 0 0 0 4 4h2'/></svg>"); }
+.fb-status--approved::before { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><polyline points='20 6 9 17 4 12'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><polyline points='20 6 9 17 4 12'/></svg>"); }
+.fb-status--rejected::before { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>"); }
+.fb-status--rejected-auto::before { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='15' y1='9' x2='9' y2='15'/><line x1='9' y1='9' x2='15' y2='15'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='15' y1='9' x2='9' y2='15'/><line x1='9' y1='9' x2='15' y2='15'/></svg>"); }
+.fb-status--active::before { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='10'/><polyline points='9 12 11 14 15 10'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='10'/><polyline points='9 12 11 14 15 10'/></svg>"); }
+.fb-status--deactivated::before { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><rect x='3' y='11' width='18' height='11' rx='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><rect x='3' y='11' width='18' height='11' rx='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>"); }
+
+/* Color variants */
+.fb-status--report-open           { background: var(--fb-status-report-open-soft); color: var(--fb-status-report-open-fg); }
+.fb-status--report-claimrequested { background: var(--fb-status-report-claimrequested-soft); color: var(--fb-status-report-claimrequested-fg); }
+.fb-status--report-claimapproved  { background: var(--fb-status-report-claimapproved-soft); color: var(--fb-status-report-claimapproved-fg); }
+.fb-status--report-returned       { background: var(--fb-status-report-returned-soft); color: var(--fb-status-report-returned-fg); }
+.fb-status--report-closed         { background: var(--fb-status-report-closed-soft); color: var(--fb-status-report-closed-fg); }
+.fb-status--claim-pending         { background: var(--fb-status-claim-pending-soft); color: var(--fb-status-claim-pending-fg); }
+.fb-status--claim-approved        { background: var(--fb-status-claim-approved-soft); color: var(--fb-status-claim-approved-fg); }
+.fb-status--claim-rejected        { background: var(--fb-status-claim-rejected-soft); color: var(--fb-status-claim-rejected-fg); }
+.fb-status--account-pending       { background: var(--fb-status-account-pending-soft); color: var(--fb-status-account-pending-fg); }
+.fb-status--account-active        { background: var(--fb-status-account-active-soft); color: var(--fb-status-account-active-fg); }
+.fb-status--account-rejected      { background: var(--fb-status-account-rejected-soft); color: var(--fb-status-account-rejected-fg); }
+.fb-status--account-deactivated   { background: var(--fb-status-account-deactivated-soft); color: var(--fb-status-account-deactivated-fg); }
+
+/* ---------- Type badge (Lost / Found) ---------- */
+.fb-type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--fb-space-3);
+  border-radius: var(--fb-radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.fb-type-badge--lost {
+  background: var(--fb-warning-soft);
+  color: var(--fb-warning);
+}
+.fb-type-badge--found {
+  background: var(--fb-success-soft);
+  color: var(--fb-success);
+}
+[data-theme="dark"] .fb-type-badge--lost { background: color-mix(in srgb, var(--fb-warning) 30%, transparent); }
+[data-theme="dark"] .fb-type-badge--found { background: color-mix(in srgb, var(--fb-success) 30%, transparent); }
+
+/* ---------- Alerts / banners ---------- */
+.fb-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--fb-space-3);
+  padding: var(--fb-space-4);
+  border-radius: var(--fb-radius-md);
+  border-left: 4px solid;
+  background: var(--fb-surface);
+  color: var(--fb-on-bg);
+}
+.fb-alert--success { border-left-color: var(--fb-success); background: var(--fb-success-soft); }
+.fb-alert--warning { border-left-color: var(--fb-warning); background: var(--fb-warning-soft); }
+.fb-alert--error   { border-left-color: var(--fb-error);   background: var(--fb-error-soft); }
+.fb-alert--info    { border-left-color: var(--fb-info);    background: var(--fb-info-soft); }
+.fb-alert--strong-warning {
+  border: 1px solid var(--fb-warning);
+  background: var(--fb-warning-soft);
+  padding: var(--fb-space-4) var(--fb-space-5);
+  border-radius: var(--fb-radius-md);
+  display: flex;
+  gap: var(--fb-space-3);
+  align-items: flex-start;
+}
+
+/* ---------- Tables ---------- */
+.fb-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--fb-surface);
+  border-radius: var(--fb-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--fb-elev-1);
+}
+.fb-table th {
+  text-align: left;
+  padding: var(--fb-space-3) var(--fb-space-4);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fb-on-surface-variant);
+  background: var(--fb-surface-dim);
+  border-bottom: 1px solid var(--fb-border-subtle);
+}
+.fb-table td {
+  padding: var(--fb-space-4);
+  border-bottom: 1px solid var(--fb-border-subtle);
+  vertical-align: middle;
+  font-size: 14px;
+}
+.fb-table tr:last-child td { border-bottom: none; }
+.fb-table tbody tr:hover { background: var(--fb-surface-container-low); }
+.fb-table__actions { text-align: right; white-space: nowrap; }
+@media (max-width: 768px) {
+  .fb-table thead { display: none; }
+  .fb-table, .fb-table tbody, .fb-table tr, .fb-table td { display: block; width: 100%; }
+  .fb-table tr { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-md); margin-bottom: var(--fb-space-3); padding: var(--fb-space-3); }
+  .fb-table td { padding: var(--fb-space-1) 0; border: none; }
+  .fb-table td::before {
+    content: attr(data-label);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fb-on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .fb-table__actions { text-align: left; margin-top: var(--fb-space-3); }
+}
+
+/* ---------- Modals ---------- */
+.fb-modal-backdrop {
+  position: fixed; inset: 0;
+  background: var(--fb-surface-overlay);
+  z-index: var(--fb-z-modal-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--fb-space-4);
+}
+.fb-modal {
+  background: var(--fb-surface);
+  border-radius: var(--fb-radius-lg);
+  box-shadow: var(--fb-elev-3);
+  max-width: 520px;
+  width: 100%;
+  padding: var(--fb-space-6);
+  z-index: var(--fb-z-modal);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.fb-modal__title { font-size: 20px; font-weight: 600; margin: 0 0 var(--fb-space-3); }
+.fb-modal__body { color: var(--fb-on-surface-variant); font-size: 15px; line-height: 1.55; }
+.fb-modal__actions { display: flex; justify-content: flex-end; gap: var(--fb-space-3); margin-top: var(--fb-space-5); flex-wrap: wrap; }
+
+/* ---------- Empty state ---------- */
+.fb-empty {
+  text-align: center;
+  padding: var(--fb-space-12) var(--fb-space-6);
+  background: var(--fb-surface);
+  border-radius: var(--fb-radius-lg);
+  border: 1px dashed var(--fb-border-default);
+}
+.fb-empty__icon {
+  width: 48px; height: 48px;
+  margin: 0 auto var(--fb-space-4);
+  border-radius: var(--fb-radius-full);
+  background: var(--fb-surface-container);
+  color: var(--fb-on-surface-variant);
+  display: flex; align-items: center; justify-content: center;
+}
+.fb-empty__title { font-size: 18px; font-weight: 600; margin: 0 0 var(--fb-space-2); }
+.fb-empty__body { color: var(--fb-on-surface-variant); margin: 0 0 var(--fb-space-5); }
+
+/* ---------- Toast ---------- */
+.fb-toast-container {
+  position: fixed;
+  bottom: var(--fb-space-6);
+  right: var(--fb-space-6);
+  display: flex; flex-direction: column; gap: var(--fb-space-3);
+  z-index: var(--fb-z-toast);
+  max-width: 360px;
+}
+@media (max-width: 640px) {
+  .fb-toast-container { right: 50%; transform: translateX(50%); }
+}
+.fb-toast {
+  background: var(--fb-surface);
+  color: var(--fb-on-surface);
+  padding: var(--fb-space-4) var(--fb-space-5);
+  border-radius: var(--fb-radius-md);
+  box-shadow: var(--fb-elev-3);
+  border-left: 4px solid var(--fb-brand-primary);
+  font-size: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--fb-space-3);
+}
+.fb-toast--success { border-left-color: var(--fb-success); }
+.fb-toast--error   { border-left-color: var(--fb-error); }
+
+/* ---------- Theme toggle (icon button + popover) ---------- */
+/* Wrapper. Position:relative anchors the popover; inline-flex keeps the
+   trigger flush in the topbar actions row. */
+.fb-theme-toggle { position: relative; display: inline-flex; }
+
+/* Trigger: square 44×44 icon button. Same outline as the secondary button
+   (border-default on light, border-strong on dark) for parity. */
+.fb-theme-toggle__trigger {
+  width: 44px; height: 44px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--fb-surface);
+  color: var(--fb-on-surface-variant);
+  border: 1px solid var(--fb-border-default);
+  border-radius: var(--fb-radius-md);
+  cursor: pointer;
+  transition: background var(--fb-dur-fast) var(--fb-ease-standard),
+              color var(--fb-dur-fast) var(--fb-ease-standard),
+              border-color var(--fb-dur-fast) var(--fb-ease-standard);
+}
+.fb-theme-toggle__trigger:hover {
+  background: var(--fb-surface-container-high);
+  color: var(--fb-on-surface);
+}
+.fb-theme-toggle--open .fb-theme-toggle__trigger,
+.fb-theme-toggle__trigger[aria-expanded="true"] {
+  background: var(--fb-brand-primary-soft);
+  color: var(--fb-brand-primary);
+  border-color: var(--fb-brand-primary);
+}
+[data-theme="dark"] .fb-theme-toggle__trigger { border-color: var(--fb-border-strong); }
+[data-theme="dark"] .fb-theme-toggle--open .fb-theme-toggle__trigger,
+[data-theme="dark"] .fb-theme-toggle__trigger[aria-expanded="true"] {
+  border-color: var(--fb-brand-primary);
+}
+
+/* Icon: 20×20, currentColor via mask. Three states swap the SVG mask. */
+.fb-theme-toggle__icon {
+  display: inline-block;
+  width: 20px; height: 20px;
+  background: currentColor;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 20px 20px;
+  mask-size: 20px 20px;
+  flex-shrink: 0;
+}
+/* Sun (light) */
+.fb-theme-toggle__icon,
+.fb-theme-toggle__icon--sun {
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><path d='M12 2v2'/><path d='M12 20v2'/><path d='m4.93 4.93 1.41 1.41'/><path d='m17.66 17.66 1.41 1.41'/><path d='M2 12h2'/><path d='M20 12h2'/><path d='m4.93 19.07 1.41-1.41'/><path d='m17.66 6.34 1.41-1.41'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><path d='M12 2v2'/><path d='M12 20v2'/><path d='m4.93 4.93 1.41 1.41'/><path d='m17.66 17.66 1.41 1.41'/><path d='M2 12h2'/><path d='M20 12h2'/><path d='m4.93 19.07 1.41-1.41'/><path d='m17.66 6.34 1.41-1.41'/></svg>");
+}
+/* Moon (dark) */
+.fb-theme-toggle__icon--moon {
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>");
+}
+/* Half-circle (system) — half-filled disc with horizontal split */
+.fb-theme-toggle__icon--half {
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'/><path d='M12 3v18'/><path d='M12 3a9 9 0 0 1 0 18z' fill='currentColor'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'/><path d='M12 3v18'/><path d='M12 3a9 9 0 0 1 0 18z' fill='currentColor'/></svg>");
+}
+
+/* Popover menu: drops below the trigger, right-aligned, with elevation. */
+.fb-theme-toggle__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  background: var(--fb-surface);
+  border: 1px solid var(--fb-border-subtle);
+  border-radius: var(--fb-radius-md);
+  box-shadow: var(--fb-elev-3);
+  padding: var(--fb-space-1);
+  z-index: var(--fb-z-sticky);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fb-theme-toggle__menu[hidden] { display: none; }
+/* Caret/arrow above the popover — small visual anchor to the trigger. */
+.fb-theme-toggle__menu::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: 16px;
+  width: 12px; height: 12px;
+  background: var(--fb-surface);
+  border-top: 1px solid var(--fb-border-subtle);
+  border-left: 1px solid var(--fb-border-subtle);
+  transform: rotate(45deg);
+}
+
+.fb-theme-toggle__menu button {
+  display: flex;
+  align-items: center;
+  gap: var(--fb-space-3);
+  width: 100%;
+  padding: var(--fb-space-2) var(--fb-space-3);
+  background: transparent;
+  border: none;
+  border-radius: var(--fb-radius-sm);
+  cursor: pointer;
+  color: var(--fb-on-surface);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  transition: background var(--fb-dur-fast) var(--fb-ease-standard);
+}
+.fb-theme-toggle__menu button:hover {
+  background: var(--fb-surface-container-high);
+}
+.fb-theme-toggle__menu button[aria-checked="true"] {
+  background: var(--fb-brand-primary-soft);
+  color: var(--fb-brand-primary);
+  font-weight: 600;
+}
+.fb-theme-toggle__menu button .fb-theme-toggle__icon {
+  /* Slightly smaller inside the menu to balance with the text label. */
+  width: 18px; height: 18px;
+}
+
+/* Reduced motion: popover opens without animation. */
+@media (prefers-reduced-motion: reduce) {
+  .fb-theme-toggle__menu { transition: none; }
+}
+
+/* ---------- Utility: hidden-from-members ---------- */
+.fb-hidden-from-members {
+  position: relative;
+}
+.fb-hidden-from-members .fb-hidden-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--fb-on-surface-variant);
+  font-style: italic;
+}
+.fb-hidden-from-members .fb-hidden-content {
+  display: none;
+}
+
+/* ---------- Item detail layout ---------- */
+.fb-detail__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--fb-space-3);
+  margin-bottom: var(--fb-space-5);
+}
+.fb-detail__title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  flex: 1;
+}
+.fb-detail__grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--fb-space-6);
+}
+@media (max-width: 768px) { .fb-detail__grid { grid-template-columns: 1fr; } }
+
+.fb-detail__image {
+  background: var(--fb-surface-container);
+  border-radius: var(--fb-radius-lg);
+  aspect-ratio: 4 / 3;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--fb-on-surface-variant);
+  font-size: 14px;
+  border: 1px solid var(--fb-border-subtle);
+}
+.fb-detail__section { padding: var(--fb-space-5) 0; border-top: 1px solid var(--fb-border-subtle); }
+.fb-detail__section:first-child { border-top: none; padding-top: 0; }
+.fb-detail__section-title {
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--fb-on-surface-variant);
+  margin: 0 0 var(--fb-space-3);
+}
+
+/* ---------- Competing claims banner ---------- */
+.fb-compete-banner {
+  background: var(--fb-warning-soft);
+  border: 1px solid var(--fb-warning);
+  border-radius: var(--fb-radius-md);
+  padding: var(--fb-space-4);
+  display: flex;
+  gap: var(--fb-space-3);
+  align-items: flex-start;
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -16,9 +16,9 @@ style: "Warm & trustworthy"
 colors:
   # ── Brand ────────────────────────────────────────────────────────────────
   brand:
-    primary: "#C2410C"          # Warm terracotta — single warm accent
-    primary-hover: "#9A330A"
-    primary-active: "#7C2907"
+    primary: "#7C2907"          # Deep firebrick — single warm accent. Bold enough to read as a CTA from any viewing distance.
+    primary-hover: "#5C1F05"
+    primary-active: "#3D1403"
     primary-soft: "#FFE7D6"      # Soft fill for primary backgrounds
     on-primary: "#FFFFFF"
 
@@ -47,7 +47,7 @@ colors:
     border-default: "#D1C5B0"
     border-strong: "#9A8E78"
 
-    focus-ring: "#C2410C"        # Same as primary for consistency
+    focus-ring: "#7C2907"        # Same as primary for consistency
     focus-ring-offset: "#FAF7F2"
 
     disabled-bg: "#ECE5D9"
@@ -106,8 +106,8 @@ colors:
 
   # ── Status colors (report lifecycle) ────────────────────────────────────
   status-report:
-    open:          { fg: "#7C2907", soft: "#FFE7D6", icon: "#C2410C" }
-    claimRequested:{ fg: "#7C2907", soft: "#FFE7D6", icon: "#C2410C" }
+    open:          { fg: "#7C2907", soft: "#FFE7D6", icon: "#7C2907" }
+    claimRequested:{ fg: "#7C2907", soft: "#FFE7D6", icon: "#7C2907" }
     claimApproved: { fg: "#7C2D12", soft: "#FEF3C7", icon: "#B45309" }
     returned:      { fg: "#1E5A4E", soft: "#D6EBE5", icon: "#2D7A4F" }
     closed:        { fg: "#5C5246", soft: "#ECE5D9", icon: "#9A8E78" }
@@ -341,12 +341,15 @@ icon:
   size-lg: "24px"
 
 logo:
+  concept: "Pin + Recovery Arrow + Item — Lost → Found → Back to Owner"
   wordmark:
-    light: "/assets/logo-wordmark-light.svg"
-    dark: "/assets/logo-wordmark-dark.svg"
+    currentColor: "/assets/logo-wordmark.svg"   # uses currentColor; pairs with CSS theme tokens
+    light: "/assets/logo-wordmark-light.svg"   # hard-coded brand primary for non-CSS contexts
+    dark: "/assets/logo-wordmark-dark.svg"     # hard-coded dark-theme accent for non-CSS contexts
   mark:
-    light: "/assets/logo-mark-light.svg"
-    dark: "/assets/logo-mark-dark.svg"
+    currentColor: "/assets/logo-mark.svg"      # uses currentColor; pairs with CSS theme tokens
+    light: "/assets/logo-mark-light.svg"       # hard-coded brand primary
+    dark: "/assets/logo-mark-dark.svg"         # hard-coded dark-theme accent
   favicon: "/assets/favicon.svg"
   app-icon: "/assets/app-icon.svg"
 
@@ -391,7 +394,7 @@ scrollbar:
 
 ### Brand
 
-- **Terracotta `#C2410C`** — primary brand accent. Used for primary buttons, primary links, focus rings, and key status indicators (Open, Claim Requested). It is warm, not aggressive. Use sparingly — one terracotta accent per visible viewport where possible.
+- **Deep firebrick `#7C2907`** — primary brand accent. Used for primary buttons, primary links, focus rings, and key status indicators (Open, Claim Requested). It is warm but bold enough that white text reads against it with 9.65:1 contrast (AAA) — the same punch the previous hover state had is now available in the resting state. Use sparingly — one firebrick accent per visible viewport where possible.
 - **Evergreen `#1E5A4E`** — secondary brand color. Used for Returned status, success-adjacent affordances, and supporting links. It signals "good outcome" without competing with terracotta for attention.
 
 ### Light theme
@@ -410,7 +413,7 @@ scrollbar:
 | `border-subtle` | `#E7DFD1` | Card edges, dividers |
 | `border-default` | `#D1C5B0` | Form inputs, table borders |
 | `border-strong` | `#9A8E78` | Hover borders, strong dividers |
-| `focus-ring` | `#C2410C` | Visible focus indicator |
+| `focus-ring` | `#7C2907` | Visible focus indicator |
 | `disabled-bg` | `#ECE5D9` | Disabled controls |
 | `disabled-text` | `#9A8E78` | Disabled text |
 
@@ -450,8 +453,8 @@ scrollbar:
 
 | Status | Foreground | Soft fill | Icon |
 |---|---|---|---|
-| Open | `#7C2907` | `#FFE7D6` | `#C2410C` |
-| Claim Requested | `#7C2907` | `#FFE7D6` | `#C2410C` |
+| Open | `#7C2907` | `#FFE7D6` | `#7C2907` |
+| Claim Requested | `#7C2907` | `#FFE7D6` | `#7C2907` |
 | Claim Approved | `#7C2D12` | `#FEF3C7` | `#B45309` |
 | Returned | `#1E5A4E` | `#D6EBE5` | `#2D7A4F` |
 | Closed | `#5C5246` | `#ECE5D9` | `#9A8E78` |
@@ -693,6 +696,19 @@ We do not mix sharp and rounded geometry. No "skeuomorphic" notches, no chamfere
 - Always paired with `aria-label` describing the action ("Close", "Toggle theme", "Next page").
 - Mobile: "Prev / 1 of 5 / Next" with the count collapsed when ≤ 5 pages.
 
+### Theme toggle (topbar icon button + popover menu)
+
+- **Trigger.** A 44 × 44 square icon button in the topbar (radius = `radius.md` = 10 px, **not** fully rounded — distinguishes it from the segmented control it replaced). Border = `border-default` light / `border-strong` dark. Background = `surface` at rest, `surface-container-high` on hover, `brand-primary-soft` + `brand-primary` border when the popover is open.
+- **Trigger icon (20 × 20).** Stroke-only line icons rendered via CSS `mask-image` + `currentColor`. Three states:
+  - **Sun** → Light is active.
+  - **Moon** → Dark is active.
+  - **Half-filled circle** (left half solid, right half outline) → System (follows OS) is active.
+- **Trigger labels.** `aria-label="Theme: <System|Light|Dark>. Click to change."` and `title="Theme: <state>"`, both updated reactively when the selection changes.
+- **Popover.** A small floating menu, `position: absolute`, dropped below the trigger (8 px gap), right-aligned to the trigger's right edge. Min-width 180 px, surface background, `border-subtle`, `elev-3` shadow, `radius.md` rounding. A 12 × 12 px arrow at the top of the popover anchors it to the trigger.
+- **Menu items.** Three `role="menuitemradio"` buttons, each with the matching icon + visible label (`System`, `Light`, `Dark`). Active item: `aria-checked="true"`, `brand-primary-soft` background, `brand-primary` color, `font-weight: 600`. Hover: `surface-container-high` background.
+- **Close triggers.** Item click (selects + closes + returns focus to trigger). Click outside the toggle. `Escape` key (also returns focus to trigger).
+- **Keyboard.** Tab to trigger; Enter/Space opens menu; ArrowDown/ArrowUp navigates items; Home/End jumps to first/last; Enter selects; Escape closes.
+
 ### Image upload
 
 - Drop zone: dashed `1 px` `{border-default}` border, `surface-dim` background. Hover/drag-active: border becomes `{brand.primary}`, background becomes `{brand.primary-soft}`.
@@ -712,45 +728,70 @@ We do not mix sharp and rounded geometry. No "skeuomorphic" notches, no chamfere
 
 ### Concept
 
-The FindBack logo is a **rounded monogram + wordmark**. The monogram is a stylized "FB" inside a soft squircle (rounded square) — the squircle reads as a friendly badge, an object you might pin to a bulletin board. The wordmark is set in the system font, `headline-md` weight.
+The FindBack logo is a single, deliberately designed **Pin + Recovery Arrow + Item** mark that communicates the product journey at a glance:
 
-The mark uses the **brand primary terracotta** fill on light backgrounds, and a softer, brighter variant on dark backgrounds (the `focus-ring` token on dark, which is the dark-theme accent).
+```
+   Lost          →          Found          →          Back to Owner
+   (item in pin)            (pin + item)                (arrow lifts out)
+```
+
+The mark is constructed from one integrated glyph, not three stacked icons:
+
+- **Pin head** — a teardrop circle with a soft point at the bottom. Reads as the place where something was lost or found. Recognizable as a location pin even at small sizes.
+- **Item** — a generic rounded-rectangle package silhouette with a tape line down the middle, sitting inside the pin head. Deliberately generic so it does not commit to any single category (wallet, phone, key, bag, etc.).
+- **Recovery arrow** — a curved stroke that begins inside the pin over the item, arcs up and to the right, and exits the pin's edge with an arrowhead. The curve communicates "recovery / return to owner" rather than a generic forward arrow; the arrow's tail at the item is the climax beat of the journey.
+
+The wordmark pairs the mark with the literal word "FindBack" in the system font at `headline-md` weight. The wordmark is the default for product surfaces; the standalone mark is used for favicons, app icons, and compact headers.
+
+### Color treatment
+
+| Theme | Mark strokes | Item fill | Wordmark fill |
+|---|---|---|---|
+| Light (default) | Brand primary `#7C2907` | Surface `#FFFFFF` | `on-background` `#1F1B16` |
+| Dark | Dark-theme accent `#FB923C` | On-surface `#F5EFE5` | On-background `#F5EFE5` |
+
+The mark uses **single ink color + one knockout fill** for the item — a single SVG therefore works on both light and dark backgrounds (via `currentColor`), and the brand's identity stays consistent.
 
 ### Variants
 
 | Variant | Use |
 |---|---|
-| `logo-wordmark-light` | Light theme top bar, light-background docs |
-| `logo-wordmark-dark` | Dark theme top bar |
-| `logo-mark-light` | Favicon, app icon, compact headers |
-| `logo-mark-dark` | Same, dark theme |
-| `favicon` | Browser tab, bookmarks |
-| `app-icon` | PWA install, OS app launcher |
+| `logo-wordmark.svg` (currentColor) | Default wordmark in product surfaces. Inherits color from CSS `color` on the wrapping element. |
+| `logo-mark.svg` (currentColor) | Standalone mark for compact headers, illustrations, footer. Same currentColor behavior. |
+| `logo-wordmark-light.svg` | Hard-coded brand primary for non-CSS contexts (emails, exported PDFs, README badges). |
+| `logo-wordmark-dark.svg` | Hard-coded dark-theme accent for dark-background contexts without CSS variables. |
+| `logo-mark-light.svg` | Mark only, light theme hard-coded. |
+| `logo-mark-dark.svg` | Mark only, dark theme hard-coded. |
+| `favicon.svg` | Browser tab, bookmarks. Simplified silhouette — pin + item + single-stroke arrow. |
+| `app-icon.svg` | 512 × 512 PWA / OS app launcher icon. Mark on a brand-primary rounded-square tile. |
 
-### Logo assets (placeholder paths — Architecture will replace with generated SVGs)
+### Logo assets
 
 ```
-/assets/logo-wordmark-light.svg
-/assets/logo-wordmark-dark.svg
-/assets/logo-mark-light.svg
-/assets/logo-mark-dark.svg
-/assets/favicon.svg
-/assets/app-icon.svg
+mockups/assets/
+├── logo-wordmark.svg            # Default wordmark (currentColor)
+├── logo-wordmark-light.svg      # Wordmark, brand-primary hard-coded
+├── logo-wordmark-dark.svg       # Wordmark, dark-accent hard-coded
+├── logo-mark.svg                # Standalone mark (currentColor)
+├── logo-mark-light.svg          # Mark, brand-primary hard-coded
+├── logo-mark-dark.svg           # Mark, dark-accent hard-coded
+├── favicon.svg                  # Browser tab icon
+└── app-icon.svg                 # 512×512 OS app icon
 ```
 
 ### Clear space and minimum size
 
 - Clear space: 16 px on all sides of the mark, 24 px around the full wordmark.
-- Minimum size, mark: 24 px tall.
+- Minimum size, mark: **20 px tall** (lower than the previous badge minimum because the new construction is line-art and survives small sizes more cleanly than a filled monogram). At 16 px (favicon) the simplified favicon silhouette is preferred.
 - Minimum size, wordmark: 96 px wide.
 - Don't: place the logo on busy photographic backgrounds; always use a solid surface or transparent area.
 
 ### Usage rules
 
-- Use the variant that matches the current theme. Never invert colors by hand.
+- Use the variant that matches the current theme. The `currentColor` variants pair with the `--fb-logo-color` token (`#7C2907` light / `#F5EFE5` dark). The hard-coded variants are for export / non-CSS contexts.
 - Never outline, recolor, or stretch the logo.
 - Never place two logos next to each other (e.g., light + dark side by side).
-- The wordmark is the default for product surfaces; the mark is for favicons and compact headers only.
+- The wordmark is the default for product surfaces; the standalone mark is for favicons, app icons, and compact headers only.
 
 ---
 

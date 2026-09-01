@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brown leather wallet — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-detail__crumb { font-size: 13px; color: var(--fb-on-surface-variant); margin-bottom: var(--fb-space-3); }
+    .fb-detail__title-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fb-space-3); margin-bottom: var(--fb-space-5); }
+    .fb-detail__title { font-size: 28px; font-weight: 700; margin: 0; flex: 1; }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="01-listings-anon.html">Lost &amp; Found</a>
+      <a href="07-my-reports.html">My reports</a>
+      <a href="10-my-claims.html">My claims</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions">
+      <a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Report an item</a>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1" class="fb-page">
+    <nav class="fb-detail__crumb" aria-label="Breadcrumb">
+      <a href="02-listings-member.html">Lost &amp; Found</a> › <span aria-current="page">Brown leather wallet</span>
+    </nav>
+
+    <div class="fb-detail__title-row">
+      <h1 class="fb-detail__title">Brown leather wallet</h1>
+      <span class="fb-type-badge fb-type-badge--found">Found</span>
+      <span class="fb-status fb-status--report-claimrequested" aria-label="Status: claim requested">Claim Requested</span>
+    </div>
+
+    <div class="fb-detail__grid">
+      <div>
+        <div class="fb-detail__image" aria-label="No image attached">
+          <span>📷 No image</span>
+        </div>
+
+        <section class="fb-detail__section" aria-labelledby="desc-h">
+          <h2 id="desc-h" class="fb-detail__section-title">Description</h2>
+          <p>Bifold wallet in dark brown leather, slightly worn. Looks like it had been sitting on a study table. I picked it up near the end of the day.</p>
+        </section>
+
+        <section class="fb-detail__section" aria-labelledby="match-h">
+          <h2 id="match-h" class="fb-detail__section-title">Does this look familiar?</h2>
+          <p>If this might be yours, submit a claim with a reason and identifying details. The reporter will be notified.</p>
+          <div style="margin-top: var(--fb-space-4);">
+            <a href="11-submit-claim.html" class="fb-btn fb-btn--primary">Submit a claim</a>
+          </div>
+        </section>
+      </div>
+
+      <aside>
+        <div class="fb-card">
+          <h2 class="fb-detail__section-title" style="margin: 0 0 var(--fb-space-3);">Quick facts</h2>
+          <dl class="fb-stack" style="margin: 0;">
+            <div>
+              <dt class="fb-caption">Category</dt>
+              <dd style="margin: 2px 0 0 0;">Wallet</dd>
+            </div>
+            <div>
+              <dt class="fb-caption">Date found</dt>
+              <dd style="margin: 2px 0 0 0;"><time>Mar 16, 2026</time></dd>
+            </div>
+            <div>
+              <dt class="fb-caption">Found at</dt>
+              <dd style="margin: 2px 0 0 0;">Main Library</dd>
+            </div>
+            <div class="fb-hidden-from-members">
+              <dt class="fb-caption">Exact place <span class="fb-sensitive-flag">Sensitive</span></dt>
+              <dd style="margin: 2px 0 0 0;">
+                <span class="fb-hidden-note">Hidden until you have a relationship to this item</span>
+                <span class="fb-hidden-content">2nd floor reading room, Table 7, west window</span>
+              </dd>
+            </div>
+            <div class="fb-hidden-from-members">
+              <dt class="fb-caption">Identifying details <span class="fb-sensitive-flag">Sensitive</span></dt>
+              <dd style="margin: 2px 0 0 0;">
+                <span class="fb-hidden-note">Hidden until you have a relationship to this item</span>
+                <span class="fb-hidden-content">Embossed initials "MC" on the inside right pocket</span>
+              </dd>
+            </div>
+            <div>
+              <dt class="fb-caption">Reporter</dt>
+              <dd style="margin: 2px 0 0 0;">Sam K.</dd>
+            </div>
+            <div>
+              <dt class="fb-caption">Submitted</dt>
+              <dd style="margin: 2px 0 0 0;"><time>Mar 16, 2026 · 18:42</time></dd>
+            </div>
+          </dl>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-1 Maya · Step 4 of 13 (member, no relationship)</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="02-listings-member.html">← Previous</a>
+        <a href="../index.html">All journeys</a>
+        <a href="11-submit-claim.html">Next →</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>
