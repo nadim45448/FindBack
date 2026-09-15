@@ -19,17 +19,16 @@
     })();
   </script>
   <style>
-    .fb-page { max-width: var(--fb-container-wide); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
-    .fb-filters { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-4); display: grid; grid-template-columns: 2fr 1fr 1fr; gap: var(--fb-space-3); margin-bottom: var(--fb-space-5); }
-    .fb-table tbody tr td:first-child { font-family: ui-monospace, monospace; font-size: 13px; }
+    .fb-page { max-width: var(--fb-container-wide); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
+    .fb-table tbody tr td:first-child { font-variant-numeric: tabular-nums; }
     body { padding-bottom: 80px; }
   </style>
 </head>
-<body>
+<body class="fb-topbar--admin">
   <a href="#main" class="fb-skip-link">Skip to main content</a>
 
   <header class="fb-topbar">
-    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+    <a href="01-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
       <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
       <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
@@ -63,111 +62,16 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <span class="fb-status fb-status--account-active">Riley P.</span>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
-  <main id="main" tabindex="-1" class="fb-page">
-    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-3);">Audit trail</h1>
-    <p class="fb-helper" style="margin-bottom: var(--fb-space-5);">Append-only record of all administrative and lifecycle events on reports and claims. Visible only to administrators.</p>
-
-    <form class="fb-filters" aria-label="Filter audit events" onsubmit="event.preventDefault();">
-      <div>
-        <label class="fb-field__label" for="kw">Search</label>
-        <input class="fb-input" type="search" id="kw" name="kw" placeholder="Actor, target, action…">
-      </div>
-      <div>
-        <label class="fb-field__label" for="evt">Event type</label>
-        <select class="fb-select" id="evt" name="evt">
-          <option value="">All</option>
-          <option>Report created</option>
-          <option>Report edited</option>
-          <option>Report withdrawn</option>
-          <option>Report closed</option>
-          <option>Claim submitted</option>
-          <option>Claim approved</option>
-          <option>Claim rejected</option>
-          <option>Claim auto-rejected</option>
-          <option>Return confirmed</option>
-          <option>Message posted</option>
-          <option>Account registered</option>
-          <option>Account approved</option>
-          <option>Account rejected</option>
-          <option>Account deactivated</option>
-        </select>
-      </div>
-      <div>
-        <label class="fb-field__label" for="target">Target</label>
-        <select class="fb-select" id="target" name="target">
-          <option value="">All</option>
-          <option>Reports</option>
-          <option>Claims</option>
-          <option>Accounts</option>
-        </select>
-      </div>
-    </form>
-
-    <table class="fb-table">
-      <thead>
-        <tr>
-          <th>Timestamp</th>
-          <th>Actor</th>
-          <th>Action</th>
-          <th>Target</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr aria-label="At Mar 17, 11:30, Riley P. approved claim 501 on item 1004">
-          <td data-label="Timestamp"><time>Mar 17, 11:30</time></td>
-          <td data-label="Actor">Riley P. (admin)</td>
-          <td data-label="Action">Claim approved</td>
-          <td data-label="Target">Claim 501 · Item 1004</td>
-          <td data-label="Notes">1 pending claim on item; no auto-rejection</td>
-        </tr>
-        <tr aria-label="At Mar 13, 14:20, Riley P. approved claim 487 on item 1003; two competing claims auto-rejected">
-          <td data-label="Timestamp"><time>Mar 13, 14:20</time></td>
-          <td data-label="Actor">Riley P. (admin)</td>
-          <td data-label="Action">Claim approved</td>
-          <td data-label="Target">Claim 487 · Item 1003</td>
-          <td data-label="Notes">Claims 489, 492 auto-rejected (reason: another claim was approved for this item)</td>
-        </tr>
-        <tr aria-label="At Mar 13, 14:20, claims 489 and 492 auto-rejected">
-          <td data-label="Timestamp"><time>Mar 13, 14:20</time></td>
-          <td data-label="Actor">Riley P. (admin) — auto</td>
-          <td data-label="Action">Claim auto-rejected</td>
-          <td data-label="Target">Claims 489, 492 · Item 1003</td>
-          <td data-label="Notes">Reason: another claim was approved for this item</td>
-        </tr>
-        <tr aria-label="At Mar 17, 09:14, Maya C. submitted claim 501">
-          <td data-label="Timestamp"><time>Mar 17, 09:14</time></td>
-          <td data-label="Actor">Maya C. (member)</td>
-          <td data-label="Action">Claim submitted</td>
-          <td data-label="Target">Claim 501 · Item 1004</td>
-          <td data-label="Notes">Reason: "I lost my wallet at the library on Mar 16…"</td>
-        </tr>
-        <tr aria-label="At Mar 16, 18:42, Sam K. created report 1004">
-          <td data-label="Timestamp"><time>Mar 16, 18:42</time></td>
-          <td data-label="Actor">Sam K. (member)</td>
-          <td data-label="Action">Report created</td>
-          <td data-label="Target">Item 1004</td>
-          <td data-label="Notes">Brown leather wallet · found at Main Library</td>
-        </tr>
-        <tr aria-label="At Mar 16, 12:00, Alex Rivera registered">
-          <td data-label="Timestamp"><time>Mar 16, 12:00</time></td>
-          <td data-label="Actor">Alex Rivera</td>
-          <td data-label="Action">Account registered</td>
-          <td data-label="Target">alex.rivera@example.org</td>
-          <td data-label="Notes">Role: Employee · status: Pending</td>
-        </tr>
-      </tbody>
-    </table>
+  <main id="main" tabindex="-1" class="fb-page" data-page="admin-audit">
+    <div data-admin-root><div class="fb-listings__empty">Loading…</div></div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 12 of 12 (audit)</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 12 of 13 (audit)</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="11-confirm-returned-substitute.html">← Previous</a>
         <a href="../index.html">All journeys</a>
@@ -176,6 +80,20 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
+  <script src="../assets/admin-renderer.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var admin = window.FB.state.getCurrentUser();
+      if (!admin || admin.role !== 'administrator') {
+        window.location.href = '../public/02-login.html';
+        return;
+      }
+      var root = document.querySelector('[data-admin-root]');
+      window.FB.adminRender.auditTrail(root);
+    });
+  </script>
 </body>
 </html>

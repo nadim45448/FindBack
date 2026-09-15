@@ -19,19 +19,15 @@
     })();
   </script>
   <style>
-    .fb-page { max-width: var(--fb-container-wide); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
-    .fb-review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--fb-space-5); margin-bottom: var(--fb-space-5); }
-    @media (max-width: 900px) { .fb-review-grid { grid-template-columns: 1fr; } }
-    .fb-actions { display: flex; justify-content: flex-end; gap: var(--fb-space-3); margin-top: var(--fb-space-5); flex-wrap: wrap; }
-    .fb-context-row { display: flex; align-items: center; gap: var(--fb-space-3); margin-bottom: var(--fb-space-5); }
+    .fb-page { max-width: var(--fb-container-wide); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
     body { padding-bottom: 80px; }
   </style>
 </head>
-<body>
+<body class="fb-topbar--admin">
   <a href="#main" class="fb-skip-link">Skip to main content</a>
 
   <header class="fb-topbar">
-    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+    <a href="01-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
       <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
       <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
@@ -65,70 +61,16 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <span class="fb-status fb-status--account-active">Riley P.</span>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1" class="fb-page">
-    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
-      <a href="05-pending-claims.html">Pending claims</a> › <span aria-current="page">Claim on "Brown leather wallet"</span>
-    </nav>
-
-    <div class="fb-context-row">
-      <h1 class="fb-h2" style="margin: 0;">Review claim</h1>
-      <span class="fb-status fb-status--claim-pending">Pending</span>
-    </div>
-
-    <div class="fb-compete-banner" style="margin-bottom: var(--fb-space-5);">
-      <span aria-hidden="true">ℹ</span>
-      <div>
-        <strong>1 pending claim on this item.</strong>
-        <p style="margin: var(--fb-space-1) 0 0; font-size: 14px;">Approving this claim will move the item to <strong>Claim Approved</strong>. There are no other pending claims to auto-reject.</p>
-      </div>
-    </div>
-
-    <div class="fb-review-grid">
-      <div class="fb-card">
-        <h2 class="fb-detail__section-title" style="margin: 0 0 var(--fb-space-3);">Item details</h2>
-        <dl style="margin: 0;">
-          <div><dt class="fb-caption">Name</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;"><strong>Brown leather wallet</strong></dd></div>
-          <div><dt class="fb-caption">Type</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;"><span class="fb-type-badge fb-type-badge--found">Found</span></dd></div>
-          <div><dt class="fb-caption">Found at</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;">Main Library · 2nd floor reading room, Table 7, west window</dd></div>
-          <div><dt class="fb-caption">Date found</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;"><time>Mar 16, 2026</time></dd></div>
-          <div><dt class="fb-caption">Reporter</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;">Sam K.</dd></div>
-          <div><dt class="fb-caption">Description</dt><dd style="margin: 2px 0 0 0;">Bifold wallet in dark brown leather, slightly worn. Looks like it had been sitting on a study table.</dd></div>
-        </dl>
-      </div>
-
-      <div class="fb-card">
-        <h2 class="fb-detail__section-title" style="margin: 0 0 var(--fb-space-3);">This claim</h2>
-        <dl style="margin: 0;">
-          <div><dt class="fb-caption">Claimant</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;"><strong>Maya C.</strong></dd></div>
-          <div><dt class="fb-caption">Claimant email</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;">maya.chen@example.org</dd></div>
-          <div><dt class="fb-caption">Submitted</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;"><time>Mar 17, 2026 · 09:14</time></dd></div>
-          <div><dt class="fb-caption">Date lost (claimant says)</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;"><time>Mar 16, 2026</time></dd></div>
-          <div>
-            <dt class="fb-caption">Reason</dt>
-            <dd style="margin: 2px 0 var(--fb-space-3) 0;">I lost my wallet at the library on Mar 16 around 5pm. It has my initials embossed inside the right pocket and contains my driver's license, three credit cards, and a photo of my dog.</dd>
-          </div>
-          <div>
-            <dt class="fb-caption">Identifying details</dt>
-            <dd style="margin: 2px 0 0 0;">Initials MC. Driver's license in the name of M. Chen. Last four digits of credit cards: 4421, 8819, 0034.</dd>
-          </div>
-        </dl>
-      </div>
-    </div>
-
-    <div class="fb-actions">
-      <a href="08-claim-reject.html" class="fb-btn fb-btn--danger">Reject this claim</a>
-      <a href="08-claim-approve.html" class="fb-btn fb-btn--success">Approve this claim</a>
-    </div>
+    <div data-admin-root><div class="fb-listings__empty">Loading…</div></div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 4 of 12</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 5 of 13</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="05-pending-claims.html">← Previous</a>
         <a href="../index.html">All journeys</a>
@@ -137,6 +79,30 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
+  <script src="../assets/admin-renderer.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var admin = window.FB.state.getCurrentUser();
+      if (!admin || admin.role !== 'administrator') {
+        window.location.href = '../public/02-login.html';
+        return;
+      }
+      var params = new URLSearchParams(window.location.search);
+      var claimId = params.get('claim');
+      if (!claimId) {
+        // Default to first pending claim that doesn't have competitors.
+        var allPending = window.FB.state.listClaims().filter(function (c) { return c.status === 'pending'; });
+        var reportCount = {};
+        allPending.forEach(function (c) { reportCount[c.reportId] = (reportCount[c.reportId] || 0) + 1; });
+        var solo = allPending.find(function (c) { return reportCount[c.reportId] === 1; });
+        claimId = (solo || allPending[0] || {}).id || 'clm_wallet_maya';
+      }
+      var root = document.querySelector('[data-admin-root]');
+      window.FB.adminRender.claimReview(root, claimId);
+    });
+  </script>
 </body>
 </html>

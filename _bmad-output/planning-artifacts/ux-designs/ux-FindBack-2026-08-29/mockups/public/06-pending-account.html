@@ -66,7 +66,7 @@
     </div>
     <div class="fb-topbar__actions">
       <span class="fb-status-row"><span class="fb-status fb-status--account-pending" aria-label="Account status: pending">Pending</span></span>
-      <a href="#" class="fb-btn fb-btn--tertiary fb-btn--sm" data-mock-confirm="Sign out of FindBack?">Sign out</a>
+      <a href="#" class="fb-btn fb-btn--tertiary fb-btn--sm" data-sign-out>Sign out</a>
     </div>
   </header>
 
@@ -75,16 +75,16 @@
       <span class="fb-banner__icon" aria-hidden="true">⏳</span>
       <div class="fb-banner__body">
         <strong>Your account is pending administrator approval.</strong>
-        You can sign in, but you can't report items or submit claims until an administrator activates your account. We'll email <em>alex.rivera@example.org</em> when there's an update.
+        You can sign in, but you can't report items or submit claims until an administrator activates your account. We'll email <em data-pending-email>your registered email</em> when there's an update.
       </div>
     </div>
   </div>
 
   <main id="main" tabindex="-1" class="fb-page fb-page--narrow">
-    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Welcome, Alex.</h1>
+    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Welcome, <span data-pending-name>there</span>.</h1>
     <div class="fb-card">
       <h2 class="fb-h3" style="margin-bottom: var(--fb-space-3);">What happens next</h2>
-      <p>An administrator will review your registration. Most accounts are reviewed within one business day. You'll receive an email at <strong>alex.rivera@example.org</strong> when your account is approved.</p>
+      <p>An administrator will review your registration. Most accounts are reviewed within one business day. You'll receive an email at <strong data-pending-email>your registered email</strong> when your account is approved.</p>
       <p style="margin-top: var(--fb-space-3);">Until then, the following actions are unavailable:</p>
       <ul style="margin-top: var(--fb-space-2); padding-left: var(--fb-space-5); color: var(--fb-on-surface-variant);">
         <li>Reporting a lost or found item</li>
@@ -106,6 +106,26 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var user = window.FB && window.FB.state && window.FB.state.getCurrentUser();
+      if (user) {
+        document.querySelectorAll('[data-pending-name]').forEach(function (el) { el.textContent = user.name.split(' ')[0] || user.name; });
+        document.querySelectorAll('[data-pending-email]').forEach(function (el) { el.textContent = user.email; });
+      }
+      var signOut = document.querySelector('[data-sign-out]');
+      if (signOut) {
+        signOut.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (window.confirm('Sign out of FindBack?')) {
+            window.FB.state.logout();
+            window.location.href = '01-landing.html';
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>

@@ -19,15 +19,15 @@
     })();
   </script>
   <style>
-    .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
     body { padding-bottom: 80px; }
   </style>
 </head>
-<body>
+<body class="fb-topbar--admin">
   <a href="#main" class="fb-skip-link">Skip to main content</a>
 
   <header class="fb-topbar">
-    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+    <a href="01-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
       <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
       <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
@@ -61,65 +61,16 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <span class="fb-status fb-status--account-active">Riley P.</span>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
-  <main id="main" tabindex="-1" class="fb-page">
-    <div class="fb-row fb-row--between" style="margin-bottom: var(--fb-space-5); flex-wrap: wrap; gap: var(--fb-space-3);">
-      <h1 class="fb-h2">Pending registrations</h1>
-      <p class="fb-helper">3 awaiting review · ordered by submission time</p>
-    </div>
-
-    <table class="fb-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Role</th>
-          <th>Submitted</th>
-          <th class="fb-table__actions">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Name"><strong>Alex Rivera</strong></td>
-          <td data-label="Email">alex.rivera@example.org</td>
-          <td data-label="Role">Employee</td>
-          <td data-label="Submitted"><time>Mar 17, 09:00</time></td>
-          <td class="fb-table__actions">
-            <a href="03-registration-approve.html" class="fb-btn fb-btn--success fb-btn--sm">Approve</a>
-            <a href="04-registration-reject.html" class="fb-btn fb-btn--danger fb-btn--sm">Reject</a>
-          </td>
-        </tr>
-        <tr>
-          <td data-label="Name"><strong>Priya Patel</strong></td>
-          <td data-label="Email">priya.patel@example.org</td>
-          <td data-label="Role">Student</td>
-          <td data-label="Submitted"><time>Mar 17, 08:30</time></td>
-          <td class="fb-table__actions">
-            <a href="03-registration-approve.html" class="fb-btn fb-btn--success fb-btn--sm">Approve</a>
-            <a href="04-registration-reject.html" class="fb-btn fb-btn--danger fb-btn--sm">Reject</a>
-          </td>
-        </tr>
-        <tr>
-          <td data-label="Name"><strong>Jordan Lee</strong></td>
-          <td data-label="Email">jordan.lee@example.org</td>
-          <td data-label="Role">Visitor</td>
-          <td data-label="Submitted"><time>Mar 16, 17:00</time></td>
-          <td class="fb-table__actions">
-            <a href="03-registration-approve.html" class="fb-btn fb-btn--success fb-btn--sm">Approve</a>
-            <a href="04-registration-reject.html" class="fb-btn fb-btn--danger fb-btn--sm">Reject</a>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <main id="main" tabindex="-1" class="fb-page" data-page="admin-registrations">
+    <div data-admin-root><div class="fb-listings__empty">Loading…</div></div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 2 of 12 (UJ-3 Alex · Step 4 of 8)</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 2 of 13 (UJ-3 Alex · Step 4 of 8)</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="01-dashboard.html">← Previous</a>
         <a href="../index.html">All journeys</a>
@@ -128,6 +79,20 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
+  <script src="../assets/admin-renderer.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var admin = window.FB.state.getCurrentUser();
+      if (!admin || admin.role !== 'administrator') {
+        window.location.href = '../public/02-login.html';
+        return;
+      }
+      var root = document.querySelector('[data-admin-root]');
+      window.FB.adminRender.pendingRegistrations(root);
+    });
+  </script>
 </body>
 </html>

@@ -19,17 +19,17 @@
     })();
   </script>
   <style>
-    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
     .fb-field + .fb-field { margin-top: var(--fb-space-4); }
     .fb-actions { display: flex; justify-content: flex-end; gap: var(--fb-space-3); margin-top: var(--fb-space-5); flex-wrap: wrap; }
     body { padding-bottom: 80px; }
   </style>
 </head>
-<body>
+<body class="fb-topbar--admin">
   <a href="#main" class="fb-skip-link">Skip to main content</a>
 
   <header class="fb-topbar">
-    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+    <a href="01-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
       <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
       <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
@@ -63,54 +63,16 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <span class="fb-status fb-status--account-active">Riley P.</span>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1" class="fb-page">
-    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
-      <a href="09-items-awaiting-return.html">Awaiting return</a> › <span aria-current="page">Brown leather wallet</span>
-    </nav>
-    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Confirm returned</h1>
-
-    <div class="fb-card" style="margin-bottom: var(--fb-space-5);">
-      <p style="margin: 0;"><strong>Brown leather wallet</strong> (Item ID 1004) · Approved claimant: <strong>Maya C.</strong></p>
-    </div>
-
-    <form data-mock-form data-next="09-items-awaiting-return.html" data-toast="Returned confirmed. Item moved to Returned.">
-      <div class="fb-field">
-        <label class="fb-field__label">Receiver</label>
-        <div class="fb-radio-row" style="margin-bottom: var(--fb-space-2);">
-          <input class="fb-radio" type="radio" id="r-default" name="receiver" value="default" checked>
-          <label for="r-default">Default: Maya C. (the claimant)</label>
-        </div>
-        <div class="fb-radio-row">
-          <input class="fb-radio" type="radio" id="r-sub" name="receiver" value="substitute">
-          <label for="r-sub">Substitute receiver (different person collected on the claimant's behalf)</label>
-        </div>
-      </div>
-      <div class="fb-alert fb-alert--success">
-        <div>
-          <strong>This will:</strong>
-          <ul style="margin: var(--fb-space-1) 0 0; padding-left: var(--fb-space-5);">
-            <li>Record you (Riley P.) as the confirming administrator</li>
-            <li>Record the receiver: <strong>Maya C.</strong> (default claimant receiver)</li>
-            <li>Move the item to <strong>Returned</strong> (terminal)</li>
-            <li>Record this in the audit trail</li>
-          </ul>
-        </div>
-      </div>
-      <div class="fb-actions">
-        <a href="09-items-awaiting-return.html" class="fb-btn fb-btn--tertiary">Cancel</a>
-        <button type="submit" class="fb-btn fb-btn--primary">Confirm returned to Maya C.</button>
-      </div>
-    </form>
+    <div data-admin-root><div class="fb-listings__empty">Loading…</div></div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 11 of 12 (default receiver)</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 10 of 13 (default receiver)</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="09-items-awaiting-return.html">← Previous</a>
         <a href="../index.html">All journeys</a>
@@ -119,6 +81,85 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
+  <script src="../assets/admin-renderer.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var admin = window.FB.state.getCurrentUser();
+      if (!admin || admin.role !== 'administrator') {
+        window.location.href = '../public/02-login.html';
+        return;
+      }
+      var esc = window.FB.adminRender.escapeHtml;
+      var params = new URLSearchParams(window.location.search);
+      var reportId = params.get('report');
+      if (!reportId) {
+        // First awaiting-return report.
+        var awaiting = window.FB.state.listReports().find(function (r) { return r.status === 'claimApproved'; });
+        reportId = awaiting ? awaiting.id : 'rpt_charger_approved';
+      }
+      var report = window.FB.state.getReport(reportId);
+      if (!report) {
+        document.querySelector('[data-admin-root]').innerHTML = '<div class="fb-listings__empty"><strong>Report not found.</strong></div>';
+        return;
+      }
+      var approvedClaim = window.FB.state.listClaimsForReport(reportId).find(function (c) { return c.status === 'approved'; });
+      var claimant = approvedClaim ? window.FB.state.getUser(approvedClaim.claimantId) : null;
+      var root = document.querySelector('[data-admin-root]');
+      var html = '';
+      html += '<nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">';
+      html += '  <a href="09-items-awaiting-return.html">Awaiting return</a> › <span aria-current="page">' + esc(report.name) + '</span>';
+      html += '</nav>';
+      html += '<h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Confirm returned</h1>';
+      html += '<div class="fb-card" style="margin-bottom: var(--fb-space-5);">';
+      html += '  <p style="margin: 0;"><strong>' + esc(report.name) + '</strong> (' + esc(report.id) + ') &middot; Approved claimant: <strong>' + esc(claimant ? claimant.name : '—') + '</strong></p>';
+      html += '</div>';
+      html += '<form data-return-form>';
+      html += '  <div class="fb-field">';
+      html += '    <label class="fb-field__label">Receiver</label>';
+      html += '    <div class="fb-radio-row" style="margin-bottom: var(--fb-space-2);">';
+      html += '      <input class="fb-radio" type="radio" id="r-default" name="receiver" value="default" checked>';
+      html += '      <label for="r-default">Default: <strong>' + esc(claimant ? claimant.name : '—') + '</strong> (the claimant)</label>';
+      html += '    </div>';
+      html += '    <div class="fb-radio-row">';
+      html += '      <input class="fb-radio" type="radio" id="r-sub" name="receiver" value="substitute">';
+      html += '      <label for="r-sub">Substitute receiver (different person collected on the claimant\'s behalf)</label>';
+      html += '    </div>';
+      html += '  </div>';
+      html += '  <div class="fb-alert fb-alert--success">';
+      html += '    <div><strong>This will:</strong><ul style="margin: var(--fb-space-1) 0 0; padding-left: var(--fb-space-5);">';
+      html += '      <li>Record you (' + esc(admin.name) + ') as the confirming administrator</li>';
+      html += '      <li>Record the receiver: <strong>' + esc(claimant ? claimant.name : '—') + '</strong> (default claimant receiver)</li>';
+      html += '      <li>Move the item to <strong>Returned</strong> (terminal)</li>';
+      html += '      <li>Record this in the audit trail</li>';
+      html += '    </ul></div>';
+      html += '  </div>';
+      html += '  <div class="fb-actions">';
+      html += '    <a href="09-items-awaiting-return.html" class="fb-btn fb-btn--tertiary">Cancel</a>';
+      html += '    <button type="submit" class="fb-btn fb-btn--primary">Confirm returned to ' + esc(claimant ? claimant.name : '—') + '</button>';
+      html += '  </div>';
+      html += '</form>';
+      root.innerHTML = html;
+      var form = root.querySelector('[data-return-form]');
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var type = form.querySelector('[name="receiver"]:checked').value;
+        if (type === 'substitute') {
+          window.location.href = '11-confirm-returned-substitute.html?report=' + encodeURIComponent(report.id);
+          return;
+        }
+        var updated = window.FB.state.confirmReturned(report.id, admin.id, { type: 'default', name: claimant ? claimant.name : '—' });
+        if (!updated) {
+          window.FB.toast('This report can no longer be confirmed as returned.', 'error');
+          window.location.href = '09-items-awaiting-return.html';
+          return;
+        }
+        window.FB.toast('Returned confirmed. Item moved to Returned.', 'success');
+        setTimeout(function () { window.location.href = '09-items-awaiting-return.html'; }, 250);
+      });
+    });
+  </script>
 </body>
 </html>

@@ -19,8 +19,8 @@
     })();
   </script>
   <style>
-    .fb-page { max-width: var(--fb-container-wide); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
-    .fb-journey { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-5); margin-bottom: var(--fb-space-5); }
+    .fb-page { max-width: var(--fb-container-wide); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
+    .fb-journey { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-5); margin-bottom: var(--fb-space-5); box-shadow: var(--fb-elev-1); }
     .fb-journey h2 { margin: 0 0 var(--fb-space-3); display: flex; align-items: center; gap: var(--fb-space-3); flex-wrap: wrap; }
     .fb-journey__tag { font-size: 13px; font-weight: 500; padding: 4px var(--fb-space-3); border-radius: var(--fb-radius-full); background: var(--fb-brand-primary-soft); color: var(--fb-brand-primary); }
     .fb-flow { display: flex; gap: var(--fb-space-2); flex-wrap: wrap; align-items: center; margin-top: var(--fb-space-3); }
@@ -31,6 +31,22 @@
     .fb-journey__lede { color: var(--fb-on-surface-variant); margin: 0 0 var(--fb-space-3); }
     .fb-aside { background: var(--fb-info-soft); border-left: 4px solid var(--fb-info); border-radius: var(--fb-radius-md); padding: var(--fb-space-4); margin-bottom: var(--fb-space-5); }
     .fb-aside p { margin: 0; color: var(--fb-on-bg); }
+    .fb-demo-controls {
+      background: var(--fb-surface);
+      border: 1px solid var(--fb-border-default);
+      border-radius: var(--fb-radius-lg);
+      padding: var(--fb-space-5);
+      margin-bottom: var(--fb-space-6);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--fb-space-5);
+    }
+    @media (max-width: 768px) { .fb-demo-controls { grid-template-columns: 1fr; } }
+    .fb-demo-controls h2 { margin: 0 0 var(--fb-space-3); font-size: 18px; }
+    .fb-demo-controls p { color: var(--fb-on-surface-variant); margin: 0 0 var(--fb-space-3); font-size: 14px; }
+    .fb-prototype-tools {
+      display: flex; gap: var(--fb-space-2); flex-wrap: wrap;
+    }
     body { padding-bottom: 80px; }
   </style>
 </head>
@@ -38,7 +54,7 @@
   <a href="#main" class="fb-skip-link">Skip to main content</a>
 
   <header class="fb-topbar">
-    <a href="public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+    <a href="public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home — go to public landing">
       <img src="assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
       <img src="assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
@@ -68,18 +84,25 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <a href="public/01-landing.html" class="fb-btn fb-btn--secondary fb-btn--sm">Landing page</a>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1" class="fb-page">
     <h1 class="fb-h2" style="margin-bottom: var(--fb-space-3);">FindBack — interactive prototype</h1>
-    <p class="fb-helper" style="margin-bottom: var(--fb-space-5);">Click into any of the four user journeys below. Each screen has a mockup-nav at the bottom with Previous / All journeys / Next links so you don't lose your place.</p>
+    <p class="fb-helper" style="margin-bottom: var(--fb-space-5);">High-fidelity prototype using shared client-side state. Persona actions persist across pages and across personas. Click into any of the four user journeys below; each screen has a mockup-nav at the bottom with Previous / All journeys / Next links.</p>
 
     <div class="fb-aside">
       <p><strong>Source of truth:</strong> PRD FR-1..FR-39, EXPERIENCE.md (behavior), DESIGN.md (visual). The mockups below are a prototype of the product — not a redesign.</p>
     </div>
+
+    <div class="fb-aside" style="border-left-color: var(--fb-brand-primary); background: var(--fb-brand-primary-soft);">
+      <p><strong>Claim demo item (Active Member flow):</strong> <a href="member/03-item-detail-member.html?item=rpt_backpack_found"><strong>Found Black Backpack</strong></a> &mdash; reported by Sam, Main Library study carrel 4C, <code>open</code> status, no existing claim from Maya. Maya can sign in → open this item → Submit a claim &rarr; the claim becomes <em>Pending</em>, appears in <a href="member/10-my-claims.html">My Claims</a>, and shows up in Riley's <a href="admin/05-pending-claims.html">Pending Claims</a> queue. Use this item to walk UJ-1 end-to-end without needing to first reject any other seed claim.</p>
+    </div>
+
+    <!-- Prototype-only controls: clearly isolated from production FindBack UX.
+         The demo credentials live inside this panel (see app.js mountPrototypePanel),
+         so a duplicate section in the page body is no longer needed. -->
+    <div data-prototype-controls-slot></div>
 
     <h2 class="fb-h3" style="margin: var(--fb-space-6) 0 var(--fb-space-4);">Theme &amp; accessibility</h2>
     <p>Toggle <strong>Auto / Light / Dark</strong> in the top bar. Light and dark use the same brand tokens; status colors rebalance for dark backgrounds.</p>
@@ -89,7 +112,7 @@
     <!-- UJ-1 Maya -->
     <section class="fb-journey" aria-labelledby="uj1">
       <h2 id="uj1"><span class="fb-flow__step-num">UJ-1</span> Maya — "I lost my wallet and want it back" <span class="fb-journey__tag">Member → Member → Admin</span></h2>
-      <p class="fb-journey__lede">Reports a lost wallet, browses Found Items, finds a match, submits a claim, gets it approved, and receives it back.</p>
+      <p class="fb-journey__lede">Reports a lost wallet, browses Found Items, finds a match (use the seeded <strong>Found Black Backpack</strong> — <code>rpt_backpack_found</code>), submits a claim, gets it approved, and receives it back.</p>
       <div class="fb-flow">
         <a href="public/01-landing.html">1. Landing</a><span class="fb-flow__arrow">→</span>
         <a href="public/02-login.html">2. Sign in</a><span class="fb-flow__arrow">→</span>
@@ -99,21 +122,19 @@
         <a href="member/02-listings-member.html">3. Listings (member)</a><span class="fb-flow__arrow">→</span>
         <a href="member/03-item-detail-member.html">4. Item detail (no relationship)</a><span class="fb-flow__arrow">→</span>
         <a href="member/11-submit-claim.html">5. Submit claim</a><span class="fb-flow__arrow">→</span>
-        <a href="member/12-claim-pending.html">6. Claim Pending</a><span class="fb-flow__arrow">→</span>
+        <a href="member/13-claim-detail.html">6. Claim thread</a><span class="fb-flow__arrow">→</span>
         <a href="admin/06-claim-review.html">7. Admin reviews claim</a><span class="fb-flow__arrow">→</span>
         <a href="admin/08-claim-approve.html">8. Admin approves</a><span class="fb-flow__arrow">→</span>
-        <a href="member/13-claim-detail.html">9. Claim thread</a><span class="fb-flow__arrow">→</span>
-        <a href="member/05-item-detail-claimant.html">10. Item detail (claimant view)</a><span class="fb-flow__arrow">→</span>
-        <a href="admin/09-items-awaiting-return.html">11. Admin: items awaiting return</a><span class="fb-flow__arrow">→</span>
-        <a href="admin/10-confirm-returned-default.html">12. Admin: confirm returned</a><span class="fb-flow__arrow">→</span>
-        <a href="member/06-item-detail-returned.html">13. Returned</a>
+        <a href="admin/09-items-awaiting-return.html">9. Items awaiting return</a><span class="fb-flow__arrow">→</span>
+        <a href="admin/10-confirm-returned-default.html">10. Confirm returned</a><span class="fb-flow__arrow">→</span>
+        <a href="member/06-item-detail-returned.html">11. Returned</a>
       </div>
     </section>
 
     <!-- UJ-2 Sam -->
     <section class="fb-journey" aria-labelledby="uj2">
       <h2 id="uj2"><span class="fb-flow__step-num">UJ-2</span> Sam — "I found a phone and want to return it" <span class="fb-journey__tag">Member → Admin</span></h2>
-      <p class="fb-journey__lede">Reports a found phone, receives an email when a member claims it, sees the claim in their report, watches admin approve, records the physical return.</p>
+      <p class="fb-journey__lede">Reports a found phone, sees incoming claim messages, watches admin approve, records the physical return.</p>
       <div class="fb-flow">
         <a href="public/02-login.html">1. Sign in</a><span class="fb-flow__arrow">→</span>
         <a href="member/15-report-found.html">2. Report found item</a><span class="fb-flow__arrow">→</span>
@@ -157,7 +178,7 @@
         <a href="admin/08-claim-approve.html">6. Approve confirmation</a><span class="fb-flow__arrow">→</span>
         <a href="admin/07-claim-review-competing.html">7. Competing claims review</a><span class="fb-flow__arrow">→</span>
         <a href="admin/08-claim-reject.html">8. Reject confirmation</a><span class="fb-flow__arrow">→</span>
-        <a href="member/16-claim-rejected-detail.html">9. Auto-rejected claimant view</a><span class="fb-flow__arrow">→</span>
+        <a href="member/16-claim-rejected-detail.html">9. Rejected claimant view</a><span class="fb-flow__arrow">→</span>
         <a href="admin/09-items-awaiting-return.html">10. Items awaiting return</a><span class="fb-flow__arrow">→</span>
         <a href="admin/10-confirm-returned-default.html">11a. Confirm returned (default)</a><span class="fb-flow__arrow">→</span>
         <a href="admin/11-confirm-returned-substitute.html">11b. Confirm returned (substitute)</a><span class="fb-flow__arrow">→</span>
@@ -166,8 +187,30 @@
       </div>
     </section>
 
+    <!-- UJ-5 Anonymous Visitor -->
+    <section class="fb-journey" aria-labelledby="uj5">
+      <h2 id="uj5"><span class="fb-flow__step-num">UJ-5</span> Anonymous Visitor — "I'm looking for something I lost" <span class="fb-journey__tag">Public → Sign-in CTA</span></h2>
+      <p class="fb-journey__lede">Visits the public landing, browses and filters the public Lost &amp; Found summary, hits the authentication boundary on any item detail or authenticated action, then chooses to sign in or register.</p>
+      <p class="fb-helper" style="margin: 0 0 var(--fb-space-3);">Anonymous visitors see only <strong>type, category, location, date, and status</strong>. Item detail pages, claims, reports, member dashboard, my-reports, my-claims, and all administrator pages are gated.</p>
+      <div class="fb-flow">
+        <a href="public/01-landing.html">1. Public landing</a><span class="fb-flow__arrow">→</span>
+        <a href="member/01-listings-anon.html">2. Browse Lost &amp; Found (anonymous)</a><span class="fb-flow__arrow">→</span>
+        <span class="fb-flow__arrow" title="Search &amp; filter available on this page">⇄</span>
+        <a href="member/01-listings-anon.html">3. Search &amp; filter (keyword, category, location, type)</a><span class="fb-flow__arrow">→</span>
+        <span class="fb-flow__arrow" title="Auth boundary">↘</span>
+        <a href="public/02-login.html">4a. Auth boundary — item card → Sign in</a><span class="fb-flow__arrow">→</span>
+        <a href="public/03-register.html">4b. …or Create an account</a><span class="fb-flow__arrow">→</span>
+        <a href="public/05-register-confirmation.html">5. Registration confirmation</a><span class="fb-flow__arrow">→</span>
+        <a href="public/06-pending-account.html">6. Pending approval (awaiting administrator)</a>
+      </div>
+      <p class="fb-helper" style="margin-top: var(--fb-space-3);"><strong>Anonymous CAN:</strong> view landing · browse public summaries · use keyword/category/location/type filters · see item card meta only · navigate to Sign in · navigate to Register.</p>
+      <p class="fb-helper" style="margin: var(--fb-space-2) 0 0;"><strong>Anonymous CANNOT:</strong> open item detail · submit a claim · post claim messages · create Lost/Found reports · view My reports / My claims / Member Dashboard · access any administrator page. Attempts redirect to <a href="public/02-login.html">Sign in</a> with <code>?next=</code> preserved.</p>
+    </section>
+
     <h2 class="fb-h3" style="margin: var(--fb-space-6) 0 var(--fb-space-4);">Quick links</h2>
     <div class="fb-flow">
+      <a href="public/01-landing.html">Public landing</a>
+      <a href="member/01-listings-anon.html">Anonymous listings</a>
       <a href="member/02-listings-member.html">Member listings</a>
       <a href="member/07-dashboard.html">Member dashboard</a>
       <a href="member/08-my-reports.html">My reports</a>
@@ -193,6 +236,7 @@
     </div>
   </nav>
 
+  <script src="assets/state.js"></script>
   <script src="assets/app.js"></script>
 </body>
 </html>

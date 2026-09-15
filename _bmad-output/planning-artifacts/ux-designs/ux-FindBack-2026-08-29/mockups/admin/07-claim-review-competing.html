@@ -19,19 +19,15 @@
     })();
   </script>
   <style>
-    .fb-page { max-width: var(--fb-container-wide); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
-    .fb-compete-banner { background: var(--fb-warning-soft); border: 1px solid var(--fb-warning); border-radius: var(--fb-radius-md); padding: var(--fb-space-4); margin-bottom: var(--fb-space-5); display: flex; gap: var(--fb-space-3); align-items: flex-start; }
-    .fb-compete-list { display: grid; gap: var(--fb-space-4); }
-    .fb-claim-card { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-5); }
-    .fb-claim-card__head { display: flex; align-items: center; gap: var(--fb-space-3); margin-bottom: var(--fb-space-3); flex-wrap: wrap; }
+    .fb-page { max-width: var(--fb-container-wide); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
     body { padding-bottom: 80px; }
   </style>
 </head>
-<body>
+<body class="fb-topbar--admin">
   <a href="#main" class="fb-skip-link">Skip to main content</a>
 
   <header class="fb-topbar">
-    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+    <a href="01-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
       <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
       <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
@@ -65,83 +61,16 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <span class="fb-status fb-status--account-active">Riley P.</span>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1" class="fb-page">
-    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
-      <a href="05-pending-claims.html">Pending claims</a> › <span aria-current="page">"Black iPhone 14" — competing claims</span>
-    </nav>
-
-    <div class="fb-row" style="margin-bottom: var(--fb-space-5); flex-wrap: wrap; gap: var(--fb-space-3);">
-      <h1 class="fb-h2" style="margin: 0;">3 competing claims</h1>
-      <span class="fb-status fb-status--report-claimrequested">Claim Requested</span>
-    </div>
-
-    <div class="fb-compete-banner" role="status">
-      <span aria-hidden="true" style="font-size: 24px;">⚠</span>
-      <div>
-        <strong>Only one claim can be approved per item.</strong>
-        <p style="margin: var(--fb-space-1) 0 0; font-size: 14px;">Approving one of these claims will automatically reject the other two with the reason "another claim was approved for this item". Each claimant will be emailed. The item moves to <strong>Claim Approved</strong>.</p>
-      </div>
-    </div>
-
-    <h2 class="fb-h3" style="margin-bottom: var(--fb-space-3);">Item summary</h2>
-    <div class="fb-card" style="margin-bottom: var(--fb-space-5);">
-      <p style="margin: 0;"><strong>Black iPhone 14</strong> · <span class="fb-type-badge fb-type-badge--found">Found</span> at Science Building, Mar 12 · Reporter: Sam K.</p>
-    </div>
-
-    <h2 class="fb-h3" style="margin-bottom: var(--fb-space-3);">Pending claims</h2>
-    <div class="fb-compete-list">
-      <div class="fb-claim-card">
-        <div class="fb-claim-card__head">
-          <strong style="font-size: 17px;">Maya C.</strong>
-          <span class="fb-helper">Claim 487 · <time>Mar 13, 14:20</time></span>
-          <span class="fb-status fb-status--claim-pending">Pending</span>
-        </div>
-        <p style="margin: var(--fb-space-2) 0;"><strong>Reason:</strong> Black iPhone 14, model MQ8X3LL/A, lost around 1pm near the Science Building atrium.</p>
-        <p style="margin: 0;"><strong>Identifying details:</strong> Lock screen photo of a hiking trail; case has a small chip on the upper-right corner.</p>
-        <div class="fb-row" style="margin-top: var(--fb-space-4); gap: var(--fb-space-2);">
-          <a href="08-claim-approve.html" class="fb-btn fb-btn--success fb-btn--sm">Approve this claim</a>
-          <a href="08-claim-reject.html" class="fb-btn fb-btn--danger fb-btn--sm">Reject</a>
-        </div>
-      </div>
-
-      <div class="fb-claim-card">
-        <div class="fb-claim-card__head">
-          <strong style="font-size: 17px;">Devon K.</strong>
-          <span class="fb-helper">Claim 489 · <time>Mar 13, 16:42</time></span>
-          <span class="fb-status fb-status--claim-pending">Pending</span>
-        </div>
-        <p style="margin: var(--fb-space-2) 0;"><strong>Reason:</strong> Lost while reviewing in the science building. Has a sticker of a purple orchid on the back.</p>
-        <p style="margin: 0;"><strong>Identifying details:</strong> IMEI last four digits 7733. Lock-screen wallpaper is a beach photo.</p>
-        <div class="fb-row" style="margin-top: var(--fb-space-4); gap: var(--fb-space-2);">
-          <a href="08-claim-approve.html" class="fb-btn fb-btn--success fb-btn--sm">Approve this claim</a>
-          <a href="08-claim-reject.html" class="fb-btn fb-btn--danger fb-btn--sm">Reject</a>
-        </div>
-      </div>
-
-      <div class="fb-claim-card">
-        <div class="fb-claim-card__head">
-          <strong style="font-size: 17px;">Robin H.</strong>
-          <span class="fb-helper">Claim 492 · <time>Mar 14, 09:10</time></span>
-          <span class="fb-status fb-status--claim-pending">Pending</span>
-        </div>
-        <p style="margin: var(--fb-space-2) 0;"><strong>Reason:</strong> Lost it at the science building. I have a backup of my data, can verify with carrier.</p>
-        <p style="margin: 0;"><strong>Identifying details:</strong> Phone number 555-0142, IMEI 354-227-7733.</p>
-        <div class="fb-row" style="margin-top: var(--fb-space-4); gap: var(--fb-space-2);">
-          <a href="08-claim-approve.html" class="fb-btn fb-btn--success fb-btn--sm">Approve this claim</a>
-          <a href="08-claim-reject.html" class="fb-btn fb-btn--danger fb-btn--sm">Reject</a>
-        </div>
-      </div>
-    </div>
+    <div data-admin-root><div class="fb-listings__empty">Loading…</div></div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 7 of 12 (competing claims)</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 6 of 13 (competing claims)</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="06-claim-review.html">← Previous</a>
         <a href="../index.html">All journeys</a>
@@ -150,6 +79,30 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
+  <script src="../assets/admin-renderer.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var admin = window.FB.state.getCurrentUser();
+      if (!admin || admin.role !== 'administrator') {
+        window.location.href = '../public/02-login.html';
+        return;
+      }
+      var params = new URLSearchParams(window.location.search);
+      var reportId = params.get('report');
+      if (!reportId) {
+        // Find a report with multiple pending claims.
+        var pending = window.FB.state.listClaims().filter(function (c) { return c.status === 'pending'; });
+        var byReport = {};
+        pending.forEach(function (c) { (byReport[c.reportId] = byReport[c.reportId] || []).push(c); });
+        var compReport = Object.keys(byReport).find(function (k) { return byReport[k].length > 1; });
+        reportId = compReport || pending[0].reportId;
+      }
+      var root = document.querySelector('[data-admin-root]');
+      window.FB.adminRender.competingClaims(root, reportId);
+    });
+  </script>
 </body>
 </html>

@@ -797,17 +797,29 @@ A vertical list of messages, oldest at top, newest at bottom. Each message:
 - **Send error.** "We couldn't send your message. Try again." Composer retains input.
 - **Server error (history fetch).** "We couldn't load the conversation. Try again."
 
-### 13.5 Read-only logic (OQ-4)
+### 13.5 Read-only logic (OQ-4) — final
 
-PRD FR-26 closes the thread when the claim is `Approved`, `Rejected`, or the item is `Closed`. OQ-4 asks whether the thread should also close at `Returned`.
+The thread is **read-only** as soon as any of these conditions becomes true:
 
-**UX recommendation:** *Close at `Returned` as well.* Once the item is `Returned`, the workflow is over. Continuing to post messages after the physical handoff is confusing — both participants would be writing into a void. The thread becomes read-only at `Returned`, alongside the existing closed states.
+- The claim is `approved` (Pass-3 final UX decision; locking at approval, not at return).
+- The claim is `rejected`.
+- The item is `returned`.
+- The item is `closed`.
 
-> **Why:** the purpose of the per-claim thread is to support the active claim workflow. Once the item is physically returned, the conversation has achieved its purpose. Read-only history remains visible so members can refer back.
+While the claim is `pending` (and the item is not returned/closed), the thread is writable for the claimant, the finder (reporter of the Found item), and administrators.
 
-> **User impact:** claimants and finders see an inline notice at `Returned`: "This conversation is now read-only because the item has been returned."
+**Rationale (Pass-3 decision).** The thread exists to coordinate the *active* claim. Once a claim is `approved`, the active claim is over — the next stage is physical handoff, which is arranged out-of-band by the administrator. Allowing further messages on an approved claim muddies the record (the read-only notice tells the user "your claim was approved" rather than "we are still discussing it"). The thread closes at `returned` and `closed` because the item lifecycle has ended; `rejected` because the claim is terminal.
 
-**The PRD's stated rule is "Approved, Rejected, or Closed"; UX proposes extending to "Returned". The PRD's OQ-4 explicitly says the owner of the question is PM and the revisit is "After UX design pass."** UX is making this recommendation as part of that revisit. If PM accepts, FR-26 wording should be updated to include `Returned`.
+> **Read-only notice variants** (mirrored in `13-claim-detail.html`):
+>
+> - Approved: *"This thread is read-only because this claim has been approved. An administrator will arrange the handoff."*
+> - Rejected: *"This thread is read-only because this claim has been rejected."*
+> - Returned: *"This thread is read-only because the item has been returned."*
+> - Closed: *"This thread is read-only because this report has been closed."*
+>
+> Each variant ends with: *"Existing messages remain available for reference, but no new messages can be posted."*
+
+State-layer enforcement lives in `mockups/assets/state.js` (`isThreadReadOnly`, `getThreadLockReason`); UI in `mockups/member/13-claim-detail.html`. Bypass at the UI layer is not possible because `postMessage` short-circuits when the thread is read-only.
 
 ### 13.6 Notifications (PRD FR-30)
 

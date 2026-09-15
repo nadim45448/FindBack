@@ -19,18 +19,18 @@
     })();
   </script>
   <style>
-    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
     .fb-field + .fb-field { margin-top: var(--fb-space-4); }
     .fb-actions { display: flex; justify-content: flex-end; gap: var(--fb-space-3); margin-top: var(--fb-space-5); flex-wrap: wrap; }
     .fb-conditional { background: var(--fb-warning-soft); border: 1px solid var(--fb-warning); border-radius: var(--fb-radius-md); padding: var(--fb-space-4); margin-top: var(--fb-space-3); }
     body { padding-bottom: 80px; }
   </style>
 </head>
-<body>
+<body class="fb-topbar--admin">
   <a href="#main" class="fb-skip-link">Skip to main content</a>
 
   <header class="fb-topbar">
-    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+    <a href="01-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
       <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
       <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
@@ -64,68 +64,16 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <span class="fb-status fb-status--account-active">Riley P.</span>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1" class="fb-page">
-    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
-      <a href="09-items-awaiting-return.html">Awaiting return</a> › <span aria-current="page">Black iPhone 14 — substitute receiver</span>
-    </nav>
-    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Confirm returned</h1>
-
-    <div class="fb-card" style="margin-bottom: var(--fb-space-5);">
-      <p style="margin: 0;"><strong>Black iPhone 14</strong> (Item ID 1003) · Approved claimant: <strong>Devon K.</strong></p>
-    </div>
-
-    <form data-mock-form data-next="09-items-awaiting-return.html" data-toast="Returned confirmed with substitute receiver.">
-      <div class="fb-field">
-        <label class="fb-field__label">Receiver</label>
-        <div class="fb-radio-row" style="margin-bottom: var(--fb-space-2);">
-          <input class="fb-radio" type="radio" id="r-default" name="receiver" value="default">
-          <label for="r-default">Default: Devon K. (the claimant)</label>
-        </div>
-        <div class="fb-radio-row">
-          <input class="fb-radio" type="radio" id="r-sub" name="receiver" value="substitute" checked>
-          <label for="r-sub">Substitute receiver (different person collected on the claimant's behalf)</label>
-        </div>
-      </div>
-
-      <div class="fb-conditional" role="region" aria-label="Substitute receiver details">
-        <p class="fb-helper" style="margin: 0 0 var(--fb-space-3);"><strong>All three fields are required.</strong></p>
-        <div class="fb-field">
-          <label class="fb-field__label" for="rname">Substitute receiver's name <span class="fb-req" aria-hidden="true">*</span></label>
-          <input class="fb-input" type="text" id="rname" name="rname" required minlength="1" maxlength="80" value="K. Rivera">
-        </div>
-        <div class="fb-field">
-          <label class="fb-checkbox-row">
-            <input class="fb-checkbox" type="checkbox" id="auth" name="auth" required checked>
-            <label for="auth">I confirm the claimant (Devon K.) authorized this person to collect on their behalf.</label>
-          </label>
-        </div>
-        <div class="fb-field">
-          <label class="fb-field__label" for="rel">Relationship between claimant and substitute <span class="fb-req" aria-hidden="true">*</span></label>
-          <select class="fb-select" id="rel" name="rel" required>
-            <option>Friend</option>
-            <option selected>Family Member</option>
-            <option>Colleague</option>
-            <option>Classmate</option>
-            <option>Other</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="fb-actions">
-        <a href="09-items-awaiting-return.html" class="fb-btn fb-btn--tertiary">Cancel</a>
-        <button type="submit" class="fb-btn fb-btn--primary">Confirm returned</button>
-      </div>
-    </form>
+    <div data-admin-root><div class="fb-listings__empty">Loading…</div></div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 11b (substitute receiver)</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 11 of 13 (substitute receiver)</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="10-confirm-returned-default.html">← Previous</a>
         <a href="../index.html">All journeys</a>
@@ -134,6 +82,120 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
+  <script src="../assets/admin-renderer.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var admin = window.FB.state.getCurrentUser();
+      if (!admin || admin.role !== 'administrator') {
+        window.location.href = '../public/02-login.html';
+        return;
+      }
+      var esc = window.FB.adminRender.escapeHtml;
+      var params = new URLSearchParams(window.location.search);
+      var reportId = params.get('report');
+      if (!reportId) {
+        var awaiting = window.FB.state.listReports().find(function (r) { return r.status === 'claimApproved'; });
+        reportId = awaiting ? awaiting.id : 'rpt_charger_approved';
+      }
+      var report = window.FB.state.getReport(reportId);
+      if (!report) {
+        document.querySelector('[data-admin-root]').innerHTML = '<div class="fb-listings__empty"><strong>Report not found.</strong></div>';
+        return;
+      }
+      var approvedClaim = window.FB.state.listClaimsForReport(reportId).find(function (c) { return c.status === 'approved'; });
+      var claimant = approvedClaim ? window.FB.state.getUser(approvedClaim.claimantId) : null;
+      var relationships = window.FB.state.relationships;
+      var root = document.querySelector('[data-admin-root]');
+      var html = '';
+      html += '<nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">';
+      html += '  <a href="09-items-awaiting-return.html">Awaiting return</a> › <span aria-current="page">' + esc(report.name) + ' — substitute receiver</span>';
+      html += '</nav>';
+      html += '<h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Confirm returned</h1>';
+      html += '<div class="fb-card" style="margin-bottom: var(--fb-space-5);">';
+      html += '  <p style="margin: 0;"><strong>' + esc(report.name) + '</strong> (' + esc(report.id) + ') &middot; Approved claimant: <strong>' + esc(claimant ? claimant.name : '—') + '</strong></p>';
+      html += '</div>';
+      html += '<div class="fb-form-error" data-return-error role="alert" hidden></div>';
+      html += '<form data-return-form>';
+      html += '  <div class="fb-field">';
+      html += '    <label class="fb-field__label">Receiver</label>';
+      html += '    <div class="fb-radio-row" style="margin-bottom: var(--fb-space-2);">';
+      html += '      <input class="fb-radio" type="radio" id="r-default" name="receiver" value="default">';
+      html += '      <label for="r-default">Default: <strong>' + esc(claimant ? claimant.name : '—') + '</strong> (the claimant)</label>';
+      html += '    </div>';
+      html += '    <div class="fb-radio-row">';
+      html += '      <input class="fb-radio" type="radio" id="r-sub" name="receiver" value="substitute" checked>';
+      html += '      <label for="r-sub">Substitute receiver (different person collected on the claimant\'s behalf)</label>';
+      html += '    </div>';
+      html += '  </div>';
+      html += '  <div class="fb-conditional" role="region" aria-label="Substitute receiver details">';
+      html += '    <p class="fb-helper" style="margin: 0 0 var(--fb-space-3);"><strong>All three fields are required.</strong></p>';
+      html += '    <div class="fb-field">';
+      html += '      <label class="fb-field__label" for="rname">Substitute receiver\'s name <span class="fb-req" aria-hidden="true">*</span></label>';
+      html += '      <input class="fb-input" type="text" id="rname" name="rname" required minlength="1" maxlength="80">';
+      html += '    </div>';
+      html += '    <div class="fb-field">';
+      html += '      <label class="fb-checkbox-row" style="display: flex; gap: var(--fb-space-2);">';
+      html += '        <input class="fb-checkbox" type="checkbox" id="auth" name="auth" required>';
+      html += '        <label for="auth">I confirm the claimant (' + esc(claimant ? claimant.name : '—') + ') authorized this person to collect on their behalf.</label>';
+      html += '      </label>';
+      html += '    </div>';
+      html += '    <div class="fb-field">';
+      html += '      <label class="fb-field__label" for="rel">Relationship between claimant and substitute <span class="fb-req" aria-hidden="true">*</span></label>';
+      html += '      <select class="fb-select" id="rel" name="rel" required>';
+      relationships.forEach(function (r, i) {
+        html += '<option' + (i === 1 ? ' selected' : '') + '>' + esc(r) + '</option>';
+      });
+      html += '      </select>';
+      html += '    </div>';
+      html += '  </div>';
+      html += '  <div class="fb-actions">';
+      html += '    <a href="09-items-awaiting-return.html" class="fb-btn fb-btn--tertiary">Cancel</a>';
+      html += '    <button type="submit" class="fb-btn fb-btn--primary">Confirm returned</button>';
+      html += '  </div>';
+      html += '</form>';
+      root.innerHTML = html;
+
+      var form = root.querySelector('[data-return-form]');
+      var errEl = root.querySelector('[data-return-error]');
+      window.FB.attachFormValidation(form, {
+        summaryEl: errEl,
+        fields: [
+          { input: form.querySelector('[name="rname"]'), label: 'Substitute receiver name',
+            validate: function (v) { return v.length > 0 || 'Substitute receiver name is required.'; }
+          },
+          { input: form.querySelector('[name="auth"]'), label: 'Authorization confirmation',
+            validate: function (_v, input) { return input.checked || 'You must confirm claimant authorization.'; }
+          },
+          { input: form.querySelector('[name="rel"]'), label: 'Relationship',
+            validate: function (v) { return v.length > 0 || 'Relationship is required.'; }
+          }
+        ],
+        onSubmit: function () {
+          var type = form.querySelector('[name="receiver"]:checked').value;
+          if (type === 'default') {
+            window.location.href = '10-confirm-returned-default.html?report=' + encodeURIComponent(report.id);
+            return;
+          }
+          var rname = form.querySelector('[name="rname"]').value.trim();
+          var rel = form.querySelector('[name="rel"]').value;
+          var updated = window.FB.state.confirmReturned(report.id, admin.id, {
+            type: 'substitute',
+            name: rname,
+            substitute: { name: rname, relationship: rel, authorizedByClaimant: true }
+          });
+          if (!updated) {
+            window.FB.toast('This report can no longer be confirmed as returned.', 'error');
+            window.location.href = '09-items-awaiting-return.html';
+            return;
+          }
+          window.FB.toast('Returned confirmed with substitute receiver (' + rel + ').', 'success');
+          setTimeout(function () { window.location.href = '09-items-awaiting-return.html'; }, 250);
+        }
+      });
+    });
+  </script>
 </body>
 </html>

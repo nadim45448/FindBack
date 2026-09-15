@@ -73,25 +73,31 @@
       <div class="fb-auth-card">
         <h1>Create your FindBack account</h1>
         <p class="fb-helper">An administrator will review and approve your registration before you can report lost or found items.</p>
-        <form data-mock-form data-next="04-register-confirmation.html" data-toast="Account created. Awaiting administrator approval.">
+        <div class="fb-form-error" data-register-error role="alert" hidden></div>
+        <form data-register-form data-next="05-register-confirmation.html" novalidate>
           <div class="fb-field">
             <label class="fb-field__label" for="name">Full name <span class="fb-req" aria-hidden="true">*</span></label>
-            <input class="fb-input" type="text" id="name" name="name" value="Alex Rivera" required minlength="1" maxlength="80" autocomplete="name">
+            <input class="fb-input" type="text" id="name" name="name" required minlength="1" maxlength="80" autocomplete="name">
           </div>
           <div class="fb-field">
             <label class="fb-field__label" for="email">Email <span class="fb-req" aria-hidden="true">*</span></label>
-            <input class="fb-input" type="email" id="email" name="email" value="alex.rivera@example.org" required autocomplete="email">
+            <input class="fb-input" type="email" id="email" name="email" required autocomplete="email">
           </div>
           <div class="fb-field">
             <label class="fb-field__label" for="password">Password <span class="fb-req" aria-hidden="true">*</span></label>
-            <input class="fb-input" type="password" id="password" name="password" value="Found-things-2026" required minlength="8" autocomplete="new-password">
+            <input class="fb-input" type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
             <p class="fb-field__help">Minimum 8 characters. At least one letter and one number.</p>
           </div>
           <div class="fb-field">
+            <label class="fb-field__label" for="confirm">Confirm password <span class="fb-req" aria-hidden="true">*</span></label>
+            <input class="fb-input" type="password" id="confirm" name="confirm" required minlength="8" autocomplete="new-password">
+          </div>
+          <div class="fb-field">
             <label class="fb-field__label" for="role">Your role <span class="fb-req" aria-hidden="true">*</span></label>
-            <select class="fb-select" id="role" name="role" required>
+            <select class="fb-select" id="role" name="selfRole" required>
+              <option value="">Choose one</option>
               <option value="Student">Student</option>
-              <option value="Employee" selected>Employee</option>
+              <option value="Employee">Employee</option>
               <option value="Visitor">Visitor</option>
               <option value="Other">Other</option>
             </select>
@@ -112,11 +118,12 @@
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="01-landing.html">← Previous</a>
         <a href="../index.html">All journeys</a>
-        <a href="04-register-confirmation.html">Next →</a>
+        <a href="05-register-confirmation.html">Next →</a>
       </div>
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
   <script src="../assets/app.js"></script>
 </body>
 </html>

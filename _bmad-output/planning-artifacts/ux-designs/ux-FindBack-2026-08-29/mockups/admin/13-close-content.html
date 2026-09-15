@@ -19,16 +19,16 @@
     })();
   </script>
   <style>
-    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
     .fb-actions { display: flex; justify-content: flex-end; gap: var(--fb-space-3); margin-top: var(--fb-space-5); flex-wrap: wrap; }
     body { padding-bottom: 80px; }
   </style>
 </head>
-<body>
+<body class="fb-topbar--admin">
   <a href="#main" class="fb-skip-link">Skip to main content</a>
 
   <header class="fb-topbar">
-    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+    <a href="01-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
       <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
       <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
@@ -62,38 +62,11 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <span class="fb-status fb-status--account-active">Riley P.</span>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1" class="fb-page">
-    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
-      <a href="01-dashboard.html">Dashboard</a> › <span aria-current="page">Close report</span>
-    </nav>
-    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Close this report</h1>
-
-    <div class="fb-card" style="margin-bottom: var(--fb-space-5);">
-      <p style="margin: 0;"><strong>Black umbrella</strong> (Item ID 1000) · <span class="fb-status fb-status--report-open">Open</span> · no claims</p>
-    </div>
-
-    <form data-mock-form data-next="01-dashboard.html" data-toast="Report closed. Removed from active listings.">
-      <div class="fb-alert fb-alert--warning">
-        <div>
-          <strong>This will:</strong>
-          <ul style="margin: var(--fb-space-1) 0 0; padding-left: var(--fb-space-5);">
-            <li>Move this report to status <strong>Closed</strong> (terminal)</li>
-            <li>Remove it from active Lost &amp; Found listings</li>
-            <li>Record this action in the audit trail (actor: you, Riley P.)</li>
-            <li>Send no email — this is internal cleanup</li>
-          </ul>
-        </div>
-      </div>
-      <div class="fb-actions">
-        <a href="01-dashboard.html" class="fb-btn fb-btn--tertiary">Cancel</a>
-        <button type="submit" class="fb-btn fb-btn--danger">Close report</button>
-      </div>
-    </form>
+    <div data-admin-root><div class="fb-listings__empty">Loading…</div></div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
@@ -107,6 +80,62 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
+  <script src="../assets/admin-renderer.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var admin = window.FB.state.getCurrentUser();
+      if (!admin || admin.role !== 'administrator') {
+        window.location.href = '../public/02-login.html';
+        return;
+      }
+      var esc = window.FB.adminRender.escapeHtml;
+      var params = new URLSearchParams(window.location.search);
+      var reportId = params.get('report');
+      var report = reportId ? window.FB.state.getReport(reportId) : null;
+      if (!report) {
+        // Pick an open or claim-requested report as the demo target.
+        report = window.FB.state.listReports().find(function (r) { return r.status === 'open' || r.status === 'claimRequested'; });
+      }
+      if (!report) {
+        document.querySelector('[data-admin-root]').innerHTML = '<div class="fb-listings__empty"><strong>No closable reports.</strong></div>';
+        return;
+      }
+      var statusKlass = window.FB.adminRender.statusBadgeClass(report.status);
+      var statusLbl = window.FB.adminRender.statusLabel(report.status);
+      var root = document.querySelector('[data-admin-root]');
+      var html = '';
+      html += '<nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">';
+      html += '  <a href="01-dashboard.html">Dashboard</a> › <span aria-current="page">Close report</span>';
+      html += '</nav>';
+      html += '<h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Close this report</h1>';
+      html += '<div class="fb-card" style="margin-bottom: var(--fb-space-5);">';
+      html += '  <p style="margin: 0;"><strong>' + esc(report.name) + '</strong> (' + esc(report.id) + ') &middot; <span class="fb-status ' + statusKlass + '">' + statusLbl + '</span></p>';
+      html += '</div>';
+      html += '<div class="fb-alert fb-alert--warning"><div><strong>This will:</strong><ul style="margin: var(--fb-space-1) 0 0; padding-left: var(--fb-space-5);">';
+      html += '  <li>Move this report to status <strong>Closed</strong> (terminal)</li>';
+      html += '  <li>Remove it from active Lost &amp; Found listings</li>';
+      html += '  <li>Record this action in the audit trail (actor: ' + esc(admin.name) + ')</li>';
+      html += '  <li>Send no email — this is internal cleanup</li>';
+      html += '</ul></div></div>';
+      html += '<div class="fb-actions">';
+      html += '  <a href="01-dashboard.html" class="fb-btn fb-btn--tertiary">Cancel</a>';
+      html += '  <button type="button" class="fb-btn fb-btn--danger" data-action="confirm-close" data-report-id="' + esc(report.id) + '">Close report</button>';
+      html += '</div>';
+      root.innerHTML = html;
+      var btn = root.querySelector('[data-action="confirm-close"]');
+      btn.addEventListener('click', function () {
+        var updated = window.FB.state.closeReport(report.id, admin.id);
+        if (!updated) {
+          window.FB.toast('This report could not be closed.', 'error');
+          return;
+        }
+        window.FB.toast('Report closed. Removed from active listings.', 'success');
+        setTimeout(function () { window.location.href = '01-dashboard.html'; }, 250);
+      });
+    });
+  </script>
 </body>
 </html>

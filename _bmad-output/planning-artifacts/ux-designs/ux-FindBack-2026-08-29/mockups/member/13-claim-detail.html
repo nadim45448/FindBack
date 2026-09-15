@@ -20,15 +20,6 @@
   </script>
   <style>
     .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
-    .fb-claim-banner { background: var(--fb-success-soft); border: 1px solid var(--fb-success); border-radius: var(--fb-radius-md); padding: var(--fb-space-4); margin-bottom: var(--fb-space-5); }
-    .fb-thread { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-4); }
-    .fb-thread__msg { padding: var(--fb-space-3); border-radius: var(--fb-radius-md); margin-bottom: var(--fb-space-3); }
-    .fb-thread__msg--self { background: var(--fb-brand-primary-soft); margin-left: var(--fb-space-12); }
-    .fb-thread__msg--other { background: var(--fb-surface-container-low); margin-right: var(--fb-space-12); }
-    .fb-thread__msg--admin { background: var(--fb-info-soft); border-left: 3px solid var(--fb-info); }
-    .fb-thread__meta { font-size: 12px; color: var(--fb-on-surface-variant); margin-top: 4px; }
-    .fb-thread__composer { margin-top: var(--fb-space-4); padding-top: var(--fb-space-4); border-top: 1px solid var(--fb-border-subtle); }
-    .fb-thread__closed { padding: var(--fb-space-4); background: var(--fb-surface-container); border-radius: var(--fb-radius-md); text-align: center; font-size: 14px; color: var(--fb-on-surface-variant); margin-top: var(--fb-space-4); }
     body { padding-bottom: 80px; }
   </style>
 </head>
@@ -42,7 +33,7 @@
     </a>
     <nav class="fb-topbar__nav" aria-label="Primary">
       <a href="01-listings-anon.html">Lost &amp; Found</a>
-      <a href="07-my-reports.html">My reports</a>
+      <a href="08-my-reports.html">My reports</a>
       <a href="10-my-claims.html" aria-current="page">My claims</a>
     </nav>
     <div class="fb-topbar__spacer"></div>
@@ -68,66 +59,197 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Report an item</a>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
-  <main id="main" tabindex="-1" class="fb-page">
-    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
-      <a href="10-my-claims.html">My claims</a> › <span aria-current="page">Brown leather wallet — thread</span>
-    </nav>
-
-    <div class="fb-row fb-row--between" style="margin-bottom: var(--fb-space-4); flex-wrap: wrap; gap: var(--fb-space-3);">
-      <div>
-        <h1 class="fb-h2" style="margin: 0;">Claim on "Brown leather wallet"</h1>
-        <p class="fb-helper" style="margin: 0;">Item ID 1004 · Claim ID 501</p>
-      </div>
-      <span class="fb-status fb-status--claim-approved">Approved</span>
+  <main id="main" tabindex="-1" class="fb-page" data-page="claim-detail">
+    <div data-claim-root>
+      <div class="fb-listings__empty">Loading…</div>
     </div>
-
-    <div class="fb-claim-banner" role="status">
-      <strong>Your claim was approved.</strong>
-      <p style="margin: var(--fb-space-1) 0 0;">An administrator approved this claim on <time>Mar 17, 11:30</time>. The thread is now read-only. An administrator will record the physical handoff separately.</p>
-    </div>
-
-    <section class="fb-detail__section" aria-labelledby="thread-h" style="padding-top: 0;">
-      <h2 id="thread-h" class="fb-detail__section-title">Messages</h2>
-      <div class="fb-thread" aria-live="polite">
-        <div class="fb-thread__msg fb-thread__msg--other">
-          <strong>Sam K. (finder)</strong> <span class="fb-helper" style="display: inline;">· <time>Mar 17, 12:05</time></span>
-          <p style="margin: var(--fb-space-1) 0 0;">Hi Maya — glad the wallet reached you through FindBack. The library's lost-and-found desk has the item; they have my phone if you have questions. Thanks for the quick identifying info, that made the approval easy.</p>
-        </div>
-        <div class="fb-thread__msg fb-thread__msg--admin">
-          <strong>Riley P. (administrator)</strong> <span class="fb-helper" style="display: inline;">· <time>Mar 17, 11:30</time></span>
-          <p style="margin: var(--fb-space-1) 0 0;">Approved based on identifying details. Item remains at the Main Library desk for pickup. Stop by with photo ID. The thread is now read-only.</p>
-        </div>
-        <div class="fb-thread__msg fb-thread__msg--self">
-          <strong>You (Maya)</strong> <span class="fb-helper" style="display: inline;">· <time>Mar 17, 10:00</time></span>
-          <p style="margin: var(--fb-space-1) 0 0;">Thanks Sam for turning it in! Adding detail: my library card is also in the wallet, M. Chen, account L-4421.</p>
-        </div>
-        <div class="fb-thread__msg fb-thread__msg--self">
-          <strong>You (Maya)</strong> <span class="fb-helper" style="display: inline;">· <time>Mar 17, 09:14</time></span>
-          <p style="margin: var(--fb-space-1) 0 0;">Claim submitted.</p>
-        </div>
-        <div class="fb-thread__closed">
-          🔒 This thread is read-only because the claim was approved on <time>Mar 17</time>.
-        </div>
-      </div>
-    </section>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-1 Maya · Step 8 of 13 (thread)</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>UJ-1 Maya · Step 8 of 13 (thread)</span>
       <div style="display: flex; gap: var(--fb-space-4);">
-        <a href="12-claim-pending.html">← Previous</a>
+        <a href="11-submit-claim.html">← Previous</a>
         <a href="../index.html">All journeys</a>
         <a href="05-item-detail-claimant.html">Next →</a>
       </div>
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var user = window.FB.state.getCurrentUser();
+      if (!user) { window.location.href = '../public/02-login.html'; return; }
+      if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
+
+      var params = new URLSearchParams(window.location.search);
+      var claimId = params.get('claim') || 'clm_wallet_maya';
+      var claim = window.FB.state.getClaim(claimId);
+      if (!claim) {
+        document.querySelector('[data-claim-root]').innerHTML = '<div class="fb-listings__empty"><strong>Claim not found.</strong></div>';
+        return;
+      }
+      var report = window.FB.state.getReport(claim.reportId);
+      var reporter = window.FB.state.getUser(report ? report.reporterId : null);
+      var claimant = window.FB.state.getUser(claim.claimantId);
+
+      var ctx = document.querySelector('[data-mockup-context]');
+      if (ctx) ctx.textContent = user.name + ' · claim on "' + (report ? report.name : '?') + '"';
+
+      function statusLabel(s) { return ({pending:'Pending', approved:'Approved', rejected:'Rejected'})[s] || s; }
+      function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, function (m) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; }); }
+
+      // Visibility: claimant + reporter + admin can see the thread.
+      var isClaimant = (claim.claimantId === user.id);
+      var isReporter = report && (report.reporterId === user.id);
+      var isAdmin = user.role === 'administrator';
+      if (!isClaimant && !isReporter && !isAdmin) {
+        document.querySelector('[data-claim-root]').innerHTML = '<div class="fb-listings__empty"><strong>You don\'t have access to this claim thread.</strong><div>Only the claimant, the report\'s owner, and administrators can see it.</div></div>';
+        return;
+      }
+
+      var thread = window.FB.state.getThread(claimId);
+      // Read-only lifecycle enforced by state layer; UI mirrors it.
+      // Thread locks immediately on Approved (Pass-3 correction); also on
+      // Rejected, Returned, or Closed.
+      var isLocked = window.FB.state.isThreadReadOnly(claimId);
+      var lockReason = window.FB.state.getThreadLockReason ? window.FB.state.getThreadLockReason(claimId) : null;
+      var html = '';
+
+      html += '<nav class="fb-detail__breadcrumb" aria-label="Breadcrumb"><a href="10-my-claims.html">My claims</a> › <span aria-current="page">' + escapeHtml(report ? report.name : 'Item') + ' — thread</span></nav>';
+
+      html += '<div class="fb-row fb-row--between" style="margin-bottom: var(--fb-space-4); flex-wrap: wrap; gap: var(--fb-space-3);">';
+      html += '  <div>';
+      html += '    <h1 class="fb-h2" style="margin: 0;">Claim on "' + escapeHtml(report ? report.name : '?') + '"</h1>';
+      html += '    <p class="fb-helper" style="margin: 0;">' + escapeHtml(claim.id) + ' · ' + escapeHtml(report ? report.id : '') + '</p>';
+      html += '  </div>';
+      html += '  <span class="fb-status fb-status--claim-' + claim.status + '">' + statusLabel(claim.status) + (claim.autoRejected ? ' (auto)' : '') + '</span>';
+      html += '</div>';
+
+      // Status banner
+      if (claim.status === 'approved') {
+        html += '<div class="fb-alert" style="background: var(--fb-success-soft); border-color: var(--fb-success);" role="status"><span aria-hidden="true">✓</span><div><strong>Your claim was approved.</strong> An administrator will reach out to arrange the handoff. This thread is now read-only.</div></div>';
+      } else if (claim.status === 'rejected') {
+        var detail = claim.autoRejected ? 'Another claim was approved for this item.' : (claim.decisionReason || 'Your claim was not approved.');
+        html += '<div class="fb-alert fb-alert--error" role="status"><span aria-hidden="true">✕</span><div><strong>Your claim was not approved.</strong> ' + escapeHtml(detail) + '</div></div>';
+      } else if (claim.status === 'pending') {
+        html += '<div class="fb-alert fb-alert--info" role="status"><span aria-hidden="true">⏳</span><div><strong>Your claim is awaiting administrator review.</strong> You and the reporter can post messages here to coordinate.</div></div>';
+      }
+
+      // Claim details
+      html += '<section class="fb-detail__section" aria-labelledby="claim-h">';
+      html += '  <h2 id="claim-h" class="fb-detail__section-title">Your claim</h2>';
+      html += '  <p class="fb-detail__section-body" style="margin-bottom: var(--fb-space-3);"><strong>Reason:</strong> ' + escapeHtml(claim.reason) + '</p>';
+      html += '  <p class="fb-detail__section-body" style="margin-bottom: var(--fb-space-3);"><strong>Identifying details:</strong> ' + escapeHtml(claim.identifyingDetails) + '</p>';
+      html += '  <p class="fb-helper">Submitted ' + window.fbRelativeTime(new Date(claim.createdAt)) + (claimant ? ' by ' + escapeHtml(claimant.name) : '') + '</p>';
+      if (report) {
+        html += '  <p style="margin-top: var(--fb-space-3);"><a href="03-item-detail-member.html?item=' + report.id + '" class="fb-btn fb-btn--secondary fb-btn--sm">View item</a></p>';
+      }
+      html += '</section>';
+
+      // Messages thread
+      html += '<section class="fb-detail__section" aria-labelledby="thread-h">';
+      html += '  <h2 id="thread-h" class="fb-detail__section-title">Messages</h2>';
+      html += '  <div class="fb-thread" aria-live="polite" data-thread>';
+      // Initial system message: claim submitted
+      html += '    <div class="fb-thread__msg fb-thread__msg--admin"><strong>System</strong> · <time>' + window.fbRelativeTime(new Date(claim.createdAt)) + '</time><p style="margin: var(--fb-space-1) 0 0;">Claim submitted.</p></div>';
+      thread.forEach(function (m) {
+        var klass = 'fb-thread__msg--other';
+        var who = m.authorName;
+        if (m.authorId === user.id) klass = 'fb-thread__msg--self';
+        var author = window.FB.state.getUser(m.authorId);
+        if (author && author.role === 'administrator') klass = 'fb-thread__msg--admin';
+        html += '<div class="fb-thread__msg ' + klass + '"><strong>' + escapeHtml(who) + '</strong> <span class="fb-helper" style="display: inline;">· ' + window.fbRelativeTime(new Date(m.createdAt)) + '</span><p style="margin: var(--fb-space-1) 0 0;">' + escapeHtml(m.body) + '</p></div>';
+      });
+      html += '  </div>';
+
+      // Composer
+      if (!isLocked) {
+        html += '<div class="fb-thread__composer">';
+        html += '  <div class="fb-thread__composer-error" data-composer-error role="alert" hidden></div>';
+        html += '  <div class="fb-field"><label class="fb-field__label" for="msg">Post a message</label><textarea class="fb-textarea" id="msg" name="msg" placeholder="Write a message to the claimant, the finder, and the administrators."></textarea></div>';
+        html += '  <div class="fb-row" style="justify-content: flex-end; margin-top: var(--fb-space-3);"><button type="button" class="fb-btn fb-btn--primary" data-action="post-msg">Post</button></div>';
+        html += '</div>';
+      } else {
+        var lockMsg;
+        if (lockReason === 'approved') {
+          lockMsg = 'This thread is read-only because this claim has been approved. An administrator will arrange the handoff.';
+        } else if (lockReason === 'rejected') {
+          lockMsg = 'This thread is read-only because this claim has been rejected.';
+        } else if (lockReason === 'returned') {
+          lockMsg = 'This thread is read-only because the item has been returned.';
+        } else if (lockReason === 'closed') {
+          lockMsg = 'This thread is read-only because this report has been closed.';
+        } else {
+          lockMsg = 'This thread is read-only.';
+        }
+        html += '<div class="fb-thread__closed" role="status">🔒 ' + lockMsg + ' Existing messages remain available for reference, but no new messages can be posted.</div>';
+      }
+      html += '</section>';
+
+      document.querySelector('[data-claim-root]').innerHTML = html;
+
+      var postBtn = document.querySelector('[data-action="post-msg"]');
+      if (postBtn) {
+        var msgEl = document.getElementById('msg');
+        var composerErr = document.querySelector('[data-composer-error]');
+        function showComposerError(msg) {
+          if (!composerErr) return;
+          composerErr.textContent = msg;
+          composerErr.hidden = false;
+          msgEl.setAttribute('aria-invalid', 'true');
+          msgEl.setAttribute('aria-describedby', 'msg-error');
+        }
+        function clearComposerError() {
+          if (!composerErr) return;
+          composerErr.hidden = true;
+          composerErr.textContent = '';
+          msgEl.removeAttribute('aria-invalid');
+          msgEl.removeAttribute('aria-describedby');
+          msgEl.classList.remove('fb-textarea--error');
+        }
+        msgEl.addEventListener('input', function () {
+          if (!composerErr || composerErr.hidden) return;
+          if ((msgEl.value || '').trim().length > 0) clearComposerError();
+        });
+        postBtn.addEventListener('click', function () {
+          var body = (msgEl.value || '').trim();
+          if (!body) {
+            showComposerError('Write a message before posting.');
+            try { msgEl.focus(); } catch (e) {}
+            return;
+          }
+          var result = window.FB.state.postMessage(claimId, user.id, body);
+          if (!result) {
+            showComposerError("We couldn't send your message. Try again.");
+            return;
+          }
+          msgEl.value = '';
+          msgEl.classList.remove('fb-textarea--error');
+          msgEl.removeAttribute('aria-invalid');
+          clearComposerError();
+          window.FB.toast && window.FB.toast('Message posted.', 'success');
+          // Re-render the thread only
+          var newThread = window.FB.state.getThread(claimId);
+          var threadHtml = '';
+          threadHtml += '<div class="fb-thread__msg fb-thread__msg--admin"><strong>System</strong> · <time>' + window.fbRelativeTime(new Date(claim.createdAt)) + '</time><p style="margin: var(--fb-space-1) 0 0;">Claim submitted.</p></div>';
+          newThread.forEach(function (m) {
+            var klass = 'fb-thread__msg--other';
+            if (m.authorId === user.id) klass = 'fb-thread__msg--self';
+            var author = window.FB.state.getUser(m.authorId);
+            if (author && author.role === 'administrator') klass = 'fb-thread__msg--admin';
+            threadHtml += '<div class="fb-thread__msg ' + klass + '"><strong>' + escapeHtml(m.authorName) + '</strong> <span class="fb-helper" style="display: inline;">· ' + window.fbRelativeTime(new Date(m.createdAt)) + '</span><p style="margin: var(--fb-space-1) 0 0;">' + escapeHtml(m.body) + '</p></div>';
+          });
+          document.querySelector('[data-thread]').innerHTML = threadHtml;
+        });
+      }
+    });
+  </script>
 </body>
 </html>

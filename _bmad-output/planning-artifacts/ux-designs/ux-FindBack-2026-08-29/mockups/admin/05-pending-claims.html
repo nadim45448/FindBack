@@ -19,15 +19,15 @@
     })();
   </script>
   <style>
-    .fb-page { max-width: var(--fb-container-wide); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-page { max-width: var(--fb-container-wide); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
     body { padding-bottom: 80px; }
   </style>
 </head>
-<body>
+<body class="fb-topbar--admin">
   <a href="#main" class="fb-skip-link">Skip to main content</a>
 
   <header class="fb-topbar">
-    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+    <a href="01-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
       <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
       <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
@@ -61,46 +61,16 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <span class="fb-status fb-status--account-active">Riley P.</span>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
-  <main id="main" tabindex="-1" class="fb-page">
-    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Pending claims</h1>
-
-    <table class="fb-table">
-      <thead>
-        <tr>
-          <th>Item</th>
-          <th>Claimant</th>
-          <th>Submitted</th>
-          <th>Pending claims</th>
-          <th class="fb-table__actions"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td data-label="Item"><strong>Brown leather wallet</strong> <span class="fb-cell-meta">· ID 1004</span></td>
-          <td data-label="Claimant">Maya C.</td>
-          <td data-label="Submitted"><time>Mar 17, 09:14</time></td>
-          <td data-label="Pending claims">1</td>
-          <td class="fb-table__actions"><a href="06-claim-review.html" class="fb-btn fb-btn--primary fb-btn--sm">Review</a></td>
-        </tr>
-        <tr>
-          <td data-label="Item"><strong>Black iPhone 14</strong> <span class="fb-cell-meta">· ID 1003 · has competing claims</span></td>
-          <td data-label="Claimant">3 claimants</td>
-          <td data-label="Submitted"><time>Mar 12–13</time></td>
-          <td data-label="Pending claims">3 ⚠</td>
-          <td class="fb-table__actions"><a href="07-claim-review-competing.html" class="fb-btn fb-btn--primary fb-btn--sm">Review competing</a></td>
-        </tr>
-      </tbody>
-    </table>
+  <main id="main" tabindex="-1" class="fb-page" data-page="admin-claims">
+    <div data-admin-root><div class="fb-listings__empty">Loading…</div></div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 3 of 12</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 4 of 13</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="04-registration-reject.html">← Previous</a>
         <a href="../index.html">All journeys</a>
@@ -109,6 +79,20 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
+  <script src="../assets/admin-renderer.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var admin = window.FB.state.getCurrentUser();
+      if (!admin || admin.role !== 'administrator') {
+        window.location.href = '../public/02-login.html';
+        return;
+      }
+      var root = document.querySelector('[data-admin-root]');
+      window.FB.adminRender.pendingClaims(root);
+    });
+  </script>
 </body>
 </html>

@@ -20,7 +20,6 @@
   </script>
   <style>
     .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
-    .fb-table tbody tr { cursor: pointer; }
     body { padding-bottom: 80px; }
   </style>
 </head>
@@ -34,7 +33,7 @@
     </a>
     <nav class="fb-topbar__nav" aria-label="Primary">
       <a href="01-listings-anon.html">Lost &amp; Found</a>
-      <a href="07-my-reports.html" aria-current="page">My reports</a>
+      <a href="08-my-reports.html" aria-current="page">My reports</a>
       <a href="10-my-claims.html">My claims</a>
     </nav>
     <div class="fb-topbar__spacer"></div>
@@ -60,12 +59,10 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Report an item</a>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
-  <main id="main" tabindex="-1" class="fb-page">
+  <main id="main" tabindex="-1" class="fb-page" data-page="my-reports">
     <div class="fb-row fb-row--between" style="margin-bottom: var(--fb-space-5); flex-wrap: wrap; gap: var(--fb-space-3);">
       <h1 class="fb-h2">My reports</h1>
       <div class="fb-row">
@@ -74,45 +71,29 @@
       </div>
     </div>
 
-    <table class="fb-table">
-      <thead>
-        <tr>
-          <th>Item</th>
-          <th>Type</th>
-          <th>Date</th>
-          <th>Status</th>
-          <th>Claims</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr onclick="window.location.href='05-item-detail-claimant.html';">
-          <td data-label="Item">Brown leather wallet<span class="fb-cell-meta"> · ID 1004</span></td>
-          <td data-label="Type"><span class="fb-type-badge fb-type-badge--found">Found</span></td>
-          <td data-label="Date"><time>Mar 16</time></td>
-          <td data-label="Status"><span class="fb-status fb-status--report-claimapproved">Claim Approved</span></td>
-          <td data-label="Claims">1 approved · 0 pending</td>
-        </tr>
-        <tr>
-          <td data-label="Item">Blue North Face backpack<span class="fb-cell-meta"> · ID 1001</span></td>
-          <td data-label="Type"><span class="fb-type-badge fb-type-badge--lost">Lost</span></td>
-          <td data-label="Date"><time>Mar 10</time></td>
-          <td data-label="Status"><span class="fb-status fb-status--report-open">Open</span></td>
-          <td data-label="Claims">0</td>
-        </tr>
-        <tr>
-          <td data-label="Item">Vintage watch<span class="fb-cell-meta"> · ID 998</span></td>
-          <td data-label="Type"><span class="fb-type-badge fb-type-badge--found">Found</span></td>
-          <td data-label="Date"><time>Mar 1</time></td>
-          <td data-label="Status"><span class="fb-status fb-status--report-closed">Closed</span></td>
-          <td data-label="Claims">—</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="fb-filter-card" style="margin-bottom: var(--fb-space-4);">
+      <h3>Filter</h3>
+      <div class="fb-field">
+        <label class="fb-field__label" for="filter-status">Status</label>
+        <select class="fb-select" id="filter-status" data-filter="status">
+          <option value="">All</option>
+          <option value="open">Open</option>
+          <option value="claimRequested">Claim Requested</option>
+          <option value="claimApproved">Claim Approved</option>
+          <option value="returned">Returned</option>
+          <option value="closed">Closed</option>
+        </select>
+      </div>
+    </div>
+
+    <section data-reports-list aria-live="polite">
+      <div class="fb-listings__empty">Loading…</div>
+    </section>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-2 Sam · Step 5 of 8</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>UJ-2 Sam · Step 5 of 8</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="07-dashboard.html">← Previous</a>
         <a href="../index.html">All journeys</a>
@@ -121,6 +102,56 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var user = window.FB.state.getCurrentUser();
+      if (!user) { window.location.href = '../public/02-login.html'; return; }
+      if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
+
+      var ctx = document.querySelector('[data-mockup-context]');
+      if (ctx) ctx.textContent = user.name + ' · My reports';
+
+      var filterStatus = '';
+      var reports = window.FB.state.listReportsForUser(user.id);
+      reports.sort(function (a, b) { return a.updatedAt < b.updatedAt ? 1 : -1; });
+
+      function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, function (m) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; }); }
+      function statusLabel(s) { return ({open:'Open', claimRequested:'Claim Requested', claimApproved:'Claim Approved', returned:'Returned', closed:'Closed'})[s] || s; }
+
+      function render() {
+        var list = document.querySelector('[data-reports-list]');
+        var rows = reports.filter(function (r) { return !filterStatus || r.status === filterStatus; });
+        if (!rows.length) {
+          list.innerHTML = '<div class="fb-listings__empty"><strong>You haven\'t reported anything yet.</strong><div>Use <a href="14-report-lost.html">Report lost</a> or <a href="15-report-found.html">Report found</a> to start.</div></div>';
+          return;
+        }
+        var html = '<table class="fb-table"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th>Status</th><th>Claims</th></tr></thead><tbody>';
+        rows.forEach(function (r) {
+          var claims = window.FB.state.listClaimsForReport(r.id);
+          var pending = claims.filter(function (c) { return c.status === 'pending'; }).length;
+          var approved = claims.filter(function (c) { return c.status === 'approved'; }).length;
+          var rejected = claims.filter(function (c) { return c.status === 'rejected'; }).length;
+          var claimsTxt = approved + ' approved · ' + pending + ' pending' + (rejected ? ' · ' + rejected + ' rejected' : '');
+          var detailHref = '04-item-detail-reporter.html?item=' + r.id;
+          html += '<tr onclick="window.location.href=\'' + detailHref + '\';">' +
+                  '  <td data-label="Item"><strong>' + escapeHtml(r.name) + '</strong><div class="fb-cell-meta">' + escapeHtml(r.category) + ' · ' + escapeHtml(r.campusArea) + '</div></td>' +
+                  '  <td data-label="Type"><span class="fb-type-badge fb-type-badge--' + r.type + '">' + (r.type === 'lost' ? 'Lost' : 'Found') + '</span></td>' +
+                  '  <td data-label="Date">' + window.fbFormatDate(r.date) + '</td>' +
+                  '  <td data-label="Status"><span class="fb-status fb-status--report-' + r.status + '">' + statusLabel(r.status) + '</span></td>' +
+                  '  <td data-label="Claims">' + claimsTxt + '</td>' +
+                  '</tr>';
+        });
+        html += '</tbody></table>';
+        list.innerHTML = html;
+      }
+
+      var sel = document.getElementById('filter-status');
+      if (sel) sel.addEventListener('change', function () { filterStatus = sel.value; render(); });
+      render();
+    });
+  </script>
 </body>
 </html>

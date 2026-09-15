@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Brown leather wallet — FindBack</title>
+  <title>Item detail — FindBack</title>
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/tokens.css">
   <script>
@@ -20,9 +20,6 @@
   </script>
   <style>
     .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
-    .fb-detail__crumb { font-size: 13px; color: var(--fb-on-surface-variant); margin-bottom: var(--fb-space-3); }
-    .fb-detail__title-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fb-space-3); margin-bottom: var(--fb-space-5); }
-    .fb-detail__title { font-size: 28px; font-weight: 700; margin: 0; flex: 1; }
     body { padding-bottom: 80px; }
   </style>
 </head>
@@ -36,7 +33,7 @@
     </a>
     <nav class="fb-topbar__nav" aria-label="Primary">
       <a href="01-listings-anon.html">Lost &amp; Found</a>
-      <a href="07-my-reports.html">My reports</a>
+      <a href="08-my-reports.html">My reports</a>
       <a href="10-my-claims.html">My claims</a>
     </nav>
     <div class="fb-topbar__spacer"></div>
@@ -62,89 +59,18 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Report an item</a>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1" class="fb-page">
-    <nav class="fb-detail__crumb" aria-label="Breadcrumb">
-      <a href="02-listings-member.html">Lost &amp; Found</a> › <span aria-current="page">Brown leather wallet</span>
-    </nav>
-
-    <div class="fb-detail__title-row">
-      <h1 class="fb-detail__title">Brown leather wallet</h1>
-      <span class="fb-type-badge fb-type-badge--found">Found</span>
-      <span class="fb-status fb-status--report-claimrequested" aria-label="Status: claim requested">Claim Requested</span>
-    </div>
-
-    <div class="fb-detail__grid">
-      <div>
-        <div class="fb-detail__image" aria-label="No image attached">
-          <span>📷 No image</span>
-        </div>
-
-        <section class="fb-detail__section" aria-labelledby="desc-h">
-          <h2 id="desc-h" class="fb-detail__section-title">Description</h2>
-          <p>Bifold wallet in dark brown leather, slightly worn. Looks like it had been sitting on a study table. I picked it up near the end of the day.</p>
-        </section>
-
-        <section class="fb-detail__section" aria-labelledby="match-h">
-          <h2 id="match-h" class="fb-detail__section-title">Does this look familiar?</h2>
-          <p>If this might be yours, submit a claim with a reason and identifying details. The reporter will be notified.</p>
-          <div style="margin-top: var(--fb-space-4);">
-            <a href="11-submit-claim.html" class="fb-btn fb-btn--primary">Submit a claim</a>
-          </div>
-        </section>
-      </div>
-
-      <aside>
-        <div class="fb-card">
-          <h2 class="fb-detail__section-title" style="margin: 0 0 var(--fb-space-3);">Quick facts</h2>
-          <dl class="fb-stack" style="margin: 0;">
-            <div>
-              <dt class="fb-caption">Category</dt>
-              <dd style="margin: 2px 0 0 0;">Wallet</dd>
-            </div>
-            <div>
-              <dt class="fb-caption">Date found</dt>
-              <dd style="margin: 2px 0 0 0;"><time>Mar 16, 2026</time></dd>
-            </div>
-            <div>
-              <dt class="fb-caption">Found at</dt>
-              <dd style="margin: 2px 0 0 0;">Main Library</dd>
-            </div>
-            <div class="fb-hidden-from-members">
-              <dt class="fb-caption">Exact place <span class="fb-sensitive-flag">Sensitive</span></dt>
-              <dd style="margin: 2px 0 0 0;">
-                <span class="fb-hidden-note">Hidden until you have a relationship to this item</span>
-                <span class="fb-hidden-content">2nd floor reading room, Table 7, west window</span>
-              </dd>
-            </div>
-            <div class="fb-hidden-from-members">
-              <dt class="fb-caption">Identifying details <span class="fb-sensitive-flag">Sensitive</span></dt>
-              <dd style="margin: 2px 0 0 0;">
-                <span class="fb-hidden-note">Hidden until you have a relationship to this item</span>
-                <span class="fb-hidden-content">Embossed initials "MC" on the inside right pocket</span>
-              </dd>
-            </div>
-            <div>
-              <dt class="fb-caption">Reporter</dt>
-              <dd style="margin: 2px 0 0 0;">Sam K.</dd>
-            </div>
-            <div>
-              <dt class="fb-caption">Submitted</dt>
-              <dd style="margin: 2px 0 0 0;"><time>Mar 16, 2026 · 18:42</time></dd>
-            </div>
-          </dl>
-        </div>
-      </aside>
+    <div data-detail-root>
+      <div class="fb-listings__empty">Loading…</div>
     </div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-1 Maya · Step 4 of 13 (member, no relationship)</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>UJ-1 Maya · Step 4 of 13 (member, no relationship)</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="02-listings-member.html">← Previous</a>
         <a href="../index.html">All journeys</a>
@@ -153,6 +79,25 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
   <script src="../assets/app.js"></script>
+  <script src="../assets/detail-renderer.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var user = window.FB.state.getCurrentUser();
+      if (!user) { window.location.href = '../public/02-login.html?next=' + encodeURIComponent(window.location.pathname.split('/').pop() + window.location.search); return; }
+      if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
+      var root = document.querySelector('[data-detail-root]');
+      window.FB.renderItemDetail(root, {
+        // Default: brown leather wallet (found). Lists page passes ?item=...
+        itemId: (new URLSearchParams(window.location.search)).get('item') || 'rpt_wallet_found',
+        breadcrumb: [
+          { href: '02-listings-member.html', label: 'Lost & Found' },
+          { current: true, label: 'Item detail' }
+        ]
+      });
+    });
+  </script>
 </body>
 </html>

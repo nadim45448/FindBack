@@ -20,12 +20,6 @@
   </script>
   <style>
     .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
-    .fb-claim-banner { background: var(--fb-warning-soft); border: 1px solid var(--fb-warning); border-radius: var(--fb-radius-md); padding: var(--fb-space-4); margin-bottom: var(--fb-space-5); }
-    .fb-thread { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-4); }
-    .fb-thread__msg { padding: var(--fb-space-3); border-radius: var(--fb-radius-md); margin-bottom: var(--fb-space-3); }
-    .fb-thread__msg--self { background: var(--fb-brand-primary-soft); }
-    .fb-thread__msg--other { background: var(--fb-surface-container-low); }
-    .fb-thread__meta { font-size: 12px; color: var(--fb-on-surface-variant); margin-top: 4px; }
     body { padding-bottom: 80px; }
   </style>
 </head>
@@ -39,7 +33,7 @@
     </a>
     <nav class="fb-topbar__nav" aria-label="Primary">
       <a href="01-listings-anon.html">Lost &amp; Found</a>
-      <a href="07-my-reports.html">My reports</a>
+      <a href="08-my-reports.html">My reports</a>
       <a href="10-my-claims.html" aria-current="page">My claims</a>
     </nav>
     <div class="fb-topbar__spacer"></div>
@@ -65,61 +59,11 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Report an item</a>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1" class="fb-page">
-    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
-      <a href="10-my-claims.html">My claims</a> › <span aria-current="page">Brown leather wallet</span>
-    </nav>
-
-    <div class="fb-row fb-row--between" style="margin-bottom: var(--fb-space-4); flex-wrap: wrap; gap: var(--fb-space-3);">
-      <div>
-        <h1 class="fb-h2" style="margin: 0;">Claim on "Brown leather wallet"</h1>
-        <p class="fb-helper" style="margin: 0;">Item ID 1004 · Claim ID 501</p>
-      </div>
-      <span class="fb-status fb-status--claim-pending">Pending</span>
-    </div>
-
-    <div class="fb-claim-banner" role="status">
-      <strong>Your claim is awaiting administrator review.</strong>
-      <p style="margin: var(--fb-space-1) 0 0;">You'll be notified by email when an administrator approves or rejects this claim. The reporter (Sam K.) has also been notified.</p>
-    </div>
-
-    <section class="fb-detail__section" aria-labelledby="item-h" style="padding-top: 0;">
-      <h2 id="item-h" class="fb-detail__section-title">Item summary</h2>
-      <div class="fb-card">
-        <div class="fb-row fb-row--between">
-          <div>
-            <strong>Brown leather wallet</strong> · <span class="fb-type-badge fb-type-badge--found">Found</span> at Main Library, Mar 16
-          </div>
-          <a href="03-item-detail-member.html" class="fb-btn fb-btn--secondary fb-btn--sm">View item</a>
-        </div>
-      </div>
-    </section>
-
-    <section class="fb-detail__section" aria-labelledby="claim-h">
-      <h2 id="claim-h" class="fb-detail__section-title">Your claim</h2>
-      <div class="fb-card">
-        <p style="margin: 0 0 var(--fb-space-2);"><strong>Reason:</strong> I lost my wallet at the library on Mar 16 around 5pm. It has my initials embossed inside the right pocket and contains my driver's license, three credit cards, and a photo of my dog.</p>
-        <p style="margin: 0 0 var(--fb-space-2);"><strong>Identifying details:</strong> Initials MC. Driver's license in the name of M. Chen. Last four digits of credit cards: 4421, 8819, 0034.</p>
-        <p style="margin: 0;"><strong>Date lost:</strong> <time>Mar 16, 2026</time></p>
-      </div>
-    </section>
-
-    <section class="fb-detail__section" aria-labelledby="thread-h">
-      <h2 id="thread-h" class="fb-detail__section-title">Messages on this claim</h2>
-      <div class="fb-thread">
-        <div class="fb-empty" style="padding: var(--fb-space-6);">
-          <p style="margin: 0;">No messages yet. The thread is open between you, the finder (Sam K.), and administrators.</p>
-        </div>
-        <p class="fb-helper" style="margin-top: var(--fb-space-3);">
-          <strong>Note:</strong> New messages here don't generate emails. Members and administrators will see your messages the next time they sign in.
-        </p>
-      </div>
-    </section>
+    <div class="fb-listings__empty">Loading…</div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
@@ -133,6 +77,29 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // 12-claim-pending.html is a confirmation page; route to the unified thread.
+      var params = new URLSearchParams(window.location.search);
+      var claimId = params.get('claim');
+      if (claimId) {
+        window.location.href = '13-claim-detail.html?claim=' + encodeURIComponent(claimId);
+      } else if (window.FB && window.FB.state && window.FB.state.getCurrentUser()) {
+        // No claim param — pick the most recent pending claim for the user.
+        var user = window.FB.state.getCurrentUser();
+        var pending = window.FB.state.listClaimsForUser(user.id).filter(function (c) { return c.status === 'pending'; });
+        var target = pending[0] || window.FB.state.listClaimsForUser(user.id)[0];
+        if (target) {
+          window.location.href = '13-claim-detail.html?claim=' + encodeURIComponent(target.id);
+        } else {
+          document.querySelector('main').innerHTML = '<div class="fb-listings__empty"><strong>No claims yet.</strong><div><a href="02-listings-member.html">Browse listings</a> and submit a claim.</div></div>';
+        }
+      } else {
+        window.location.href = '../public/02-login.html';
+      }
+    });
+  </script>
 </body>
 </html>

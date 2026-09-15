@@ -19,17 +19,16 @@
     })();
   </script>
   <style>
-    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
-    .fb-field + .fb-field { margin-top: var(--fb-space-4); }
+    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
     .fb-actions { display: flex; justify-content: flex-end; gap: var(--fb-space-3); margin-top: var(--fb-space-6); flex-wrap: wrap; }
     body { padding-bottom: 80px; }
   </style>
 </head>
-<body>
+<body class="fb-topbar--admin">
   <a href="#main" class="fb-skip-link">Skip to main content</a>
 
   <header class="fb-topbar">
-    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+    <a href="01-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
       <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
       <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
@@ -63,42 +62,13 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <span class="fb-status fb-status--account-active">Riley P.</span>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1" class="fb-page">
-    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
-      <a href="02-pending-registrations.html">Pending registrations</a> › <span aria-current="page">Alex Rivera</span>
-    </nav>
-    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Approve registration</h1>
-
-    <div class="fb-card" style="margin-bottom: var(--fb-space-5);">
-      <dl style="margin: 0;">
-        <div><dt class="fb-caption">Name</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;"><strong>Alex Rivera</strong></dd></div>
-        <div><dt class="fb-caption">Email</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;">alex.rivera@example.org</dd></div>
-        <div><dt class="fb-caption">Self-declared role</dt><dd style="margin: 2px 0 var(--fb-space-3) 0;">Employee</dd></div>
-        <div><dt class="fb-caption">Submitted</dt><dd style="margin: 2px 0 0 0;"><time>Mar 17, 2026 · 09:00</time></dd></div>
-      </dl>
+    <div data-admin-root>
+      <div class="fb-listings__empty">Loading…</div>
     </div>
-
-    <form data-mock-form data-next="02-pending-registrations.html" data-toast="Account approved. Approval email sent.">
-      <div class="fb-alert fb-alert--info" style="margin-bottom: var(--fb-space-5);">
-        <div>
-          <strong>Approving will:</strong>
-          <ul style="margin: var(--fb-space-1) 0 0; padding-left: var(--fb-space-5);">
-            <li>Change account status from <strong>Pending</strong> to <strong>Active</strong></li>
-            <li>Send the "account approved" email to <strong>alex.rivera@example.org</strong></li>
-            <li>Record this action in the audit trail (actor: you, Riley P.)</li>
-          </ul>
-        </div>
-      </div>
-      <div class="fb-actions">
-        <a href="02-pending-registrations.html" class="fb-btn fb-btn--tertiary">Cancel</a>
-        <button type="submit" class="fb-btn fb-btn--success">Approve account</button>
-      </div>
-    </form>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
@@ -112,6 +82,64 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
+  <script src="../assets/admin-renderer.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var admin = window.FB.state.getCurrentUser();
+      if (!admin || admin.role !== 'administrator') {
+        window.location.href = '../public/02-login.html';
+        return;
+      }
+      var esc = window.FB.adminRender.escapeHtml;
+      var params = new URLSearchParams(window.location.search);
+      var regId = params.get('reg');
+      var regs = window.FB.state.listRegistrations();
+      var reg = regs.find(function (r) { return r.id === regId; }) || regs.find(function (r) { return !r.decision; });
+      if (!reg) {
+        document.querySelector('[data-admin-root]').innerHTML = '<div class="fb-listings__empty"><strong>No pending registrations.</strong></div>';
+        return;
+      }
+      var root = document.querySelector('[data-admin-root]');
+      var html = '';
+      html += '<nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">';
+      html += '  <a href="02-pending-registrations.html">Pending registrations</a> › <span aria-current="page">' + esc(reg.name) + '</span>';
+      html += '</nav>';
+      html += '<h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Approve registration</h1>';
+      html += '<div class="fb-card" style="margin-bottom: var(--fb-space-5);">';
+      html += '  <dl style="margin: 0;">';
+      html += '    <div style="margin-bottom: var(--fb-space-3);"><dt class="fb-caption">Name</dt><dd style="margin: 2px 0 0;"><strong>' + esc(reg.name) + '</strong></dd></div>';
+      html += '    <div style="margin-bottom: var(--fb-space-3);"><dt class="fb-caption">Email</dt><dd style="margin: 2px 0 0;"><code style="font-size: 13px;">' + esc(reg.email) + '</code></dd></div>';
+      html += '    <div style="margin-bottom: var(--fb-space-3);"><dt class="fb-caption">Self-declared role</dt><dd style="margin: 2px 0 0;">' + esc(reg.selfRole || '—') + '</dd></div>';
+      html += '    <div><dt class="fb-caption">Submitted</dt><dd style="margin: 2px 0 0;"><time>' + esc(window.fbFormatDate(reg.requestedAt, 'datetime')) + '</time></dd></div>';
+      html += '  </dl>';
+      html += '</div>';
+      html += '<div class="fb-alert fb-alert--info" style="margin-bottom: var(--fb-space-5);">';
+      html += '  <div><strong>Approving will:</strong><ul style="margin: var(--fb-space-1) 0 0; padding-left: var(--fb-space-5);">';
+      html += '    <li>Change account status from <strong>Pending</strong> to <strong>Active</strong></li>';
+      html += '    <li>Send the "account approved" email to <strong>' + esc(reg.email) + '</strong></li>';
+      html += '    <li>Record this action in the audit trail (actor: ' + esc(admin.name) + ')</li>';
+      html += '  </ul></div>';
+      html += '</div>';
+      html += '<div class="fb-actions">';
+      html += '  <a href="02-pending-registrations.html" class="fb-btn fb-btn--tertiary">Cancel</a>';
+      html += '  <button type="button" class="fb-btn fb-btn--success" data-action="approve-reg" data-reg-id="' + esc(reg.id) + '">Approve account</button>';
+      html += '</div>';
+      root.innerHTML = html;
+      var btn = root.querySelector('[data-action="approve-reg"]');
+      btn.addEventListener('click', function () {
+        var created = window.FB.state.approveRegistration(reg.id, admin.id);
+        if (!created) {
+          window.FB.toast('This application was already reviewed.', 'error');
+          window.location.href = '02-pending-registrations.html';
+          return;
+        }
+        window.FB.toast('Account approved. Approval email sent to ' + created.email + '.', 'success');
+        setTimeout(function () { window.location.href = '02-pending-registrations.html'; }, 250);
+      });
+    });
+  </script>
 </body>
 </html>

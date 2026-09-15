@@ -62,9 +62,7 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <a href="03-register.html" class="fb-btn fb-btn--primary fb-btn--sm">Register</a>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1">
@@ -72,24 +70,57 @@
       <div class="fb-auth-card">
         <h1>Sign in</h1>
         <p class="fb-helper">Enter your email and password to access your FindBack account.</p>
-        <form data-mock-form data-next="../member/02-dashboard.html" data-toast="Signed in as Maya.">
+        <form data-login-form novalidate>
+          <!-- Login-failure alert. Lives INSIDE the form so the submit
+               handler's form.querySelector('[data-login-error]') can find it.
+               Starts hidden; only populated after a failed sign-in
+               (invalid credentials) or when ?blocked= is set. Distinct from
+               the field-validation summary used by attachFormValidation. -->
+          <div class="fb-form-error" data-login-error id="login-error-summary" role="alert" aria-live="assertive" hidden></div>
           <div class="fb-field">
             <label class="fb-field__label" for="email">Email</label>
-            <input class="fb-input" type="email" id="email" name="email" value="maya.chen@example.org" autocomplete="email" required>
+            <input class="fb-input" type="email" id="email" name="email" autocomplete="email" required aria-describedby="login-error-summary">
           </div>
           <div class="fb-field">
             <label class="fb-field__label" for="password">Password</label>
-            <input class="fb-input" type="password" id="password" name="password" value="lost-and-found-2026" autocomplete="current-password" required>
+            <input class="fb-input" type="password" id="password" name="password" autocomplete="current-password" required aria-describedby="login-error-summary">
             <p class="fb-helper"><a href="09-forgot-password.html">Forgot your password?</a></p>
           </div>
           <button type="submit" class="fb-btn fb-btn--primary">Sign in</button>
         </form>
+
         <div class="fb-auth-footer">
           New to FindBack? <a href="03-register.html">Create an account</a>
         </div>
       </div>
     </div>
   </main>
+
+  <script>
+    // The login-failure alert is rendered/cleared by app.js (handleLoginForm).
+    // This inline script only runs when ?blocked=rejected|deactivated is present
+    // (a guarded page redirected the user back to Login after a state change).
+    (function () {
+      function showBlocked(reason) {
+        var err = document.querySelector('[data-login-error]');
+        if (!err) return;
+        if (reason === 'rejected' || reason === 'deactivated') {
+          err.textContent = "We couldn't sign you in. Your account is not active. If you think this is a mistake, contact your administrator.";
+          err.hidden = false;
+        } else if (reason === 'pending') {
+          err.textContent = "Your account is awaiting administrator approval. You'll be able to sign in once it's approved.";
+          err.hidden = false;
+        }
+      }
+      document.addEventListener('DOMContentLoaded', function () {
+        var blocked = new URLSearchParams(window.location.search).get('blocked');
+        if (blocked) showBlocked(blocked);
+      });
+      // Expose so app.js can re-show this on a same-page redirect without reload.
+      window.FB = window.FB || {};
+      window.FB.showLoginBlocked = showBlocked;
+    })();
+  </script>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
@@ -102,6 +133,7 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
   <script src="../assets/app.js"></script>
 </body>
 </html>

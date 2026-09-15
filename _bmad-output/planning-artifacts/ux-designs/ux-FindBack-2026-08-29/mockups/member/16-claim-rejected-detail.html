@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Auto-rejected claim — FindBack</title>
+  <title>Rejected claim — FindBack</title>
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/tokens.css">
   <script>
@@ -20,9 +20,6 @@
   </script>
   <style>
     .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
-    .fb-reject-banner { background: var(--fb-error-soft); border: 1px solid var(--fb-error); border-radius: var(--fb-radius-md); padding: var(--fb-space-4); margin-bottom: var(--fb-space-5); }
-    .fb-thread { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-4); }
-    .fb-thread__closed { padding: var(--fb-space-4); background: var(--fb-surface-container); border-radius: var(--fb-radius-md); text-align: center; font-size: 14px; color: var(--fb-on-surface-variant); margin-top: var(--fb-space-4); }
     body { padding-bottom: 80px; }
   </style>
 </head>
@@ -36,7 +33,7 @@
     </a>
     <nav class="fb-topbar__nav" aria-label="Primary">
       <a href="01-listings-anon.html">Lost &amp; Found</a>
-      <a href="07-my-reports.html">My reports</a>
+      <a href="08-my-reports.html">My reports</a>
       <a href="10-my-claims.html" aria-current="page">My claims</a>
     </nav>
     <div class="fb-topbar__spacer"></div>
@@ -62,74 +59,40 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Report an item</a>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1" class="fb-page">
-    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
-      <a href="10-my-claims.html">My claims</a> › <span aria-current="page">Black iPhone 14 — auto-rejected</span>
-    </nav>
-
-    <div class="fb-row fb-row--between" style="margin-bottom: var(--fb-space-4); flex-wrap: wrap; gap: var(--fb-space-3);">
-      <div>
-        <h1 class="fb-h2" style="margin: 0;">Claim on "Black iPhone 14"</h1>
-        <p class="fb-helper" style="margin: 0;">Item ID 1003 · Claim ID 487</p>
-      </div>
-      <span class="fb-status fb-status--claim-rejected">Rejected (auto)</span>
+    <div data-claim-root>
+      <div class="fb-listings__empty">Loading…</div>
     </div>
-
-    <div class="fb-reject-banner" role="alert">
-      <strong>Another claim was approved for this item.</strong>
-      <p style="margin: var(--fb-space-1) 0 0;">Your claim was automatically rejected because a different pending claim on the same item was approved by an administrator. Only one claim can be approved per item. The thread is now read-only.</p>
-    </div>
-
-    <section class="fb-detail__section" style="padding-top: 0;">
-      <h2 class="fb-detail__section-title">Item summary</h2>
-      <div class="fb-card">
-        <div class="fb-row fb-row--between">
-          <div>
-            <strong>Black iPhone 14</strong> · <span class="fb-type-badge fb-type-badge--found">Found</span> at Science Building, Mar 12
-          </div>
-          <span class="fb-status fb-status--report-claimapproved">Claim Approved</span>
-        </div>
-        <p style="margin: var(--fb-space-3) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">
-          A different claimant's claim was approved for this item on <time>Mar 13, 14:20</time>. Item is awaiting physical return.
-        </p>
-      </div>
-    </section>
-
-    <section class="fb-detail__section">
-      <h2 class="fb-detail__section-title">Your claim (rejected)</h2>
-      <div class="fb-card">
-        <p style="margin: 0 0 var(--fb-space-2);"><strong>Reason:</strong> Black iPhone 14, model MQ8X3LL/A, lost around 1pm near the Science Building atrium.</p>
-        <p style="margin: 0;"><strong>Identifying details:</strong> Lock screen photo of a hiking trail; case has a small chip on the upper-right corner.</p>
-      </div>
-    </section>
-
-    <section class="fb-detail__section">
-      <h2 class="fb-detail__section-title">Messages</h2>
-      <div class="fb-thread" aria-live="polite">
-        <p style="margin: 0;">No messages were exchanged on this claim.</p>
-        <div class="fb-thread__closed">
-          🔒 This thread is read-only because the claim was rejected on <time>Mar 13</time>.
-        </div>
-      </div>
-    </section>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 9 of 12 (auto-rejection view)</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>UJ-4 (auto-rejection view)</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="10-my-claims.html">← Previous</a>
         <a href="../index.html">All journeys</a>
-        <a href="../admin/01-dashboard.html">Next →</a>
+        <a href="13-claim-detail.html">Next →</a>
       </div>
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var user = window.FB.state.getCurrentUser();
+      if (!user) { window.location.href = '../public/02-login.html'; return; }
+      if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
+
+      var params = new URLSearchParams(window.location.search);
+      var claimId = params.get('claim') || 'clm_phone_alex';
+      // Default redirect to the unified claim detail page; passing through the claim id.
+      window.location.href = '13-claim-detail.html?claim=' + encodeURIComponent(claimId);
+    });
+  </script>
 </body>
 </html>

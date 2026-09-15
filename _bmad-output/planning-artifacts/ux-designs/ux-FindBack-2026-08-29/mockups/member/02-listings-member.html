@@ -20,13 +20,11 @@
   </script>
   <style>
     .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
-    .fb-filters { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-4); display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: var(--fb-space-3); margin-bottom: var(--fb-space-5); }
-    @media (max-width: 900px) { .fb-filters { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 600px) { .fb-filters { grid-template-columns: 1fr; } }
-    .fb-filters .fb-field__label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fb-on-surface-variant); }
-    .fb-table tbody tr { cursor: pointer; }
-    .fb-table tbody tr td:first-child { font-weight: 600; }
-    .fb-cell-meta { color: var(--fb-on-surface-variant); font-size: 13px; }
+    .fb-listings__filters .fb-field__label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fb-on-surface-variant); }
+    .fb-listings__filters .fb-clear {
+      margin-top: var(--fb-space-3);
+      width: 100%;
+    }
     body { padding-bottom: 80px; }
   </style>
 </head>
@@ -39,8 +37,8 @@
       <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
     <nav class="fb-topbar__nav" aria-label="Primary">
-      <a href="01-listings-anon.html" aria-current="page">Lost &amp; Found</a>
-      <a href="07-my-reports.html">My reports</a>
+      <a href="01-listings-anon.html">Lost &amp; Found</a>
+      <a href="08-my-reports.html">My reports</a>
       <a href="10-my-claims.html">My claims</a>
     </nav>
     <div class="fb-topbar__spacer"></div>
@@ -66,138 +64,68 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <span class="fb-status" style="margin-right: var(--fb-space-2);"><span class="fb-status fb-status--account-active">Maya C.</span></span>
-      <a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Report an item</a>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
-  <main id="main" tabindex="-1" class="fb-page">
+  <main id="main" tabindex="-1" class="fb-page" data-page="listings-member">
     <div class="fb-row fb-row--between" style="margin-bottom: var(--fb-space-5); flex-wrap: wrap; gap: var(--fb-space-3);">
       <h1 class="fb-h2">Lost &amp; Found</h1>
-      <p class="fb-helper">38 active reports · showing first 5</p>
+      <p class="fb-helper" data-result-count>Loading reports…</p>
     </div>
 
-    <form class="fb-filters" aria-label="Filter reports" onsubmit="event.preventDefault();">
-      <div>
-        <label class="fb-field__label" for="kw">Search</label>
-        <input class="fb-input" type="search" id="kw" name="kw" placeholder="Keyword (name or description)">
-      </div>
-      <div>
-        <label class="fb-field__label" for="cat">Category</label>
-        <select class="fb-select" id="cat" name="cat">
-          <option value="">All</option>
-          <option>Wallet</option>
-          <option>Bag</option>
-          <option>Electronics</option>
-          <option>Keys</option>
-          <option>Clothing</option>
-          <option>Books/Notebooks</option>
-          <option>Identification</option>
-          <option>Water Bottle</option>
-          <option>Other</option>
-        </select>
-      </div>
-      <div>
-        <label class="fb-field__label" for="loc">Location</label>
-        <select class="fb-select" id="loc" name="loc">
-          <option value="">All</option>
-          <option>Main Library</option>
-          <option>Science Building</option>
-          <option>Student Center</option>
-          <option>North Quad</option>
-          <option>Rec Center</option>
-        </select>
-      </div>
-      <div>
-        <label class="fb-field__label" for="type">Type</label>
-        <select class="fb-select" id="type" name="type">
-          <option value="">Both</option>
-          <option>Lost</option>
-          <option>Found</option>
-        </select>
-      </div>
-      <div>
-        <label class="fb-field__label" for="status">Status</label>
-        <select class="fb-select" id="status" name="status">
-          <option value="">Active only</option>
-          <option>Open</option>
-          <option>Claim Requested</option>
-          <option>Claim Approved</option>
-          <option>Returned</option>
-          <option>Closed</option>
-        </select>
-      </div>
-    </form>
+    <div class="fb-listings">
+      <aside class="fb-listings__filters">
+        <div class="fb-filter-card">
+          <h3>Filters</h3>
+          <div class="fb-field">
+            <label class="fb-field__label" for="kw">Search</label>
+            <input class="fb-input" type="search" id="kw" name="kw" placeholder="Keyword" data-filter="kw">
+          </div>
+          <div class="fb-field">
+            <label class="fb-field__label" for="cat">Category</label>
+            <select class="fb-select" id="cat" name="cat" data-filter="category">
+              <option value="">All categories</option>
+            </select>
+          </div>
+          <div class="fb-field">
+            <label class="fb-field__label" for="loc">Location</label>
+            <select class="fb-select" id="loc" name="loc" data-filter="campusArea">
+              <option value="">All locations</option>
+            </select>
+          </div>
+          <div class="fb-field">
+            <label class="fb-field__label" for="type">Type</label>
+            <select class="fb-select" id="type" name="type" data-filter="type">
+              <option value="">Both</option>
+              <option value="lost">Lost</option>
+              <option value="found">Found</option>
+            </select>
+          </div>
+          <div class="fb-field">
+            <label class="fb-field__label" for="status">Status</label>
+            <select class="fb-select" id="status" name="status" data-filter="status">
+              <option value="">Active only</option>
+              <option value="open">Open</option>
+              <option value="claimRequested">Claim Requested</option>
+              <option value="claimApproved">Claim Approved</option>
+              <option value="returned">Returned</option>
+              <option value="closed">Closed</option>
+              <option value="any">All statuses</option>
+            </select>
+          </div>
+          <button type="button" class="fb-btn fb-btn--secondary fb-btn--sm fb-clear" data-action="clear-filters">Clear filters</button>
+        </div>
+      </aside>
 
-    <table class="fb-table">
-      <thead>
-        <tr>
-          <th>Item</th>
-          <th>Category</th>
-          <th>Date</th>
-          <th>Location</th>
-          <th>Type</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr onclick="window.location.href='03-item-detail-anon.html';">
-          <td data-label="Item">Brown leather wallet<span class="fb-cell-meta"> · ID 1004</span></td>
-          <td data-label="Category">Wallet</td>
-          <td data-label="Date"><time>Mar 16</time></td>
-          <td data-label="Location">Main Library</td>
-          <td data-label="Type"><span class="fb-type-badge fb-type-badge--found">Found</span></td>
-          <td data-label="Status"><span class="fb-status fb-status--report-claimrequested">Claim Requested</span></td>
-        </tr>
-        <tr>
-          <td data-label="Item">Black iPhone 14<span class="fb-cell-meta"> · ID 1003</span></td>
-          <td data-label="Category">Electronics</td>
-          <td data-label="Date"><time>Mar 12</time></td>
-          <td data-label="Location">Science Building</td>
-          <td data-label="Type"><span class="fb-type-badge fb-type-badge--found">Found</span></td>
-          <td data-label="Status"><span class="fb-status fb-status--report-claimrequested">Claim Requested</span></td>
-        </tr>
-        <tr>
-          <td data-label="Item">Set of keys with red lanyard<span class="fb-cell-meta"> · ID 1002</span></td>
-          <td data-label="Category">Keys</td>
-          <td data-label="Date"><time>Mar 11</time></td>
-          <td data-label="Location">Student Center</td>
-          <td data-label="Type"><span class="fb-type-badge fb-type-badge--found">Found</span></td>
-          <td data-label="Status"><span class="fb-status fb-status--report-open">Open</span></td>
-        </tr>
-        <tr>
-          <td data-label="Item">Blue North Face backpack<span class="fb-cell-meta"> · ID 1001</span></td>
-          <td data-label="Category">Bag</td>
-          <td data-label="Date"><time>Mar 10</time></td>
-          <td data-label="Location">North Quad</td>
-          <td data-label="Type"><span class="fb-type-badge fb-type-badge--lost">Lost</span></td>
-          <td data-label="Status"><span class="fb-status fb-status--report-open">Open</span></td>
-        </tr>
-        <tr>
-          <td data-label="Item">Black umbrella<span class="fb-cell-meta"> · ID 1000</span></td>
-          <td data-label="Category">Other</td>
-          <td data-label="Date"><time>Mar 8</time></td>
-          <td data-label="Location">Rec Center</td>
-          <td data-label="Type"><span class="fb-type-badge fb-type-badge--found">Found</span></td>
-          <td data-label="Status"><span class="fb-status fb-status--report-open">Open</span></td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="fb-row fb-row--between" style="margin-top: var(--fb-space-5); font-size: 13px; color: var(--fb-on-surface-variant);">
-      <span>Showing 5 of 38 active reports</span>
-      <div class="fb-row">
-        <a href="#" aria-disabled="true" style="opacity: 0.4; pointer-events: none;">‹ Prev</a>
-        <span>Page 1 of 8</span>
-        <a href="#">Next ›</a>
-      </div>
+      <section class="fb-listings__results" aria-live="polite" data-results>
+        <div class="fb-listings__empty">Loading reports…</div>
+      </section>
     </div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-1 Maya · Step 3 of 13</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>UJ-1 Maya · Step 3 of 13</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="01-listings-anon.html">← Previous</a>
         <a href="../index.html">All journeys</a>
@@ -206,6 +134,116 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var user = window.FB.state.getCurrentUser();
+      if (!user) { window.location.href = '../public/02-login.html'; return; }
+      if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
+
+      var ctx = document.querySelector('[data-mockup-context]');
+      if (ctx) ctx.textContent = 'UJ-1 ' + user.name + ' · Step 3 of 13';
+
+      // Populate filter selects from state.
+      var categories = window.FB.state.categories;
+      var areas = window.FB.state.campusAreas;
+      var catSel = document.getElementById('cat');
+      var locSel = document.getElementById('loc');
+      categories.forEach(function (c) { catSel.insertAdjacentHTML('beforeend', '<option value="' + c + '">' + c + '</option>'); });
+      areas.forEach(function (a) { locSel.insertAdjacentHTML('beforeend', '<option value="' + a + '">' + a + '</option>'); });
+
+      var filters = { kw: '', category: '', campusArea: '', type: '', status: '' };
+
+      function statusLabel(s) {
+        if (s === 'open') return 'Open';
+        if (s === 'claimRequested') return 'Claim Requested';
+        if (s === 'claimApproved') return 'Claim Approved';
+        if (s === 'returned') return 'Returned';
+        if (s === 'closed') return 'Closed';
+        return s;
+      }
+      function statusBadge(s) {
+        return '<span class="fb-status fb-status--report-' + s + '">' + statusLabel(s) + '</span>';
+      }
+
+      function applyFilters() {
+        var all = window.FB.state.listReports();
+        var filtered = all.filter(function (r) {
+          // Default: hide closed unless explicitly requested.
+          var statusQ = filters.status;
+          if (!statusQ) {
+            if (r.status === 'closed') return false;
+          } else if (statusQ !== 'any') {
+            if (r.status !== statusQ) return false;
+          }
+          if (filters.type && r.type !== filters.type) return false;
+          if (filters.category && r.category !== filters.category) return false;
+          if (filters.campusArea && r.campusArea !== filters.campusArea) return false;
+          if (filters.kw) {
+            var kw = filters.kw.toLowerCase();
+            var hay = (r.name + ' ' + r.description + ' ' + r.identifyingDetails + ' ' + r.exactPlace).toLowerCase();
+            if (hay.indexOf(kw) === -1) return false;
+          }
+          return true;
+        });
+        // Sort: most recent first
+        filtered.sort(function (a, b) { return a.updatedAt < b.updatedAt ? 1 : -1; });
+        render(filtered);
+        var countEl = document.querySelector('[data-result-count]');
+        if (countEl) {
+          var total = all.length;
+          countEl.textContent = filtered.length + ' of ' + total + ' reports' + (filters.status === 'any' ? '' : ' (active)');
+        }
+      }
+
+      function render(rows) {
+        var out = document.querySelector('[data-results]');
+        if (!rows.length) {
+          out.innerHTML = '<div class="fb-listings__empty"><strong>No reports match your filters.</strong><div>Try clearing filters or searching by a different keyword.</div></div>';
+          return;
+        }
+        var html = '';
+        rows.forEach(function (r) {
+          var typeBadge = '<span class="fb-type-badge fb-type-badge--' + r.type + '">' + (r.type === 'lost' ? 'Lost' : 'Found') + '</span>';
+          html += '<a class="fb-item-card" href="03-item-detail-member.html?item=' + r.id + '">' +
+            '<div class="fb-item-card__head">' +
+              '<h3 class="fb-item-card__title">' + r.name + '</h3>' +
+              '<div class="fb-detail__badges">' + typeBadge + statusBadge(r.status) + '</div>' +
+            '</div>' +
+            '<p style="margin: 0 0 var(--fb-space-2); color: var(--fb-on-surface-variant); font-size: 14px;">' + r.description + '</p>' +
+            '<div class="fb-item-card__meta">' +
+              '<span class="fb-item-card__meta-item">Category · ' + r.category + '</span>' +
+              '<span class="fb-item-card__meta-item">Location · ' + r.campusArea + '</span>' +
+              '<span class="fb-item-card__meta-item">Date · ' + window.fbFormatDate(r.date) + '</span>' +
+            '</div>' +
+          '</a>';
+        });
+        out.innerHTML = html;
+      }
+
+      // Wire filters
+      document.querySelectorAll('[data-filter]').forEach(function (el) {
+        el.addEventListener('input', function () { filters[el.dataset.filter] = el.value; applyFilters(); });
+        el.addEventListener('change', function () { filters[el.dataset.filter] = el.value; applyFilters(); });
+      });
+      var clearBtn = document.querySelector('[data-action="clear-filters"]');
+      if (clearBtn) clearBtn.addEventListener('click', function () {
+        filters = { kw: '', category: '', campusArea: '', type: '', status: '' };
+        document.querySelectorAll('[data-filter]').forEach(function (el) { el.value = ''; });
+        applyFilters();
+      });
+
+      // Read URL filters
+      try {
+        var p = new URLSearchParams(window.location.search);
+        if (p.get('q')) { filters.kw = p.get('q'); document.getElementById('kw').value = p.get('q'); }
+        if (p.get('status')) { filters.status = p.get('status'); document.getElementById('status').value = p.get('status'); }
+      } catch (e) {}
+
+      applyFilters();
+    });
+  </script>
 </body>
 </html>

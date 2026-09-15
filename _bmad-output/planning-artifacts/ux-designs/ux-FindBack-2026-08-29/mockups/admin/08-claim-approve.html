@@ -19,16 +19,16 @@
     })();
   </script>
   <style>
-    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
     .fb-actions { display: flex; justify-content: flex-end; gap: var(--fb-space-3); margin-top: var(--fb-space-5); flex-wrap: wrap; }
     body { padding-bottom: 80px; }
   </style>
 </head>
-<body>
+<body class="fb-topbar--admin">
   <a href="#main" class="fb-skip-link">Skip to main content</a>
 
   <header class="fb-topbar">
-    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+    <a href="01-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
       <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
       <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
@@ -62,52 +62,95 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <span class="fb-status fb-status--account-active">Riley P.</span>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1" class="fb-page">
-    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
-      <a href="06-claim-review.html">Review claim</a> › <span aria-current="page">Approve</span>
-    </nav>
-    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Approve this claim</h1>
-
-    <div class="fb-card" style="margin-bottom: var(--fb-space-5);">
-      <p style="margin: 0;"><strong>Maya C.</strong> claiming <strong>Brown leather wallet</strong> (Item ID 1004)</p>
-    </div>
-
-    <form data-mock-form data-next="09-items-awaiting-return.html" data-toast="Claim approved. Item moved to Claim Approved.">
-      <div class="fb-alert fb-alert--success">
-        <div>
-          <strong>This approval will:</strong>
-          <ul style="margin: var(--fb-space-1) 0 0; padding-left: var(--fb-space-5);">
-            <li>Change Maya's claim to <strong>Approved</strong></li>
-            <li>Move the item to status <strong>Claim Approved</strong></li>
-            <li>Email Maya with the approval notice</li>
-            <li>Record the approval in the audit trail</li>
-          </ul>
-          <p style="margin: var(--fb-space-2) 0 0;"><em>No competing claims to auto-reject in this case.</em></p>
-        </div>
-      </div>
-      <div class="fb-actions">
-        <a href="06-claim-review.html" class="fb-btn fb-btn--tertiary">Cancel</a>
-        <button type="submit" class="fb-btn fb-btn--success">Confirm approval</button>
-      </div>
-    </form>
+    <div data-admin-root><div class="fb-listings__empty">Loading…</div></div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 5 of 12 (approve)</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 7 of 13 (approve)</span>
       <div style="display: flex; gap: var(--fb-space-4);">
-        <a href="06-claim-review.html">← Previous</a>
+        <a href="07-claim-review-competing.html">← Previous</a>
         <a href="../index.html">All journeys</a>
-        <a href="08-claim-reject.html">Next →</a>
+        <a href="09-items-awaiting-return.html">Next →</a>
       </div>
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
+  <script src="../assets/admin-renderer.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var admin = window.FB.state.getCurrentUser();
+      if (!admin || admin.role !== 'administrator') {
+        window.location.href = '../public/02-login.html';
+        return;
+      }
+      var esc = window.FB.adminRender.escapeHtml;
+      var params = new URLSearchParams(window.location.search);
+      var claimId = params.get('claim');
+      var claim = claimId ? window.FB.state.getClaim(claimId) : null;
+      if (!claim) {
+        // Default to first pending claim.
+        var first = window.FB.state.listClaims().find(function (c) { return c.status === 'pending'; });
+        claim = first;
+      }
+      if (!claim) {
+        document.querySelector('[data-admin-root]').innerHTML = '<div class="fb-listings__empty"><strong>No pending claims.</strong></div>';
+        return;
+      }
+      var report = window.FB.state.getReport(claim.reportId);
+      var claimant = window.FB.state.getUser(claim.claimantId);
+      var siblings = window.FB.state.listPendingClaimsForReport(claim.reportId).filter(function (c) { return c.id !== claim.id; });
+      var root = document.querySelector('[data-admin-root]');
+      var html = '';
+      html += '<nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">';
+      html += '  <a href="05-pending-claims.html">Pending claims</a> › <span aria-current="page">Approve</span>';
+      html += '</nav>';
+      html += '<h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Approve this claim</h1>';
+      html += '<div class="fb-card" style="margin-bottom: var(--fb-space-5);">';
+      html += '  <p style="margin: 0;"><strong>' + esc(claimant ? claimant.name : '—') + '</strong> claiming <strong>' + esc(report ? report.name : '?') + '</strong> (' + esc(claim.id) + ')</p>';
+      html += '</div>';
+      html += '<div class="fb-alert" style="background: var(--fb-success-soft); border-color: var(--fb-success);">';
+      html += '  <div><strong>This approval will:</strong>';
+      html += '    <ul style="margin: var(--fb-space-1) 0 0; padding-left: var(--fb-space-5);">';
+      html += '      <li>Change the claimant\'s claim to <strong>Approved</strong></li>';
+      html += '      <li>Move the item to status <strong>Claim Approved</strong></li>';
+      html += '      <li>Send an approval email to <strong>' + esc(claimant ? claimant.email : '?') + '</strong></li>';
+      html += '      <li>Record the approval in the audit trail</li>';
+      if (siblings.length) {
+        html += '      <li><strong>Auto-reject</strong> ' + siblings.length + ' other pending claim' + (siblings.length === 1 ? '' : 's') + ' on this item</li>';
+      }
+      html += '    </ul>';
+      if (!siblings.length) {
+        html += '    <p style="margin: var(--fb-space-2) 0 0;"><em>No competing claims to auto-reject.</em></p>';
+      }
+      html += '  </div>';
+      html += '</div>';
+      html += '<div class="fb-actions">';
+      html += '  <a href="06-claim-review.html?claim=' + esc(claim.id) + '" class="fb-btn fb-btn--tertiary">Cancel</a>';
+      html += '  <button type="button" class="fb-btn fb-btn--success" data-action="confirm-approve" data-claim-id="' + esc(claim.id) + '">Confirm approval</button>';
+      html += '</div>';
+      root.innerHTML = html;
+      var btn = root.querySelector('[data-action="confirm-approve"]');
+      btn.addEventListener('click', function () {
+        var result = window.FB.state.approveClaim(claim.id, admin.id);
+        if (!result) {
+          window.FB.toast('This claim is no longer pending.', 'error');
+          window.location.href = '05-pending-claims.html';
+          return;
+        }
+        var autoCount = result.autoRejected ? result.autoRejected.length : 0;
+        var msg = 'Claim approved.' + (autoCount ? ' ' + autoCount + ' competing claim' + (autoCount === 1 ? '' : 's') + ' auto-rejected.' : '') + ' Item moved to Claim Approved.';
+        window.FB.toast(msg, 'success');
+        setTimeout(function () { window.location.href = '09-items-awaiting-return.html'; }, 350);
+      });
+    });
+  </script>
 </body>
 </html>

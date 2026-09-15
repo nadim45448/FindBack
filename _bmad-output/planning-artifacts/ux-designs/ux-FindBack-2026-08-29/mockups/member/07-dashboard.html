@@ -18,31 +18,21 @@
       } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
     })();
   </script>
-  <style>
-    .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
-    .fb-stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--fb-space-4); margin-bottom: var(--fb-space-6); }
-    @media (max-width: 768px) { .fb-stat-row { grid-template-columns: 1fr 1fr; } }
-    .fb-stat { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-4); }
-    .fb-stat__num { font-size: 28px; font-weight: 700; line-height: 1; }
-    .fb-stat__label { font-size: 13px; color: var(--fb-on-surface-variant); margin-top: 2px; }
-    .fb-action-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--fb-space-4); }
-    @media (max-width: 768px) { .fb-action-grid { grid-template-columns: 1fr; } }
-    .fb-action-card { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-5); }
-    body { padding-bottom: 80px; }
-  </style>
+  <style>body { padding-bottom: 80px; }</style>
 </head>
 <body>
   <a href="#main" class="fb-skip-link">Skip to main content</a>
 
   <header class="fb-topbar">
-    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+    <a href="01-listings-anon.html" class="fb-topbar__brand" aria-label="FindBack home">
       <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
       <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
     <nav class="fb-topbar__nav" aria-label="Primary">
-      <a href="01-listings-anon.html">Lost &amp; Found</a>
-      <a href="07-my-reports.html">My reports</a>
+      <a href="02-listings-member.html">Browse</a>
+      <a href="08-my-reports.html">My reports</a>
       <a href="10-my-claims.html">My claims</a>
+      <a href="../admin/01-dashboard.html" data-admin-link hidden>Admin</a>
     </nav>
     <div class="fb-topbar__spacer"></div>
     <div class="fb-theme-toggle" data-theme-toggle>
@@ -67,74 +57,52 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Report an item</a>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1" class="fb-page">
-    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-3);">Welcome back, Maya.</h1>
-    <p class="fb-helper" style="margin-bottom: var(--fb-space-6);">Here's what's happening with your reports and claims.</p>
+    <div data-dashboard-root>
+      <div class="fb-welcome-card">
+        <h1 class="fb-welcome-card__greeting" data-greeting>Welcome back.</h1>
+        <p class="fb-welcome-card__sub">Here's what's happening with your reports and claims.</p>
+      </div>
 
-    <div class="fb-stat-row">
-      <div class="fb-stat">
-        <div class="fb-stat__num">2</div>
-        <div class="fb-stat__label">My open reports</div>
+      <div class="fb-stat-row" data-stat-row>
+        <div class="fb-stat"><div class="fb-stat__num" data-stat-open>0</div><div class="fb-stat__label">My open reports</div></div>
+        <div class="fb-stat fb-stat--accent"><div class="fb-stat__num" data-stat-pending>0</div><div class="fb-stat__label">Pending claims</div></div>
+        <div class="fb-stat"><div class="fb-stat__num" data-stat-approved>0</div><div class="fb-stat__label">Approved claims</div></div>
+        <div class="fb-stat"><div class="fb-stat__num" data-stat-returned>0</div><div class="fb-stat__label">Returned items</div></div>
       </div>
-      <div class="fb-stat">
-        <div class="fb-stat__num">1</div>
-        <div class="fb-stat__label">Pending claims</div>
-      </div>
-      <div class="fb-stat">
-        <div class="fb-stat__num">1</div>
-        <div class="fb-stat__label">Approved claim</div>
-      </div>
-      <div class="fb-stat">
-        <div class="fb-stat__num">3</div>
-        <div class="fb-stat__label">Total returned</div>
-      </div>
-    </div>
 
-    <h2 class="fb-h3" style="margin-bottom: var(--fb-space-4);">Quick actions</h2>
-    <div class="fb-action-grid">
-      <div class="fb-action-card">
-        <h3 class="fb-h4" style="margin-bottom: var(--fb-space-2);">Report a lost item</h3>
-        <p>Tell us what you lost and we'll match it against found reports.</p>
-        <p style="margin-top: var(--fb-space-3);"><a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Start a lost report</a></p>
-      </div>
-      <div class="fb-action-card">
-        <h3 class="fb-h4" style="margin-bottom: var(--fb-space-2);">Report a found item</h3>
-        <p>Turn in something you found so its owner can find it.</p>
-        <p style="margin-top: var(--fb-space-3);"><a href="15-report-found.html" class="fb-btn fb-btn--secondary fb-btn--sm">Start a found report</a></p>
-      </div>
-    </div>
-
-    <h2 class="fb-h3" style="margin: var(--fb-space-8) 0 var(--fb-space-4);">Recent activity</h2>
-    <ul class="fb-stack" style="list-style: none; padding: 0; margin: 0;">
-      <li class="fb-card">
-        <div class="fb-row fb-row--between">
-          <div>
-            <strong>Your claim on "Brown leather wallet" was approved.</strong>
-            <p style="margin: var(--fb-space-1) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">Mar 17, 11:30 — by Riley P.</p>
-          </div>
-          <a href="05-item-detail-claimant.html" class="fb-btn fb-btn--secondary fb-btn--sm">View</a>
+      <h2 class="fb-h3" style="margin-bottom: var(--fb-space-4);">Quick actions</h2>
+      <div class="fb-action-grid">
+        <div class="fb-action-card">
+          <div class="fb-action-card__icon" aria-hidden="true">↗</div>
+          <h3 class="fb-action-card__title">Report a lost item</h3>
+          <p class="fb-action-card__body">Tell us what you lost so we can help you find it.</p>
+          <div class="fb-action-card__cta"><a href="14-report-lost.html" class="fb-btn fb-btn--primary">Start a lost report</a></div>
         </div>
-      </li>
-      <li class="fb-card">
-        <div class="fb-row fb-row--between">
-          <div>
-            <strong>You submitted a claim on "Brown leather wallet".</strong>
-            <p style="margin: var(--fb-space-1) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">Mar 17, 09:14</p>
-          </div>
-          <a href="13-claim-detail.html" class="fb-btn fb-btn--secondary fb-btn--sm">View claim</a>
+        <div class="fb-action-card fb-action-card--found">
+          <div class="fb-action-card__icon" aria-hidden="true">↘</div>
+          <h3 class="fb-action-card__title">Report a found item</h3>
+          <p class="fb-action-card__body">Turn in something you found so its owner can find it.</p>
+          <div class="fb-action-card__cta"><a href="15-report-found.html" class="fb-btn fb-btn--secondary">Start a found report</a></div>
         </div>
-      </li>
-    </ul>
+      </div>
+
+      <div class="fb-section-header">
+        <h2 class="fb-h3">Recent activity</h2>
+        <a href="08-my-reports.html" class="fb-helper" style="text-decoration: underline;">All my reports →</a>
+      </div>
+      <ul class="fb-activity-list" data-activity-list>
+        <li>Loading your activity…</li>
+      </ul>
+    </div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">Member dashboard (Maya)</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>Member dashboard</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="../public/02-login.html">← Previous</a>
         <a href="../index.html">All journeys</a>
@@ -143,6 +111,84 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var user = window.FB.state.getCurrentUser();
+      if (!user) { window.location.href = '../public/02-login.html'; return; }
+      if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
+      var adminLink = document.querySelector('[data-admin-link]');
+      if (adminLink) adminLink.hidden = (user.role !== 'administrator');
+
+      var greeting = document.querySelector('[data-greeting]');
+      var firstName = (user.name || 'there').split(' ')[0];
+      var hour = new Date().getHours();
+      var salutation = hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening');
+      greeting.textContent = salutation + ', ' + firstName + '.';
+
+      var stats = window.FB.state.getDashboardStats(user.id);
+      document.querySelector('[data-stat-open]').textContent = stats.openReports;
+      document.querySelector('[data-stat-pending]').textContent = stats.pendingClaims;
+      document.querySelector('[data-stat-approved]').textContent = stats.approvedClaims;
+      document.querySelector('[data-stat-returned]').textContent = stats.returnedItems;
+
+      var ctx = document.querySelector('[data-mockup-context]');
+      if (ctx) ctx.textContent = 'Member dashboard · ' + user.name;
+
+      var myReports = window.FB.state.listReportsForUser(user.id);
+      var myClaims = window.FB.state.listClaimsForUser(user.id);
+      var reportIds = {};
+      myReports.forEach(function (r) { reportIds[r.id] = true; });
+      var claimIds = {};
+      myClaims.forEach(function (c) { claimIds[c.id] = true; });
+      var events = window.FB.state.listAudit().filter(function (a) {
+        return (a.actorId === user.id) ||
+               (a.reportId && reportIds[a.reportId]) ||
+               (a.claimId && claimIds[a.claimId]);
+      }).slice(0, 6);
+
+      var list = document.querySelector('[data-activity-list]');
+      if (!events.length) {
+        list.innerHTML = '<li class="fb-helper" style="text-align:center;">No activity yet. Start by reporting a lost or found item.</li>';
+        return;
+      }
+      var html = '';
+      events.forEach(function (e) {
+        var verb;
+        if (e.action === 'created') {
+          // Resolve the report type so the activity title distinguishes a
+          // lost report from a found report — a single verb ("reported an
+          // item") is too generic for a member who needs to scan recent
+          // activity at a glance. Falls back to the generic verb only if
+          // the report record cannot be found.
+          var createdReport = e.reportId ? window.FB.state.getReport(e.reportId) : null;
+          if (createdReport && createdReport.type === 'lost')  verb = 'You reported a lost item';
+          else if (createdReport && createdReport.type === 'found') verb = 'You reported a found item';
+          else verb = 'You reported an item';
+        }
+        else if (e.action === 'claim_submitted') verb = 'You submitted a claim';
+        else if (e.action === 'claim_approved') verb = 'A claim you made was approved';
+        else if (e.action === 'claim_rejected') verb = 'A claim you made was not approved';
+        else if (e.action === 'claim_auto_rejected') verb = 'A claim you made was not approved (another claim was approved)';
+        else if (e.action === 'returned') verb = 'A report was returned';
+        else if (e.action === 'edited') verb = 'You edited a report';
+        else if (e.action === 'withdrawn') verb = 'You withdrew a report';
+        else if (e.action === 'closed') verb = 'A report was closed';
+        else if (e.action === 'message_posted') verb = 'A new message was posted in a claim thread';
+        else verb = e.action;
+        var link = '';
+        if (e.reportId && e.action.indexOf('claim_') === 0 && e.claimId) link = '<a href="13-claim-detail.html?claim=' + e.claimId + '" class="fb-btn fb-btn--secondary fb-btn--sm">View</a>';
+        else if (e.reportId) link = '<a href="03-item-detail-member.html?item=' + e.reportId + '" class="fb-btn fb-btn--secondary fb-btn--sm">View</a>';
+        else link = '';
+        html += '<li><div class="fb-row fb-row--between">' +
+                '<div><strong>' + verb + '</strong>' +
+                '<p style="margin: var(--fb-space-1) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">' + window.fbRelativeTime(new Date(e.createdAt)) + ' &middot; ' + (e.detail || '') + '</p></div>' +
+                link + '</div></li>';
+      });
+      list.innerHTML = html;
+    });
+  </script>
 </body>
 </html>

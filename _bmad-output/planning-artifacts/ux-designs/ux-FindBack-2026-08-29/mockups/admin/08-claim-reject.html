@@ -19,17 +19,17 @@
     })();
   </script>
   <style>
-    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
     .fb-field + .fb-field { margin-top: var(--fb-space-4); }
     .fb-actions { display: flex; justify-content: flex-end; gap: var(--fb-space-3); margin-top: var(--fb-space-5); flex-wrap: wrap; }
     body { padding-bottom: 80px; }
   </style>
 </head>
-<body>
+<body class="fb-topbar--admin">
   <a href="#main" class="fb-skip-link">Skip to main content</a>
 
   <header class="fb-topbar">
-    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+    <a href="01-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
       <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
       <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
@@ -63,37 +63,16 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <span class="fb-status fb-status--account-active">Riley P.</span>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1" class="fb-page">
-    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
-      <a href="06-claim-review.html">Review claim</a> › <span aria-current="page">Reject</span>
-    </nav>
-    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Reject this claim</h1>
-
-    <div class="fb-card" style="margin-bottom: var(--fb-space-5);">
-      <p style="margin: 0;"><strong>Devon K.</strong> claiming <strong>Black iPhone 14</strong> (Item ID 1003)</p>
-    </div>
-
-    <form data-mock-form data-next="05-pending-claims.html" data-toast="Claim rejected. Claimant emailed.">
-      <div class="fb-field">
-        <label class="fb-field__label" for="reason">Rejection reason <span class="fb-req" aria-hidden="true">*</span></label>
-        <textarea class="fb-textarea" id="reason" name="reason" required minlength="10" maxlength="500" placeholder="10–500 characters. The claimant will see this in their rejection email."></textarea>
-        <p class="fb-field__help">Visible to the claimant in the rejection email and recorded in the audit trail.</p>
-      </div>
-      <div class="fb-actions">
-        <a href="06-claim-review.html" class="fb-btn fb-btn--tertiary">Cancel</a>
-        <button type="submit" class="fb-btn fb-btn--danger">Confirm rejection</button>
-      </div>
-    </form>
+    <div data-admin-root><div class="fb-listings__empty">Loading…</div></div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 8 of 12 (reject)</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-4 Riley · Step 8 of 13 (reject)</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="08-claim-approve.html">← Previous</a>
         <a href="../index.html">All journeys</a>
@@ -102,6 +81,80 @@
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
+  <script src="../assets/admin-renderer.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var admin = window.FB.state.getCurrentUser();
+      if (!admin || admin.role !== 'administrator') {
+        window.location.href = '../public/02-login.html';
+        return;
+      }
+      var esc = window.FB.adminRender.escapeHtml;
+      var params = new URLSearchParams(window.location.search);
+      var claimId = params.get('claim');
+      var claim = claimId ? window.FB.state.getClaim(claimId) : null;
+      if (!claim) {
+        var first = window.FB.state.listClaims().find(function (c) { return c.status === 'pending'; });
+        claim = first;
+      }
+      if (!claim) {
+        document.querySelector('[data-admin-root]').innerHTML = '<div class="fb-listings__empty"><strong>No pending claims.</strong></div>';
+        return;
+      }
+      var report = window.FB.state.getReport(claim.reportId);
+      var claimant = window.FB.state.getUser(claim.claimantId);
+      var root = document.querySelector('[data-admin-root]');
+      var html = '';
+      html += '<nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">';
+      html += '  <a href="06-claim-review.html?claim=' + esc(claim.id) + '">Review claim</a> › <span aria-current="page">Reject</span>';
+      html += '</nav>';
+      html += '<h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Reject this claim</h1>';
+      html += '<div class="fb-card" style="margin-bottom: var(--fb-space-5);">';
+      html += '  <p style="margin: 0;"><strong>' + esc(claimant ? claimant.name : '—') + '</strong> claiming <strong>' + esc(report ? report.name : '?') + '</strong> (' + esc(claim.id) + ')</p>';
+      html += '</div>';
+      html += '<div class="fb-form-error" data-reject-error role="alert" hidden></div>';
+      html += '<form data-reject-form>';
+      html += '  <div class="fb-field">';
+      html += '    <label class="fb-field__label" for="reason">Rejection reason <span class="fb-req" aria-hidden="true">*</span></label>';
+      html += '    <textarea class="fb-textarea" id="reason" name="reason" required minlength="10" maxlength="500" placeholder="10–500 characters. The claimant will see this in their rejection email."></textarea>';
+      html += '    <p class="fb-field__help">Visible to the claimant in the rejection email and recorded in the audit trail.</p>';
+      html += '  </div>';
+      html += '  <div class="fb-actions">';
+      html += '    <a href="06-claim-review.html?claim=' + esc(claim.id) + '" class="fb-btn fb-btn--tertiary">Cancel</a>';
+      html += '    <button type="submit" class="fb-btn fb-btn--danger">Confirm rejection</button>';
+      html += '  </div>';
+      html += '</form>';
+      root.innerHTML = html;
+      var form = root.querySelector('[data-reject-form]');
+      var errEl = root.querySelector('[data-reject-error]');
+      window.FB.attachFormValidation(form, {
+        summaryEl: errEl,
+        fields: [
+          { input: form.querySelector('[name="reason"]'), label: 'Rejection reason',
+            validate: function (v) {
+              if (!v) return 'Rejection reason is required.';
+              if (v.length < 10) return 'Rejection reason must be at least 10 characters.';
+              if (v.length > 500) return 'Rejection reason must be at most 500 characters.';
+              return true;
+            }
+          }
+        ],
+        onSubmit: function () {
+          var reason = form.querySelector('[name="reason"]').value.trim();
+          var updated = window.FB.state.rejectClaim(claim.id, admin.id, reason);
+          if (!updated) {
+            window.FB.toast('This claim is no longer pending.', 'error');
+            window.location.href = '05-pending-claims.html';
+            return;
+          }
+          window.FB.toast('Claim rejected. Claimant emailed.', 'success');
+          setTimeout(function () { window.location.href = '05-pending-claims.html'; }, 250);
+        }
+      });
+    });
+  </script>
 </body>
 </html>

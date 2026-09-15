@@ -22,7 +22,7 @@
     .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
     .fb-field + .fb-field { margin-top: var(--fb-space-5); }
     .fb-actions { display: flex; justify-content: flex-end; gap: var(--fb-space-3); margin-top: var(--fb-space-6); flex-wrap: wrap; }
-    .fb-context { display: flex; align-items: center; gap: var(--fb-space-3); padding: var(--fb-space-3); background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-md); margin-bottom: var(--fb-space-5); }
+    .fb-context { display: flex; align-items: center; gap: var(--fb-space-3); padding: var(--fb-space-3) var(--fb-space-4); background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-md); margin-bottom: var(--fb-space-5); flex-wrap: wrap; }
     .fb-context__title { font-weight: 600; }
     body { padding-bottom: 80px; }
   </style>
@@ -37,7 +37,7 @@
     </a>
     <nav class="fb-topbar__nav" aria-label="Primary">
       <a href="01-listings-anon.html">Lost &amp; Found</a>
-      <a href="07-my-reports.html">My reports</a>
+      <a href="08-my-reports.html">My reports</a>
       <a href="10-my-claims.html" aria-current="page">My claims</a>
     </nav>
     <div class="fb-topbar__spacer"></div>
@@ -63,42 +63,45 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Report an item</a>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
-  <main id="main" tabindex="-1" class="fb-page">
+  <main id="main" tabindex="-1" class="fb-page" data-page="submit-claim">
     <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
-      <a href="03-item-detail-member.html">Brown leather wallet</a> › <span aria-current="page">Submit a claim</span>
+      <a href="02-listings-member.html">Lost &amp; Found</a> › <span aria-current="page">Submit a claim</span>
     </nav>
     <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Submit a claim</h1>
 
-    <div class="fb-context">
-      <span class="fb-type-badge fb-type-badge--found">Found</span>
-      <span class="fb-context__title">Brown leather wallet</span>
-      <span style="color: var(--fb-on-surface-variant);">· ID 1004 · Reported by Sam K.</span>
+    <div class="fb-context" data-claim-context>
+      <span class="fb-listings__empty" style="background: none; border: none; padding: 0;">Loading…</span>
     </div>
 
     <p class="fb-helper" style="margin-bottom: var(--fb-space-5);">If this is your item, share enough detail so an administrator can confirm ownership. The reporter will see your reason and identifying details.</p>
 
-    <form data-mock-form data-next="12-claim-pending.html" data-toast="Claim submitted. Awaiting administrator review.">
+    <div class="fb-alert fb-alert--warning" data-block-alert hidden>
+      <span aria-hidden="true">⚠</span>
+      <div data-block-message></div>
+    </div>
+
+    <div class="fb-form-error" data-claim-error role="alert" hidden></div>
+
+    <form data-claim-form novalidate>
       <div class="fb-field">
         <label class="fb-field__label" for="reason">Reason you believe this is yours <span class="fb-req" aria-hidden="true">*</span></label>
-        <textarea class="fb-textarea" id="reason" name="reason" required minlength="20" maxlength="1000" placeholder="20–1000 characters">I lost my wallet at the library on Mar 16 around 5pm. It has my initials embossed inside the right pocket and contains my driver's license, three credit cards, and a photo of my dog.</textarea>
-        <div class="fb-field__counter" aria-live="polite">142 / 1000</div>
+        <textarea class="fb-textarea" id="reason" name="reason" required minlength="20" maxlength="1000" placeholder="20–1000 characters" data-counter></textarea>
+        <div class="fb-field__counter" aria-live="polite">0 / 1000</div>
       </div>
       <div class="fb-field">
         <label class="fb-field__label" for="ident">Identifying details <span class="fb-req" aria-hidden="true">*</span></label>
-        <textarea class="fb-textarea" id="ident" name="ident" required minlength="10" maxlength="500" placeholder="10–500 characters">Initials MC. Driver's license in the name of M. Chen. Last four digits of credit cards: 4421, 8819, 0034.</textarea>
+        <textarea class="fb-textarea" id="ident" name="identifyingDetails" required minlength="10" maxlength="500" placeholder="10–500 characters"></textarea>
         <p class="fb-field__help">Visible to the reporter of this item and administrators. Other members don't see this.</p>
       </div>
       <div class="fb-field">
         <label class="fb-field__label" for="dlost">Date you lost it <span class="fb-req" aria-hidden="true">*</span></label>
-        <input class="fb-input" type="date" id="dlost" name="dlost" value="2026-03-16" required>
+        <input class="fb-input" type="date" id="dlost" name="dateLost" required>
       </div>
       <div class="fb-actions">
-        <a href="03-item-detail-member.html" class="fb-btn fb-btn--tertiary">Cancel</a>
+        <a href="02-listings-member.html" class="fb-btn fb-btn--tertiary">Cancel</a>
         <button type="submit" class="fb-btn fb-btn--primary">Submit claim</button>
       </div>
     </form>
@@ -106,15 +109,109 @@
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-1 Maya · Step 6 of 13</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>UJ-1 Maya · Step 6 of 13</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="03-item-detail-member.html">← Previous</a>
         <a href="../index.html">All journeys</a>
-        <a href="12-claim-pending.html">Next →</a>
+        <a href="13-claim-detail.html">Next →</a>
       </div>
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var user = window.FB.state.getCurrentUser();
+      if (!user) { window.location.href = '../public/02-login.html?next=11-submit-claim.html'; return; }
+      if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
+
+      var params = new URLSearchParams(window.location.search);
+      var itemId = params.get('item') || 'rpt_wallet_found';
+      var r = window.FB.state.getReport(itemId);
+      if (!r) {
+        document.querySelector('main').innerHTML = '<div class="fb-listings__empty"><strong>Item not found.</strong></div>';
+        return;
+      }
+      var reporter = window.FB.state.getUser(r.reporterId);
+
+      var ctx = document.querySelector('[data-mockup-context]');
+      if (ctx) ctx.textContent = user.name + ' · Submitting claim on "' + r.name + '"';
+
+      var ctxEl = document.querySelector('[data-claim-context]');
+      ctxEl.innerHTML =
+        '<span class="fb-type-badge fb-type-badge--' + r.type + '">' + (r.type === 'lost' ? 'Lost' : 'Found') + '</span>' +
+        '<span class="fb-context__title">' + r.name + '</span>' +
+        '<span style="color: var(--fb-on-surface-variant);">Reported by ' + (reporter ? reporter.name : 'Unknown') + ' on ' + window.fbFormatDate(r.date) + '</span>';
+
+      // Pre-fill date lost with the report's date if useful
+      var dateInput = document.getElementById('dlost');
+      dateInput.max = new Date().toISOString().split('T')[0];
+      // No minimum date restriction; users might be claiming an older item.
+
+      // Block check: cannot claim your own report; cannot claim a closed/returned item.
+      var blockAlert = document.querySelector('[data-block-alert]');
+      var blockMsg = document.querySelector('[data-block-message]');
+      var form = document.querySelector('[data-claim-form]');
+      var block = false;
+      if (r.type !== 'found') {
+        block = true;
+        blockMsg.innerHTML = '<strong>This item is a Lost report.</strong> Claims can only be submitted on Found items. If this is your item, use <a href="08-my-reports.html">My reports</a> to manage your Lost report.';
+      } else if (r.reporterId === user.id) {
+        block = true;
+        blockMsg.innerHTML = '<strong>You reported this item.</strong> You don\'t need to claim it. Use <a href="08-my-reports.html">My reports</a> to manage it.';
+      } else if (r.status === 'closed') {
+        block = true;
+        blockMsg.innerHTML = '<strong>This report is closed.</strong> No new claims can be submitted.';
+      } else if (r.status === 'returned') {
+        block = true;
+        blockMsg.innerHTML = '<strong>This item was already returned.</strong> No new claims can be submitted.';
+      } else {
+        var existing = window.FB.state.listClaimsForReport(r.id).filter(function (c) { return c.claimantId === user.id; });
+        if (existing.length) {
+          block = true;
+          var c = existing[0];
+          blockMsg.innerHTML = '<strong>You already submitted a claim</strong> for this item. Status: ' + c.status + '. <a href="13-claim-detail.html?claim=' + c.id + '">View claim</a>';
+        }
+      }
+      if (block) {
+        blockAlert.hidden = false;
+        form.querySelectorAll('input, textarea, button[type="submit"]').forEach(function (el) { el.disabled = true; });
+      }
+
+      var ta = document.querySelector('[data-counter]');
+      var counter = document.querySelector('.fb-field__counter');
+      function updateCounter() {
+        counter.textContent = ta.value.length + ' / 1000';
+        counter.classList.toggle('fb-field__counter--warn', ta.value.length > 900);
+      }
+      ta.addEventListener('input', updateCounter);
+      updateCounter();
+
+      var errEl = document.querySelector('[data-claim-error]');
+      // Pass-3: validation only after submit; clear on valid correction.
+      window.FB.attachFormValidation(form, {
+        summaryEl: errEl,
+        fields: [
+          { input: form.querySelector('[name="reason"]'),             label: 'Reason',              validate: function (v) { if (!v) return 'Reason is required.'; if (v.length < 20) return 'Reason must be at least 20 characters.'; if (v.length > 1000) return 'Reason must be at most 1000 characters.'; return true; } },
+          { input: form.querySelector('[name="identifyingDetails"]'), label: 'Identifying details', validate: function (v) { if (!v) return 'Identifying details are required.'; if (v.length < 10) return 'Identifying details must be at least 10 characters.'; if (v.length > 500) return 'Identifying details must be at most 500 characters.'; return true; } },
+          { input: form.querySelector('[name="dateLost"]'),           label: 'Date lost',           validate: function (v) { return v.length > 0 || 'Date lost is required.'; } }
+        ],
+        onSubmit: function () {
+          if (block) return;
+          var data = {
+            reportId: itemId,
+            reason: form.querySelector('[name="reason"]').value.trim(),
+            identifyingDetails: form.querySelector('[name="identifyingDetails"]').value.trim(),
+            dateLost: form.querySelector('[name="dateLost"]').value
+          };
+          var claim = window.FB.state.submitClaim(data, user.id);
+          window.FB.toast && window.FB.toast('Claim submitted. Awaiting administrator review.', 'success');
+          setTimeout(function () { window.location.href = '13-claim-detail.html?claim=' + claim.id; }, 250);
+        }
+      });
+    });
+  </script>
 </body>
 </html>

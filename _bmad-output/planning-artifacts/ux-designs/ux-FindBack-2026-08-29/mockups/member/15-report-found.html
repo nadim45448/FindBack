@@ -35,7 +35,7 @@
     </a>
     <nav class="fb-topbar__nav" aria-label="Primary">
       <a href="01-listings-anon.html">Lost &amp; Found</a>
-      <a href="07-my-reports.html">My reports</a>
+      <a href="08-my-reports.html">My reports</a>
       <a href="10-my-claims.html">My claims</a>
     </nav>
     <div class="fb-topbar__spacer"></div>
@@ -61,69 +61,58 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <span class="fb-helper" style="margin-right: var(--fb-space-2);">Sam K.</span>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
-  <main id="main" tabindex="-1" class="fb-page">
+  <main id="main" tabindex="-1" class="fb-page" data-page="report-form" data-report-type="found">
     <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
       <a href="07-dashboard.html">Dashboard</a> › <span aria-current="page">Report found item</span>
     </nav>
     <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">Report a found item</h1>
     <p class="fb-helper" style="margin-bottom: var(--fb-space-6);">Thanks for turning something in. Once you submit, members can browse and claim it. You'll be notified by email if someone claims it.</p>
 
-    <form data-mock-form data-next="07-my-reports.html" data-toast="Found report submitted.">
+    <div class="fb-form-error" data-report-error role="alert" hidden></div>
+
+    <form data-report-form novalidate>
+      <input type="hidden" name="type" value="found">
       <div class="fb-field">
         <label class="fb-field__label" for="name">Item name <span class="fb-req" aria-hidden="true">*</span></label>
         <input class="fb-input" type="text" id="name" name="name" required minlength="1" maxlength="80" placeholder="e.g., Black iPhone 14 with cracked screen protector">
       </div>
       <div class="fb-field">
         <label class="fb-field__label" for="cat">Category <span class="fb-req" aria-hidden="true">*</span></label>
-        <select class="fb-select" id="cat" name="cat" required>
+        <select class="fb-select" id="cat" name="category" required>
           <option value="">Select a category…</option>
-          <option>Wallet</option>
-          <option>Bag</option>
-          <option>Electronics</option>
-          <option>Keys</option>
-          <option>Clothing</option>
-          <option>Books/Notebooks</option>
-          <option>Identification</option>
-          <option>Water Bottle</option>
-          <option>Other</option>
         </select>
       </div>
       <div class="fb-field">
         <label class="fb-field__label" for="desc">Description <span class="fb-req" aria-hidden="true">*</span></label>
-        <textarea class="fb-textarea" id="desc" name="desc" required minlength="10" maxlength="2000" placeholder="10–2000 characters"></textarea>
+        <textarea class="fb-textarea" id="desc" name="description" required minlength="10" maxlength="2000" placeholder="10–2000 characters" data-counter></textarea>
+        <div class="fb-field__counter" aria-live="polite">0 / 2000</div>
       </div>
       <div class="fb-field">
         <label class="fb-field__label" for="dfound">Date found <span class="fb-req" aria-hidden="true">*</span></label>
-        <input class="fb-input" type="date" id="dfound" name="dfound" required>
+        <input class="fb-input" type="date" id="dfound" name="date" required>
         <p class="fb-field__help">Today or earlier (last 30 days).</p>
       </div>
       <div class="fb-field">
         <label class="fb-field__label" for="loc">Location (campus area) <span class="fb-req" aria-hidden="true">*</span></label>
-        <select class="fb-select" id="loc" name="loc" required>
+        <select class="fb-select" id="loc" name="campusArea" required>
           <option value="">Select a location…</option>
-          <option>Main Library</option>
-          <option>Science Building</option>
-          <option>Student Center</option>
-          <option>North Quad</option>
-          <option>Rec Center</option>
         </select>
       </div>
       <div class="fb-field">
         <label class="fb-field__label" for="place">Exact place <span class="fb-sensitive-flag">Sensitive</span></label>
-        <input class="fb-input" type="text" id="place" name="place" maxlength="200">
+        <input class="fb-input" type="text" id="place" name="exactPlace" maxlength="200" placeholder="Optional — e.g., Found on cafeteria table 7">
       </div>
       <div class="fb-field">
         <label class="fb-field__label" for="ident">Identifying details <span class="fb-sensitive-flag">Sensitive</span></label>
-        <textarea class="fb-textarea" id="ident" name="ident" maxlength="500"></textarea>
+        <textarea class="fb-textarea" id="ident" name="identifyingDetails" maxlength="500" placeholder="Optional — anything that identifies the item"></textarea>
       </div>
       <div class="fb-field">
         <label class="fb-field__label" for="image">Image</label>
         <input class="fb-input" type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp">
+        <p class="fb-field__help">JPEG, PNG, or WebP up to 5 MB. Optional.</p>
       </div>
       <div class="fb-actions">
         <a href="07-dashboard.html" class="fb-btn fb-btn--tertiary">Cancel</a>
@@ -134,15 +123,100 @@
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-2 Sam · Step 2 of 8 (report found)</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>UJ-2 Sam · Step 2 of 8 (report found)</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="07-dashboard.html">← Previous</a>
         <a href="../index.html">All journeys</a>
-        <a href="07-my-reports.html">Next →</a>
+        <a href="08-my-reports.html">Next →</a>
       </div>
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
   <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var user = window.FB.state.getCurrentUser();
+      if (!user) { window.location.href = '../public/02-login.html?next=15-report-found.html'; return; }
+      if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
+      if (user.accountState !== 'active') {
+        document.querySelector('main').innerHTML = '<div class="fb-listings__empty"><strong>Your account is not active.</strong><div>Pending accounts cannot report items. Please contact your administrator.</div></div>';
+        return;
+      }
+
+      var ctx = document.querySelector('[data-mockup-context]');
+      if (ctx) ctx.textContent = user.name + ' · Report found item';
+
+      var cats = window.FB.state.categories;
+      var areas = window.FB.state.campusAreas;
+      var catSel = document.getElementById('cat');
+      var locSel = document.getElementById('loc');
+      cats.forEach(function (c) { catSel.insertAdjacentHTML('beforeend', '<option value="' + c + '">' + c + '</option>'); });
+      areas.forEach(function (a) { locSel.insertAdjacentHTML('beforeend', '<option value="' + a + '">' + a + '</option>'); });
+
+      var dateInput = document.getElementById('dfound');
+      var today = new Date().toISOString().split('T')[0];
+      dateInput.value = today;
+      dateInput.max = today;
+      var minDate = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+      dateInput.min = minDate;
+
+      var ta = document.querySelector('[data-counter]');
+      var counter = document.querySelector('.fb-field__counter');
+      ta.addEventListener('input', function () {
+        counter.textContent = ta.value.length + ' / 2000';
+        counter.classList.toggle('fb-field__counter--warn', ta.value.length > 1800);
+      });
+
+      var imgInput = document.getElementById('image');
+      imgInput.addEventListener('change', function () {
+        var f = imgInput.files && imgInput.files[0];
+        if (!f) return;
+        if (!/^image\//.test(f.type)) return;
+        if (f.size > 5 * 1024 * 1024) { alert('Image is too large (5 MB max).'); imgInput.value = ''; return; }
+      });
+
+      var form = document.querySelector('[data-report-form]');
+      var errEl = document.querySelector('[data-report-error]');
+      // Pass-3: validation only after submit; clear on valid correction.
+      window.FB.attachFormValidation(form, {
+        summaryEl: errEl,
+        fields: [
+          { input: form.querySelector('[name="name"]'),          label: 'Item name',   validate: function (v) { return v.length > 0 || 'Item name is required.'; } },
+          { input: form.querySelector('[name="category"]'),      label: 'Category',    validate: function (v) { return v.length > 0 || 'Please choose a category.'; } },
+          { input: form.querySelector('[name="description"]'),   label: 'Description', validate: function (v) { if (!v) return 'Description is required.'; if (v.length < 10) return 'Description must be at least 10 characters.'; if (v.length > 2000) return 'Description must be at most 2000 characters.'; return true; } },
+          { input: form.querySelector('[name="date"]'),          label: 'Date found',  validate: function (v) { return v.length > 0 || 'Date found is required.'; } },
+          { input: form.querySelector('[name="campusArea"]'),    label: 'Location',    validate: function (v) { return v.length > 0 || 'Please choose a location.'; } }
+        ],
+        onSubmit: function () {
+          var data = {
+            type: 'found',
+            name: form.querySelector('[name="name"]').value.trim(),
+            category: form.querySelector('[name="category"]').value,
+            description: form.querySelector('[name="description"]').value.trim(),
+            date: form.querySelector('[name="date"]').value,
+            campusArea: form.querySelector('[name="campusArea"]').value,
+            exactPlace: form.querySelector('[name="exactPlace"]').value,
+            identifyingDetails: form.querySelector('[name="identifyingDetails"]').value
+          };
+          var file = imgInput.files && imgInput.files[0];
+          var submit = function (imageDataUrl) {
+            data.imageDataUrl = imageDataUrl || null;
+            var r = window.FB.state.createReport(data, user.id);
+            window.FB.toast && window.FB.toast('Found report submitted.', 'success');
+            setTimeout(function () { window.location.href = '03-item-detail-member.html?item=' + r.id; }, 250);
+          };
+          if (file) {
+            var reader = new FileReader();
+            reader.onload = function () { submit(reader.result); };
+            reader.readAsDataURL(file);
+          } else {
+            submit(null);
+          }
+        }
+      });
+    });
+  </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Brown leather wallet — Returned — FindBack</title>
+  <title>Item detail — FindBack</title>
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/tokens.css">
   <script>
@@ -20,9 +20,6 @@
   </script>
   <style>
     .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
-    .fb-detail__crumb { font-size: 13px; color: var(--fb-on-surface-variant); margin-bottom: var(--fb-space-3); }
-    .fb-detail__title-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fb-space-3); margin-bottom: var(--fb-space-5); }
-    .fb-detail__title { font-size: 28px; font-weight: 700; margin: 0; flex: 1; }
     body { padding-bottom: 80px; }
   </style>
 </head>
@@ -36,7 +33,7 @@
     </a>
     <nav class="fb-topbar__nav" aria-label="Primary">
       <a href="01-listings-anon.html">Lost &amp; Found</a>
-      <a href="07-my-reports.html">My reports</a>
+      <a href="08-my-reports.html">My reports</a>
       <a href="10-my-claims.html" aria-current="page">My claims</a>
     </nav>
     <div class="fb-topbar__spacer"></div>
@@ -62,87 +59,49 @@
         </button>
       </div>
     </div>
-    <div class="fb-topbar__actions">
-      <a href="14-report-lost.html" class="fb-btn fb-btn--primary fb-btn--sm">Report an item</a>
-    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
   <main id="main" tabindex="-1" class="fb-page">
-    <nav class="fb-detail__crumb" aria-label="Breadcrumb">
-      <a href="10-my-claims.html">My claims</a> › <span aria-current="page">Brown leather wallet</span>
-    </nav>
-
-    <div class="fb-detail__title-row">
-      <h1 class="fb-detail__title">Brown leather wallet</h1>
-      <span class="fb-type-badge fb-type-badge--found">Found</span>
-      <span class="fb-status fb-status--report-returned" aria-label="Status: returned">Returned</span>
-    </div>
-
-    <div class="fb-row" style="margin-bottom: var(--fb-space-5); padding: var(--fb-space-3) var(--fb-space-4); background: var(--fb-success-soft); border-radius: var(--fb-radius-md);">
-      <span style="color: var(--fb-success); font-weight: 500;">✓ This item was returned. Returned reports cannot be edited.</span>
-    </div>
-
-    <div class="fb-detail__grid">
-      <div>
-        <div class="fb-detail__image" aria-label="No image attached">
-          <span>📷 No image</span>
-        </div>
-
-        <section class="fb-detail__section" aria-labelledby="desc-h">
-          <h2 id="desc-h" class="fb-detail__section-title">Description</h2>
-          <p>Bifold wallet in dark brown leather, slightly worn. Looks like it had been sitting on a study table. I picked it up near the end of the day.</p>
-        </section>
-
-        <section class="fb-detail__section" aria-labelledby="return-h">
-          <h2 id="return-h" class="fb-detail__section-title">Return record</h2>
-          <dl style="margin: 0;">
-            <dt class="fb-caption">Returned on</dt>
-            <dd style="margin: 2px 0 var(--fb-space-3) 0;"><time>Mar 18, 2026 · 14:00</time></dd>
-            <dt class="fb-caption">Confirmed by</dt>
-            <dd style="margin: 2px 0 var(--fb-space-3) 0;">Riley P. (administrator)</dd>
-            <dt class="fb-caption">Received by</dt>
-            <dd style="margin: 2px 0 0 0;">Maya C. (you, claimant — default receiver)</dd>
-          </dl>
-        </section>
-      </div>
-
-      <aside>
-        <div class="fb-card">
-          <h2 class="fb-detail__section-title" style="margin: 0 0 var(--fb-space-3);">Quick facts</h2>
-          <dl class="fb-stack" style="margin: 0;">
-            <div>
-              <dt class="fb-caption">Category</dt>
-              <dd style="margin: 2px 0 0 0;">Wallet</dd>
-            </div>
-            <div>
-              <dt class="fb-caption">Date found</dt>
-              <dd style="margin: 2px 0 0 0;"><time>Mar 16, 2026</time></dd>
-            </div>
-            <div>
-              <dt class="fb-caption">Found at</dt>
-              <dd style="margin: 2px 0 0 0;">Main Library</dd>
-            </div>
-            <div>
-              <dt class="fb-caption">Reporter</dt>
-              <dd style="margin: 2px 0 0 0;">Sam K.</dd>
-            </div>
-          </dl>
-        </div>
-      </aside>
+    <div data-detail-root>
+      <div class="fb-listings__empty">Loading…</div>
     </div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-1 Maya · Step 13 of 13 (returned)</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>UJ-1 Maya · Step 13 of 13 (returned)</span>
       <div style="display: flex; gap: var(--fb-space-4);">
         <a href="05-item-detail-claimant.html">← Previous</a>
         <a href="../index.html">All journeys</a>
-        <a href="07-my-reports.html">Next →</a>
+        <a href="08-my-reports.html">Next →</a>
       </div>
     </div>
   </nav>
 
+  <script src="../assets/state.js"></script>
   <script src="../assets/app.js"></script>
+  <script src="../assets/detail-renderer.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var user = window.FB.state.getCurrentUser();
+      if (!user) { window.location.href = '../public/02-login.html'; return; }
+      if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
+      var root = document.querySelector('[data-detail-root]');
+      // Resolve the report id from the ?item= query string so the page
+      // renders whichever report the user clicked. A hard-coded itemId here
+      // would override the URL and always show the same item regardless
+      // of which claim/report was clicked.
+      var params = new URLSearchParams(window.location.search);
+      window.FB.renderItemDetail(root, {
+        itemId: params.get('item') || 'rpt_textbook_returned',
+        breadcrumb: [
+          { href: '10-my-claims.html', label: 'My claims' },
+          { current: true, label: 'Returned item' }
+        ]
+      });
+    });
+  </script>
 </body>
 </html>
