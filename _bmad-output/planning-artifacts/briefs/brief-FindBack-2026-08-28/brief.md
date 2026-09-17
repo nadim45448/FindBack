@@ -2,7 +2,7 @@
 title: "Product Brief: FindBack"
 status: final
 created: 2026-08-28
-updated: 2026-09-08
+updated: 2026-09-16
 ---
 
 # Product Brief: FindBack
@@ -13,7 +13,7 @@ FindBack is a single-tenant Lost & Found management system. One organization run
 
 It centralizes the lost-and-found workflow that today lives across notice boards, group chats, and security desks. Members report items, search what others have reported, claim what is theirs, and respond to other members' lost reports when they believe they may have found the item.
 
-Automatic match suggestions and cross-organization features are intentionally outside the MVP scope so the initial workflow stays focused. See §Scope for what the MVP covers, what it does not, and which decisions are deferred to the PRD. FindBack's value is in being simple, trustworthy, and clear.
+Automatic match suggestions and cross-organization features are intentionally outside project scope so the workflow stays focused. See §Scope for what FindBack covers, what it does not, and which decisions are deferred to the PRD. FindBack's value is in being simple, trustworthy, and clear.
 
 ## The Problem
 
@@ -56,7 +56,7 @@ Each report carries a name, category, description, date, location, optional iden
 
 ### Discovering matches
 
-The MVP uses user-driven search and filtering rather than automatic match suggestions. Members discover potential matches by **browsing and searching** the combined pool of active lost and found reports. Search supports keyword, category, location, date, type (lost / found), and status. Anonymous users can see summary listings; full item details require login.
+FindBack uses user-driven search and filtering rather than automatic match suggestions. Members discover potential matches by **browsing and searching** the combined pool of active lost and found reports. Search supports keyword, category, location, date, type (lost / found), and status. Anonymous users can see summary listings; full item details require login.
 
 A logged-in member's view is split into two distinct listings: **My Reports** contains that member's own Lost and Found reports; **Browse** contains other members' Lost and Found reports. A member's own reports never appear in their own Browse results. This separation applies to both Lost and Found reports and is independent of whether the member is searching for a match or responding to a Lost report.
 
@@ -70,7 +70,7 @@ When an active member, while browsing another member's Lost report, believes the
 
 The Lost-report owner reviews the Recovery Responses on their Lost report and can select one candidate for physical verification with the original item. Selecting a Recovery Response is provisional — it means "verify this one first" and does not permanently close or reject the other Recovery Responses. If the selected item turns out not to be the owner's item, the owner can return to the remaining Recovery Responses and select a different candidate.
 
-When a Lost report reaches **Returned** through one Recovery Response, any other unresolved Recovery Responses on that Lost report are no longer actionable but remain preserved as part of the report's history. The same high-level principle applies when a Lost report transitions to **Closed** (for example, because the reporter withdraws the report while Recovery Responses still exist): any unresolved Recovery Responses are no longer actionable but remain preserved as part of the report's history. The exact terminal status or closure reason for those Recovery Responses is defined in the PRD.
+When a Lost report reaches **Returned** through one Recovery Response, any other unresolved Recovery Responses on that Lost report are no longer actionable but remain preserved as part of the report's history. The same high-level principle applies when a Lost report transitions to **Closed** (for example, because the reporter withdraws the report while Recovery Responses still exist): any unresolved Recovery Responses are no longer actionable but remain preserved as part of the report's history. The exact terminal status or closure reason for those Recovery Responses will be defined in the PRD.
 
 #### Verification responsibility on the Lost side
 
@@ -107,13 +107,13 @@ Open
 → Returned / Closed
 ```
 
-Between **Open** and **Returned / Closed**, the Lost report passes through a **Recovery Response and verification stage** during which one or more Recovery Responses are submitted, the Lost-report owner selects a candidate for verification, physical verification takes place, and the outcome is either Match Confirmed and Returned or Not a Match (in which case the report remains active). The Lost-report states established at Product Brief level are **Open**, **Returned**, and **Closed**; the detailed intermediate Lost-report and Recovery Response statuses (for example, Response Received, Verification Pending, Standby, Not a Match, Match Confirmed) are defined in the PRD and are not finalized at the Product Brief level.
+Between **Open** and **Returned / Closed**, the Lost report passes through a **Recovery Response and verification stage** during which one or more Recovery Responses are submitted, the Lost-report owner selects a candidate for verification, physical verification takes place, and the outcome is either Match Confirmed and Returned or Not a Match (in which case the report remains active). The Lost-report states established at Product Brief level are **Open**, **Returned**, and **Closed**; the detailed intermediate Lost-report and Recovery Response statuses are deferred to the PRD and are not finalized at the Product Brief level.
 
 Found and Lost reports share common states such as **Open**, **Returned**, and **Closed**, but they use different intermediate recovery stages because Found reports use Claims while Lost reports use Recovery Responses. Multiple Claims on a Found report and multiple Recovery Responses on a Lost report may exist concurrently.
 
 On the Found side, Claim review and approval follow the Found-item Claim workflow: a Claim, once approved, is not provisional. The Found-item lifecycle reaches **Returned** when an administrator confirms the physical return.
 
-On the Lost side, selecting one Recovery Response for physical verification is provisional — it means "verify this one first" and does not permanently close or reject the other Recovery Responses. If the Lost-report owner confirms the candidate is not theirs, the administrator records Not a Match against the selected Recovery Response and the Lost report remains active so the owner can return to the remaining Recovery Responses to select a different candidate. The Lost-item lifecycle reaches **Returned** only when the Lost-report owner confirms the candidate item is theirs and the administrator confirms the physical return. When the Lost report reaches **Returned**, any other unresolved Recovery Responses on that Lost report are no longer actionable but remain preserved as part of the report's history; the exact terminal status or closure reason for those Recovery Responses is defined in the PRD. The same high-level principle applies when a Lost report transitions to **Closed** while Recovery Responses exist (for example, because the reporter withdraws the report): any unresolved Recovery Responses are no longer actionable but remain preserved as part of the report's history, and the exact terminal status or closure reason for those Recovery Responses is defined in the PRD. While the Lost report is still active, other Recovery Responses remain actionable so the Lost-report owner can continue to review and select them.
+On the Lost side, selecting one Recovery Response for physical verification is provisional — it means "verify this one first" and does not permanently close or reject the other Recovery Responses. If the Lost-report owner confirms the candidate is not theirs, the administrator records Not a Match against the selected Recovery Response and the Lost report remains active so the owner can return to the remaining Recovery Responses to select a different candidate. The Lost-item lifecycle reaches **Returned** only when the Lost-report owner confirms the candidate item is theirs and the administrator confirms the physical return. When the Lost report reaches **Returned**, any other unresolved Recovery Responses on that Lost report are no longer actionable but remain preserved as part of the report's history; the exact terminal status or closure reason for those Recovery Responses will be defined in the PRD. The same high-level principle applies when a Lost report transitions to **Closed** while Recovery Responses exist (for example, because the reporter withdraws the report): any unresolved Recovery Responses are no longer actionable but remain preserved as part of the report's history, and the exact terminal status or closure reason for those Recovery Responses will be defined in the PRD. While the Lost report is still active, other Recovery Responses remain actionable so the Lost-report owner can continue to review and select them.
 
 Each important transition in an item's lifecycle records **who** performed the action and **when** it occurred, so the full journey of the item is reconstructable. For a Found report this includes:
 
@@ -131,9 +131,9 @@ For the Returned action specifically, the default receiver depends on the report
 - **Found report** — the approved claimant is recorded as the default receiver.
 - **Lost report** — the Lost-report owner is recorded as the default receiver.
 
-If the actual receiver is different from the default, the administrator records the substitute receiver's name or identity, confirms that the default receiver (the approved claimant for a Found report, or the Lost-report owner for a Lost report) authorized this person to collect the item on their behalf, and records the relationship between the default receiver and the substitute receiver (Friend, Family Member, Colleague, Classmate, or Other). If the default receiver and the substitute receiver are the same person, authorization and relationship are not applicable. MVP does not include identity verification or additional handoff features.
+If the actual receiver is different from the default, the administrator records the substitute receiver's name or identity, confirms that the default receiver (the approved claimant for a Found report, or the Lost-report owner for a Lost report) authorized this person to collect the item on their behalf, and records the relationship between the default receiver and the substitute receiver (Friend, Family Member, Colleague, Classmate, or Other). If the default receiver and the substitute receiver are the same person, authorization and relationship are not applicable. FindBack does not include identity verification or additional handoff features.
 
-The full item history is an internal administrative record: only administrators can view it. Members continue to see the relevant current status of their Reports, Claims, and Recovery Responses. The exact member-visible details are defined in the PRD. The item history is kept as long as the report itself is kept, with no separate deletion mechanism.
+The full item history is an internal administrative record: only administrators can view it. Members continue to see the relevant current status of their Reports, Claims, and Recovery Responses. The exact member-visible details will be defined in the PRD. The item history is kept as long as the report itself is kept, with no separate deletion mechanism.
 
 ### Editing and removing reports
 
@@ -142,17 +142,17 @@ The full item history is an internal administrative record: only administrators 
   - For a **Found report**, the report may be deleted only while **Open** and has no Claim.
   - For a **Lost report**, the report may be deleted only while **Open** and has no Recovery Response.
 - Once a Claim exists on a Found report, or a Recovery Response exists on a Lost report, the reporter can no longer delete the report; they may instead **withdraw** it, which transitions the report to **Closed**. The report is preserved in history but no longer appears in active listings.
-- Administrators can edit or remove any report at any time, for moderation purposes.
+- Administrators can moderate, edit, close, or remove reports where appropriate for moderation purposes; detailed rules and lifecycle constraints will be defined in the PRD.
 
 ### Notifications
 
-The MVP sends **email only**. Three MVP email events are currently confirmed:
+FindBack sends **email only**. Three business/workflow notification email events are currently confirmed:
 
 1. A new account has been approved.
 2. A new Claim has been submitted on a Found report the member reported.
 3. A Claim the member submitted has been approved or rejected.
 
-Whether the Lost-report Recovery Response workflow requires additional email events — for example, a new Recovery Response on my Lost report; my Recovery Response was selected for verification; verification failed; successful return — is deferred to the PRD. In-app notifications, "claim under review" reminders, and stale-report reminders are not part of MVP.
+Whether the Lost-report Recovery Response workflow requires additional email events — for example, a new Recovery Response on my Lost report; my Recovery Response was selected for verification; verification failed; successful return — is deferred to the PRD. In-app notifications, "claim under review" reminders, and stale-report reminders are not part of FindBack.
 
 ### Brand and visual identity
 
@@ -160,7 +160,7 @@ FindBack's brand, logo, color palette, and visual identity are a related concern
 
 ## Scope
 
-### In scope for MVP
+### In scope
 
 - Self-registration with administrator approval
 - Login, logout, and member profile (limited to what the system needs to identify the member)
@@ -175,18 +175,18 @@ FindBack's brand, logo, color palette, and visual identity are a related concern
 - Claim review and decision by administrators
 - Found report lifecycle (Open, Claim Requested, Claim Approved, Returned, Closed) and Lost report lifecycle with established states Open, Returned, and Closed, with Recovery Response and verification occurring between Open and resolution; detailed intermediate Lost-side statuses are deferred to the PRD
 - Item history / audit trail recording who performed each important lifecycle action and when, including the receiver and confirming administrator at Returned (administrator-only view; no separate deletion mechanism for the trail)
-- Email notifications for the currently confirmed MVP email events (account approved, new Claim on a Found report, Claim approved or rejected). Whether the Lost-report Recovery Response workflow requires additional email events is deferred to the PRD.
+- Email notifications for the currently confirmed business/workflow notification email events (account approved, new Claim on a Found report, Claim approved or rejected). Whether the Lost-report Recovery Response workflow requires additional email events is deferred to the PRD.
 - Administrator functions: approve / deactivate users, review Found-item Claims, manage Lost-item physical verification with visibility into Recovery Responses and record the outcome the Lost-report owner determines, record Not a Match, confirm Returned on the Found side and on the Lost side after the owner confirms the match, close or moderate reports, remove inappropriate content
 
-### Explicitly out of scope for MVP
+### Explicitly out of scope
 
 - Automatic match suggestions or proactive notifications of potential matches
 - In-app notifications
-- General-purpose or real-time in-app chat/messaging (the Product Brief does not preclude a narrowly scoped, workflow-specific communication mechanism attached to a Claim or Recovery Response, but general chat is not part of MVP)
+- General-purpose or real-time in-app chat/messaging (the Product Brief does not preclude a narrowly scoped, workflow-specific communication mechanism attached to a Claim or Recovery Response, but general chat is not part of FindBack)
 - Proof-of-ownership uploads (photos of receipts, serial numbers, etc.)
 - Cross-organization item sharing
 - A global public marketplace
-- Mobile native applications (the MVP is web-based)
+- Mobile native applications (FindBack is web-based)
 - Multi-tenant administration of multiple organizations from one console
 - Bulk import of historical lost-and-found records
 - Analytics, dashboards, or reporting beyond what administrators need to operate the system
@@ -200,12 +200,12 @@ These are product decisions that need product-level design but were intentionall
 - The process for facilitating contact between claimants, finders, and administrators when needed, including whether any contact information or external communication method is exposed.
 - The precise definition of "sensitive" information that is hidden from public listings (e.g., reporter's full name, exact location, contact details), and the precise set of summary fields visible to anonymous users.
 - The detailed handling of competing Claims on the same found item — administrators decide, but the rules and behavior for how they review and choose between pending Claims is a PRD design call.
-- The Recovery Response flow for Lost reports, including: the Recovery Response form fields; the owner-side behavior for reviewing multiple Recovery Responses; the selection-for-verification rules and interaction requirements (including the provisional, reversible nature of selection); the verification workflow, permissions, and outcomes (with administrator visibility into all Recovery Responses); the exact set of Recovery Response statuses (for example, Response Received, Verification Pending, Standby, Not a Match, Match Confirmed); the exact terminal status or closure reason for unresolved Recovery Responses when a Lost report reaches Returned; the communication or thread behavior associated with Recovery Responses; detailed permissions and visibility extensions for the Lost-side flow; and the set of notification events associated with the Lost-side recovery flow (for example, a new Recovery Response on my Lost report; my Recovery Response was selected for verification; verification failed; successful return) — all of which are PRD design calls.
+- The Recovery Response flow for Lost reports, including: the Recovery Response form fields; the owner-side behavior for reviewing multiple Recovery Responses; the selection-for-verification rules and interaction requirements (including the provisional, reversible nature of selection); the verification workflow, permissions, and outcomes (with administrator visibility into all Recovery Responses); the exact set of Recovery Response statuses; the exact terminal status or closure reason for unresolved Recovery Responses when a Lost report reaches Returned; the communication or thread behavior associated with Recovery Responses; detailed permissions and visibility extensions for the Lost-side flow; and the set of notification events associated with the Lost-side recovery flow (for example, a new Recovery Response on my Lost report; my Recovery Response was selected for verification; verification failed; successful return) — all of which are PRD design calls.
 - The detailed process administrators follow to review and approve registration requests.
 
 ## Product Principles
 
-Three principles guide product decisions in MVP:
+Three principles guide product decisions in FindBack:
 
 - **Simple.** Members should report and search without a learning curve; administrators should run the system without training.
 - **Trustworthy.** Members should feel their information and claims are handled responsibly; administrators should have the visibility they need to decide and act.
@@ -215,7 +215,7 @@ Detailed UX requirements — including accessibility and action-oriented interac
 
 ## Success Criteria
 
-The MVP is successful when:
+FindBack is successful when:
 
 1. A new user can register, and an administrator can approve their account.
 2. An active member can report a lost item and a found item.
@@ -227,7 +227,7 @@ The MVP is successful when:
 8. The full recovery path for a Lost report — Recovery Responses received, owner selection, verification outcome, Returned confirmation — is reconstructable from the item's history.
 9. Administrators can review pending Claims and approve or reject them.
 10. Administrators can confirm Returned after an approved Found-item Claim or successful Lost-item physical verification, and close reports where permitted.
-11. Email notifications are delivered for the three currently confirmed MVP events (account approved, new Claim on a Found report, Claim approved or rejected). Whether the Lost-report Recovery Response workflow requires additional email events is deferred to the PRD.
+11. Email notifications are delivered for the three currently confirmed business/workflow notification email events (account approved, new Claim on a Found report, Claim approved or rejected). Whether the Lost-report Recovery Response workflow requires additional email events is deferred to the PRD.
 12. Members see the relevant current status of their Reports, Claims, and Recovery Responses whenever they log in.
 13. Trying to edit or delete a report outside the permitted rules is prevented with a clear message.
 14. Anonymous users can browse summary listings without logging in, but cannot view item details.
@@ -235,4 +235,4 @@ The MVP is successful when:
 
 ## Vision
 
-FindBack's vision is to be the place each organization uses to return things to its members — a single, durable record of what has been lost, what has been found, and what has been returned. The product is designed for the current single-organization use case and stays focused on that scope.
+FindBack's vision is to be the place each organization uses to return things to its members — a single, durable record of what has been lost, what has been found, and what has been returned. The product is designed for a single-organization operating model and stays focused on that scope.

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>I may have found this item — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-field + .fb-field { margin-top: var(--fb-space-5); }
+    .fb-actions { display: flex; justify-content: flex-end; gap: var(--fb-space-3); margin-top: var(--fb-space-6); flex-wrap: wrap; }
+    .fb-context { display: flex; align-items: center; gap: var(--fb-space-3); padding: var(--fb-space-3) var(--fb-space-4); background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-md); margin-bottom: var(--fb-space-5); flex-wrap: wrap; }
+    .fb-context__title { font-weight: 600; }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="02-listings-member.html">Lost &amp; Found</a>
+      <a href="08-my-reports.html">My reports</a>
+      <a href="10-my-claims.html">My claims</a>
+      <a href="18-my-recovery-responses.html">My recovery responses</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
+  </header>
+
+  <main id="main" tabindex="-1" class="fb-page" data-page="submit-recovery-response">
+    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
+      <a href="02-listings-member.html">Lost &amp; Found</a> › <span aria-current="page">I may have found this item</span>
+    </nav>
+    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-5);">I may have found this item</h1>
+
+    <div class="fb-context" data-rr-context>
+      <span class="fb-listings__empty" style="background: none; border: none; padding: 0;">Loading…</span>
+    </div>
+
+    <p class="fb-helper" style="margin-bottom: var(--fb-space-5);">Tell the owner what you observed. They and an administrator will review responses and verify ownership.</p>
+
+    <div class="fb-alert fb-alert--warning" data-block-alert hidden>
+      <span aria-hidden="true">⚠</span>
+      <div data-block-message></div>
+    </div>
+
+    <div class="fb-form-error" data-rr-error role="alert" hidden></div>
+
+    <form data-rr-form novalidate>
+      <div class="fb-field">
+        <label class="fb-field__label" for="whereCampus">Where you found it — campus area <span class="fb-req" aria-hidden="true">*</span></label>
+        <select class="fb-select" id="whereCampus" name="whereFoundCampusArea" required>
+          <option value="">Select campus area…</option>
+          <option value="Library">Library</option>
+          <option value="Student Center">Student Center</option>
+          <option value="Engineering Building">Engineering Building</option>
+          <option value="Dining Hall">Dining Hall</option>
+          <option value="Athletics Center">Athletics Center</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="whereExact">Exact place (optional)</label>
+        <input class="fb-input" type="text" id="whereExact" name="whereFoundExactPlace" maxlength="120" placeholder="e.g., 3rd-floor study carrel">
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="ident">Observed identifying details <span class="fb-req" aria-hidden="true">*</span></label>
+        <textarea class="fb-textarea" id="ident" name="observedIdentifyingDetails" required minlength="10" maxlength="1000" placeholder="Describe what you saw — color, brand, stickers, contents if visible. 10–1000 characters." data-counter></textarea>
+        <div class="fb-field__counter" aria-live="polite">0 / 1000</div>
+        <p class="fb-field__help">Visible to the Lost-report owner and administrators. Do not include your contact information.</p>
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="dfound">Date you found it <span class="fb-req" aria-hidden="true">*</span></label>
+        <input class="fb-input" type="date" id="dfound" name="dateFound" required>
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="img">Candidate image (optional)</label>
+        <input class="fb-input" type="file" id="img" name="candidateImage" accept="image/*" disabled>
+        <p class="fb-field__help">Image upload is not available in this prototype.</p>
+      </div>
+      <div class="fb-actions">
+        <a href="02-listings-member.html" class="fb-btn fb-btn--tertiary">Cancel</a>
+        <button type="submit" class="fb-btn fb-btn--primary">Submit response</button>
+      </div>
+    </form>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>UJ-5 Quinn · Step 3 of 12</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="03-item-detail-member.html">← Previous</a>
+        <a href="../index.html">All journeys</a>
+        <a href="19-recovery-response-detail.html">Next →</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/state.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var user = window.FB.state.getCurrentUser();
+      if (!user) { window.location.href = '../public/02-login.html?next=20-submit-recovery-response.html'; return; }
+      if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
+
+      var params = new URLSearchParams(window.location.search);
+      var itemId = params.get('item') || 'rpt_wallet_lost_pending';
+      var r = window.FB.state.getReport(itemId);
+      if (!r) {
+        document.querySelector('main').innerHTML = '<div class="fb-listings__empty"><strong>Item not found.</strong></div>';
+        return;
+      }
+
+      var ctx = document.querySelector('[data-mockup-context]');
+      if (ctx) ctx.textContent = user.name + ' · Recovery response on "' + r.name + '"';
+
+      var ctxEl = document.querySelector('[data-rr-context]');
+      var reporter = window.FB.state.getUser(r.reporterId);
+      ctxEl.innerHTML =
+        '<span class="fb-type-badge fb-type-badge--' + r.type + '">' + (r.type === 'lost' ? 'Lost' : 'Found') + '</span>' +
+        '<span class="fb-context__title">' + r.name + '</span>' +
+        '<span style="color: var(--fb-on-surface-variant);">' + r.campusArea + '</span>';
+
+      // Date bounds: today and 30 days past per FR-8.
+      var dateInput = document.getElementById('dfound');
+      var today = new Date();
+      var past30 = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+      dateInput.max = today.toISOString().split('T')[0];
+      dateInput.min = past30.toISOString().split('T')[0];
+
+      // Block conditions.
+      var blockAlert = document.querySelector('[data-block-alert]');
+      var blockMsg = document.querySelector('[data-block-message]');
+      var form = document.querySelector('[data-rr-form]');
+      var block = false;
+      if (r.type !== 'lost') {
+        block = true;
+        blockMsg.innerHTML = '<strong>This is a Found report.</strong> Recovery responses are for Lost items only. If this looks like yours, use <a href="11-submit-claim.html?item=' + r.id + '">Submit a claim</a>.';
+      } else if (r.reporterId === user.id) {
+        block = true;
+        blockMsg.innerHTML = '<strong>You reported this Lost item.</strong> Recovery responses are submitted by other members who think they found it. Manage your Lost report from <a href="08-my-reports.html">My reports</a>.';
+      } else if (r.status === 'returned' || r.status === 'closed') {
+        block = true;
+        blockMsg.innerHTML = '<strong>This Lost report is ' + r.status + '.</strong> No new recovery responses can be submitted.';
+      } else if (r.status === 'verificationPending' && r.selectedResponseId) {
+        // Selected for verification; check whether the responder already submitted one.
+        var existingForUser = window.FB.state.listRecoveryResponsesForLostReport(r.id).filter(function (rr) { return rr.responderId === user.id; });
+        if (existingForUser.length) {
+          block = true;
+          var ex = existingForUser[0];
+          var rrStatus = ex.status;
+          var rrMsg = '';
+          if (rrStatus === 'Submitted') {
+            rrMsg = '<strong>You already have a Recovery Response</strong> on this item. Status: ' + rrStatus + '. <a href="19-recovery-response-detail.html?rr=' + ex.id + '">View response</a>';
+          } else if (rrStatus === 'Selected for Verification') {
+            rrMsg = '<strong>You already have a Recovery Response being verified</strong> for this item. You cannot submit another response while verification is in progress. <a href="19-recovery-response-detail.html?rr=' + ex.id + '">View response</a>';
+          } else if (rrStatus === 'Match Confirmed') {
+            rrMsg = '<strong>Your Recovery Response was Match Confirmed.</strong> An administrator will record the return shortly. You cannot submit another response. <a href="19-recovery-response-detail.html?rr=' + ex.id + '">View response</a>';
+          } else if (rrStatus === 'Not a Match') {
+            rrMsg = '<strong>Your previous Recovery Response was Not a Match.</strong> You may submit a new one if otherwise eligible. <a href="19-recovery-response-detail.html?rr=' + ex.id + '">View previous response</a>';
+            block = false; // allow new submission
+          } else {
+            rrMsg = '<strong>You already submitted a recovery response</strong> for this item. Status: ' + rrStatus + '. <a href="19-recovery-response-detail.html?rr=' + ex.id + '">View response</a>';
+          }
+          blockMsg.innerHTML = rrMsg;
+        }
+      } else {
+        // Open or verificationPending without selectedResponse; still check for duplicates.
+        var existingAny = window.FB.state.listRecoveryResponsesForLostReport(r.id).filter(function (rr) { return rr.responderId === user.id; });
+        if (existingAny.length) {
+          block = true;
+          var ex2 = existingAny[0];
+          var rrStatus2 = ex2.status;
+          if (rrStatus2 === 'Submitted') {
+            blockMsg.innerHTML = '<strong>You already have a Recovery Response</strong> on this item. Withdraw it first if you want to end it before submitting a new one. <a href="19-recovery-response-detail.html?rr=' + ex2.id + '">View response</a>';
+          } else if (rrStatus2 === 'Not a Match') {
+            blockMsg.innerHTML = '<strong>Your previous Recovery Response was Not a Match.</strong> You may submit a new one if otherwise eligible. <a href="19-recovery-response-detail.html?rr=' + ex2.id + '">View previous response</a>';
+            block = false; // allow new submission
+          } else {
+            blockMsg.innerHTML = '<strong>You already submitted a recovery response</strong> for this item. Status: ' + rrStatus2 + '. <a href="19-recovery-response-detail.html?rr=' + ex2.id + '">View response</a>';
+          }
+        }
+      }
+      if (block) {
+        blockAlert.hidden = false;
+        form.querySelectorAll('input, textarea, select, button[type="submit"]').forEach(function (el) { el.disabled = true; });
+      }
+
+      var ta = document.querySelector('[data-counter]');
+      var counter = document.querySelector('.fb-field__counter');
+      function updateCounter() {
+        counter.textContent = ta.value.length + ' / 1000';
+        counter.classList.toggle('fb-field__counter--warn', ta.value.length > 900);
+      }
+      ta.addEventListener('input', updateCounter);
+      updateCounter();
+
+      var errEl = document.querySelector('[data-rr-error]');
+      window.FB.attachFormValidation(form, {
+        summaryEl: errEl,
+        fields: [
+          { input: form.querySelector('[name="whereFoundCampusArea"]'), label: 'Campus area', validate: function (v) { return !!v || 'Select the campus area where you found the item.'; } },
+          { input: form.querySelector('[name="whereFoundExactPlace"]'), label: 'Exact place', validate: function (v) { return !v || v.length <= 120 || 'Keep this under 120 characters.'; } },
+          { input: form.querySelector('[name="observedIdentifyingDetails"]'), label: 'Observed identifying details', validate: function (v) { if (!v) return 'Observed identifying details are required.'; if (v.length < 10) return 'Please add at least 10 characters.'; if (v.length > 1000) return 'Please keep this under 1000 characters.'; return true; } },
+          { input: form.querySelector('[name="dateFound"]'), label: 'Date found', validate: function (v) { return v.length > 0 || 'Date found is required.'; } }
+        ],
+        onSubmit: function () {
+          if (block) return;
+          var data = {
+            lostReportId: itemId,
+            campusArea: form.querySelector('[name="whereFoundCampusArea"]').value,
+            exactPlace: form.querySelector('[name="whereFoundExactPlace"]').value.trim(),
+            observedDetails: form.querySelector('[name="observedIdentifyingDetails"]').value.trim(),
+            dateFound: form.querySelector('[name="dateFound"]').value
+          };
+          var rr = window.FB.state.submitRecoveryResponse(data, user.id);
+          if (!rr) { alert('Could not submit your recovery response. The item may already be matched or closed.'); return; }
+          window.FB.toast && window.FB.toast('Recovery response submitted.', 'success');
+          setTimeout(function () { window.location.href = '19-recovery-response-detail.html?rr=' + rr.id; }, 250);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

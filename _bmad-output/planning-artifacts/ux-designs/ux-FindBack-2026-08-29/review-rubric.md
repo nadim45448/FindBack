@@ -85,3 +85,15 @@ The spine pair is **strong overall** and is fit to ship as the contract for down
 - **Title-case variation.** DESIGN.md frontmatter title is "FindBack — Design System"; EXPERIENCE.md frontmatter is "EXPERIENCE.md — FindBack". Not load-bearing but inconsistent for grep-based extraction tooling.
 - **The §24 traceability table is the rubric walker Pass 1 reference for downstream consumers.** Architecture and Story-Dev can source-extract FR coverage by section reference. Recommend a one-line preamble in §24 saying "This section is also the rubric walker output."
 - **Token path normalization (Finding 2.1, 2.2) is the only mechanical issue that would block a strict `{path.to.token}` source extractor.** Cosmetic to humans, mechanical to tooling.
+
+## Correction pass — 2026-09-16 (post-review)
+
+The 2026-08-29 rubric review above is the as-finalized baseline. A targeted correction pass on 2026-09-16 produced the following alignment-to-PRD updates:
+
+- UJ-1 (Maya's Lost-report cleanup) is now an explicit manual Withdraw action — no auto-linking.
+- UJ-2 (Sam) no longer implies the finder sees claimant reason / identifying details; thread-only visibility.
+- UJ-3 (Alex) loses the registration-rejection email; rejected users surface via the neutral login message.
+- UJ-4 (Riley) now covers four queues including Lost-side Items in Verification; competing-Claim wording is normalized.
+- UJ-5 (Maya / Sam / Pat / Riley) is replaced: Maya selects the RR; Riley records; Quinn is an edge case only.
+
+Rubric-walker coverage re-checked: all FR-1..FR-50, all UJ-1..UJ-5, all 8 canonical RR statuses, all 4 admin queues + audit cross-cutting, all 8 audit-action Family events (Created, Edited, Withdrawn, Claim-submitted, Claim-decided, Returned, Admin-closed, RR lifecycle), owner-determines / Administrator-records preserved on Lost-side. UX package retained as `revision` pending manual prototype review by the user.

@@ -1,6 +1,6 @@
 # FindBack — Interactive HTML Mockups
 
-A clickable prototype that realizes the FindBack MVP per the finalized **PRD**, **EXPERIENCE.md**, and **DESIGN.md**.
+A clickable prototype that realizes FindBack per the finalized **PRD**, **EXPERIENCE.md**, and **DESIGN.md**.
 
 **Start here:** open `mockups/index.html` (the Prototype Guide) and pick a journey.
 
@@ -31,7 +31,9 @@ mockups/
 │   ├── 05-register-confirmation.html
 │   ├── 06-pending-account.html
 │   ├── 07-rejected-account.html
-│   └── 08-deactivated-account.html
+│   ├── 08-deactivated-account.html
+│   ├── 09-forgot-password.html
+│   └── 10-forgot-password-sent.html
 ├── member/                    # Authenticated member surfaces (Maya, Sam, Alex)
 │   ├── 01-listings-anon.html        # Same listing as anonymous users see
 │   ├── 02-listings-member.html
@@ -67,7 +69,7 @@ mockups/
     └── 13-close-content.html
 ```
 
-**Totals:** 40 HTML files + 10 shared assets.
+**Totals:** 48 HTML files + 10 shared assets.
 
 ---
 
@@ -186,7 +188,7 @@ Other interactions:
 
 - **OQ-1** — Does the reporter see **other claimants' identifying details** on their own item? PRD FR-13 says "no", but UJ-2's reporter thread (`13-claim-detail.html`) currently shows just the claimant's own identifying details. The audit row would be the place to expose this for administrators only; currently `12-audit-trail.html` only shows the reason excerpt.
 - **OQ-2** — "Returned" is a terminal status; an admin could in theory move it back. Mockups assume not. (PRD FR-9 explicitly blocks member edits on Returned but doesn't address admin reversals.)
-- **OQ-3** — Substitute receiver authorization is recorded as a single checkbox affirmation. Mockups show this as `fb-checkbox-row`. There is no message-thread back-and-forth to the claimant in MVP.
+- **OQ-3** — Substitute receiver authorization is recorded as a single checkbox affirmation. Mockups show this as `fb-checkbox-row`. There is no message-thread back-and-forth to the claimant.
 - **OQ-4** — The per-claim thread becomes read-only on Approved/Rejected/Closed. Mockups show "🔒 read-only" banner. UX vs. architecture question: should the thread close on Returned too? Currently shown as yes (`13-claim-detail.html`).
 - **OQ-5** — The audit-trail filter UI is a minimal wireframe (`12-audit-trail.html`). A real product would want event-type, actor, target, date range, free-text search across all fields.
 - **OQ-6** — "Sensitive" flag is rendered as `fb-sensitive-flag` (terracotta pill) on form labels and detail-page field labels. A real product may want a tooltip explaining *why* a field is sensitive (administrator-only? reporter+admin? reporter+claimant?).
@@ -240,7 +242,7 @@ Other interactions:
   - D3 (Competing claims auto-rejection): `07-claim-review-competing.html` shows three pending; `08-claim-approve.html` approval cascades; `16-claim-rejected-detail.html` shows the auto-rejected claimant's view
   - D4 (Audit trail 14 events): `12-audit-trail.html` filter dropdown lists them all
 
-- **EXPERIENCE.md Key Flows** — UJ-1 through UJ-4 are all walked step-by-step in `index.html`.
+- **EXPERIENCE.md Key Flows** — UJ-1 through UJ-5 are all walked step-by-step in `index.html`.
 - **DESIGN.md** — every visual decision uses tokens from `tokens.css`. No hard-coded colors, font sizes, or spacing values outside the token system.
 - **No source artifacts were modified.** Brief, PRD, DESIGN.md, EXPERIENCE.md remain untouched.
 

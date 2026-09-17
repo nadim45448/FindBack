@@ -156,6 +156,66 @@
       html += '  </section>';
     }
 
+    // Recovery Response CTA: only for **Lost** items (PRD FR-40; UJ-5 step 3).
+    // Eligibility: Active member + Lost item + status Open or VerificationPending
+    // (NOT after Match Confirmed) + not the Lost-report owner + no existing RR.
+    var myExistingRR = null;
+    if (user && user.role === 'member' && r.type === 'lost') {
+      var allRRs = window.FB.state.listRecoveryResponsesForLostReport(r.id) || [];
+      myExistingRR = allRRs.find(function (rr) { return rr.responderId === user.id; }) || null;
+    }
+    var canSubmitRR = !!user && user.role === 'member' && r.type === 'lost' &&
+      (r.status === 'open' || (r.status === 'verificationPending' && (!r.selectedResponseId || r.status !== 'verificationPending'))) &&
+      !isReporter && !myExistingRR;
+    // Refine: only block when selected RR has progressed to Match Confirmed.
+    if (canSubmitRR && r.status === 'verificationPending' && r.selectedResponseId) {
+      var selRR = window.FB.state.getRecoveryResponse(r.selectedResponseId);
+      if (selRR && selRR.status === 'Match Confirmed') canSubmitRR = false;
+    }
+    if (canSubmitRR) {
+      html += '  <section class="fb-detail__section" aria-labelledby="rr-h">';
+      html += '    <h2 id="rr-h" class="fb-detail__section-title">I may have found this item</h2>';
+      html += '    <p class="fb-detail__section-body">If you think you found this item, share what you observed — where you found it, when, and identifying details. The owner will review responses.</p>';
+      html += '    <div style="margin-top: var(--fb-space-4);">';
+      html += '      <a href="20-submit-recovery-response.html?item=' + r.id + '" class="fb-btn fb-btn--primary">I may have found this item</a>';
+      html += '    </div>';
+      html += '  </section>';
+    }
+    // Sign-in prompt for Lost items.
+    var canShowSignInRRCTA = !user && r.type === 'lost' && (r.status === 'open' || r.status === 'verificationPending');
+    if (canShowSignInRRCTA) {
+      html += '  <section class="fb-detail__section" aria-labelledby="rr-h">';
+      html += '    <h2 id="rr-h" class="fb-detail__section-title">I may have found this item</h2>';
+      html += '    <p class="fb-detail__section-body">Sign in to submit a recovery response with where you found it and what you observed.</p>';
+      html += '    <div style="margin-top: var(--fb-space-4);"><a href="../public/02-login.html?next=' + encodeURIComponent('03-item-detail-member.html?item=' + r.id) + '" class="fb-btn fb-btn--primary">Sign in to respond</a></div>';
+      html += '  </section>';
+    }
+    // If Lost-report owner has submitted RRs, surface the Review Responses
+    // owner-action surface (PRD FR-43 / correction #10 — owner selects).
+    if (isReporter && r.type === 'lost') {
+      var lostRRs = window.FB.state.listRecoveryResponsesForLostReport(r.id) || [];
+      if (lostRRs.length > 0) {
+        var nonTerminalRRs = lostRRs.filter(function (rr) {
+          return rr.status === 'Submitted' || rr.status === 'Selected for Verification';
+        });
+        html += '  <section class="fb-detail__section" aria-labelledby="rr-h">';
+        html += '    <h2 id="rr-h" class="fb-detail__section-title">Recovery Responses (' + lostRRs.length + ')</h2>';
+        if (r.status === 'verificationPending') {
+          html += '    <p class="fb-detail__section-body">You selected a response. An administrator will record your determination when you meet them at the security desk.</p>';
+        } else if (r.status === 'returned') {
+          html += '    <p class="fb-detail__section-body">This Lost report has been returned. The verification flow is closed.</p>';
+        } else if (r.status === 'closed') {
+          html += '    <p class="fb-detail__section-body">This Lost report has been closed. The verification flow is closed.</p>';
+        } else if (nonTerminalRRs.length === 0) {
+          html += '    <p class="fb-detail__section-body">All submitted responses are now terminal. The verification flow is closed.</p>';
+        } else {
+          html += '    <p class="fb-detail__section-body">Pick the response that looks like yours — an administrator will then record your determination.</p>';
+        }
+        html += '    <p style="margin-top: var(--fb-space-3);"><a href="21-review-responses.html?item=' + r.id + '" class="fb-btn fb-btn--primary fb-btn--sm">Review responses</a></p>';
+        html += '  </section>';
+      }
+    }
+
     // Claimant-specific status alerts
     if (isClaimant) {
       var pendingClaim = myClaims.find(function (c) { return c.status === 'pending'; });

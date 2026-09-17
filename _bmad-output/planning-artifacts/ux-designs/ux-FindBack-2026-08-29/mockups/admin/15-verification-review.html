@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Item detail — FindBack</title>
+  <title>Verification review — FindBack</title>
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/tokens.css">
   <script>
@@ -19,23 +19,28 @@
     })();
   </script>
   <style>
-    .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-page { max-width: var(--fb-container-wide); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
     body { padding-bottom: 80px; }
+    @media (max-width: 720px) {
+      .fb-verification-grid { grid-template-columns: 1fr !important; }
+    }
   </style>
 </head>
-<body>
+<body class="fb-topbar--admin">
   <a href="#main" class="fb-skip-link">Skip to main content</a>
 
   <header class="fb-topbar">
-    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+    <a href="01-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
       <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
       <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
     </a>
     <nav class="fb-topbar__nav" aria-label="Primary">
-      <a href="02-listings-member.html">Lost &amp; Found</a>
-      <a href="08-my-reports.html" aria-current="page">My reports</a>
-      <a href="10-my-claims.html">My claims</a>
-      <a href="18-my-recovery-responses.html">My recovery responses</a>
+      <a href="01-dashboard.html">Dashboard</a>
+      <a href="02-pending-registrations.html">Registrations</a>
+      <a href="05-pending-claims.html">Claims</a>
+      <a href="09-items-awaiting-return.html">Awaiting return</a>
+      <a href="14-items-in-verification.html" aria-current="page">In verification</a>
+      <a href="12-audit-trail.html">Audit trail</a>
     </nav>
     <div class="fb-topbar__spacer"></div>
     <div class="fb-theme-toggle" data-theme-toggle>
@@ -63,45 +68,34 @@
     <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
-  <main id="main" tabindex="-1" class="fb-page">
-    <div data-detail-root>
-      <div class="fb-listings__empty">Loading…</div>
-    </div>
+  <main id="main" tabindex="-1" class="fb-page" data-page="admin-verification-review">
+    <div data-admin-root><div class="fb-listings__empty">Loading…</div></div>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>UJ-2 Sam · Step 5 of 8 (reporter view)</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;">UJ-5 Quinn · Step 9–10 of 12</span>
       <div style="display: flex; gap: var(--fb-space-4);">
-        <a href="02-listings-member.html">← Previous</a>
+        <a href="14-items-in-verification.html">← Previous</a>
         <a href="../index.html">All journeys</a>
-        <a href="08-my-reports.html">Next →</a>
+        <a href="12-audit-trail.html">Next →</a>
       </div>
     </div>
   </nav>
 
   <script src="../assets/state.js"></script>
+  <script src="../assets/admin-renderer.js"></script>
   <script src="../assets/app.js"></script>
-  <script src="../assets/detail-renderer.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       if (!window.FB || !window.FB.state) return;
-      var user = window.FB.state.getCurrentUser();
-      if (!user) { window.location.href = '../public/02-login.html'; return; }
-      if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
-      var root = document.querySelector('[data-detail-root]');
-      // Resolve the report id from the ?item= query string so the page
-      // renders whichever report the user clicked from My Reports. Passing
-      // a hard-coded id here would override the URL and always show the
-      // same item regardless of which row was clicked.
-      var params = new URLSearchParams(window.location.search);
-      window.FB.renderItemDetail(root, {
-        itemId: params.get('item') || 'rpt_wallet_found',
-        breadcrumb: [
-          { href: '08-my-reports.html', label: 'My reports' },
-          { current: true, label: 'Item detail' }
-        ]
-      });
+      var admin = window.FB.state.getCurrentUser();
+      if (!admin || admin.role !== 'administrator') {
+        window.location.href = '../public/02-login.html';
+        return;
+      }
+      var root = document.querySelector('[data-admin-root]');
+      window.FB.adminRender.verificationReview(root);
     });
   </script>
 </body>

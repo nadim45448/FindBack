@@ -20,23 +20,38 @@
 //                          campusArea, exactPlace, identifyingDetails,
 //                          imageDataUrl?, reporterId, status, createdAt,
 //                          updatedAt, closedAt, returnedAt, returnedBy,
-//                          receiver, substituteReceiver } },
+//                          receiver, substituteReceiver,
+//                          selectedResponseId? } },
 //     claims:    { [id]: { id, reportId, claimantId, reason,
 //                          identifyingDetails, dateLost, status, createdAt,
 //                          reviewedAt, reviewedBy, decisionReason,
 //                          autoRejected } },
-//     threads:   { [claimId]: [ { id, authorId, authorName, body, createdAt } ] },
-//     audit:     [ { id, reportId, claimId?, actorId, actorName, action,
-//                    detail, createdAt } ],
+//     recoveryResponses: { [id]: { id, lostReportId, responderId,
+//                          campusArea, exactPlace, observedDetails,
+//                          dateFound, candidateImageDataUrl?, status,
+//                          createdAt, selectedAt?, verifiedAt?,
+//                          verifiedByAdminId?, determinedByOwnerId?,
+//                          determination?, withdrawnAt?, terminalAt? } },
+//     threads:   { [claimId]: [...], [recoveryResponseId]: [...] },
+//     audit:     [ { id, reportId, claimId?, recoveryResponseId?,
+//                    actorId, actorName, action, detail, createdAt,
+//                    triggeredBy?, triggeringAction?, reason? } ],
 //     session:   { userId, since } | null,
 //     meta:      { seededAt, version }
 //   }
+//
+// Note: Standby is a derived/display condition, NOT a persisted status
+// (PRD FR-41; EXPERIENCE.md §11.5). When a Lost report's selectedResponseId
+// is set, other Submitted responses render as `Submitted — Standby` via
+// `displayStatus(rr, lostReport)` while their canonical status remains
+// `Submitted`.
+//
 // ============================================================================
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'findback.state.v1';
-  const SCHEMA_VERSION = 1;
+  const STORAGE_KEY = 'findback.state.v2';
+  const SCHEMA_VERSION = 2;
 
   // ---------- ID + time helpers ----------
   const newId = (prefix) => prefix + '_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
@@ -58,6 +73,27 @@
   ];
   const SELF_ROLES = ['Student', 'Employee', 'Visitor', 'Other'];
   const RELATIONSHIPS = ['Friend', 'Family Member', 'Colleague', 'Classmate', 'Other'];
+
+  // Recovery Response canonical statuses (PRD FR-41; corrections #16/#2).
+  // Standby is NOT a persisted status; it is a derived display condition
+  // applied by `displayStatus()` when a Lost report has a selected response.
+  const RR_STATUSES = [
+    'Submitted',
+    'Selected for Verification',
+    'Match Confirmed',
+    'Not a Match',
+    'Completed — Report Returned',
+    'Resolved — Report Returned',
+    'Resolved — Report Closed',
+    'Withdrawn'
+  ];
+  const RR_NON_TERMINAL = new Set(['Submitted', 'Selected for Verification', 'Match Confirmed']);
+  const RR_TERMINAL = new Set([
+    'Not a Match', 'Completed — Report Returned', 'Resolved — Report Returned',
+    'Resolved — Report Closed', 'Withdrawn'
+  ]);
+  // Lost report lifecycle (PRD FR-42; corrections #22/#2).
+  const LOST_STATUSES = ['open', 'verificationPending', 'returned', 'closed'];
 
   // ---------- Seed data ----------
   function seedUsers() {
@@ -222,7 +258,109 @@
       receiver: null, substituteReceiver: null
     });
 
+    // ----- Lost-side seed (Revision 3 final; PRD FR-40..FR-45) -----
+    // Lost report in Verification Pending with one selected RR + one standby RR.
+    add({
+      id: 'rpt_wallet_lost_pending', type: 'lost', name: 'Brown leather wallet',
+      category: 'Wallets & purses',
+      description: 'Brown leather bifold wallet, zip closure. Contains my student ID and a folded photo of my dog.',
+      date: daysAgo(8), campusArea: 'Main Library',
+      exactPlace: '2nd floor, behind the periodicals shelf.',
+      identifyingDetails: 'Small scratch on the back near the corner. A red metro card inside the inner pocket.',
+      reporterId: 'u_maya', status: 'verificationPending',
+      selectedResponseId: 'rr_wallet_sam',
+      createdAt: daysAgo(8), updatedAt: hoursAgo(4),
+      closedAt: null, returnedAt: null, returnedBy: null,
+      receiver: null, substituteReceiver: null
+    });
+
+    // An Open Lost report (no RR yet) — supports the Browse → Submit RR CTA demo.
+    add({
+      id: 'rpt_keys_lost_open', type: 'lost', name: 'Set of keys with red lanyard',
+      category: 'Keys',
+      description: 'Four keys on a metal ring with a red Braves lanyard. One Yale-style key for a bike lock.',
+      date: daysAgo(1), campusArea: 'Engineering Building',
+      exactPlace: 'Second floor bathroom sink.',
+      identifyingDetails: 'A small silver baseball charm on the keyring.',
+      reporterId: 'u_maya', status: 'open',
+      selectedResponseId: null,
+      createdAt: daysAgo(1), updatedAt: daysAgo(1),
+      closedAt: null, returnedAt: null, returnedBy: null,
+      receiver: null, substituteReceiver: null
+    });
+
+    // A Returned Lost report — supports the historical My Recovery Responses
+    // and Items-in-Verification (post-Returned) views.
+    add({
+      id: 'rpt_scarf_lost_returned', type: 'lost', name: 'Wool scarf — burnt orange',
+      category: 'Clothing & accessories',
+      description: 'Long wool scarf, burnt orange, hand-knit. Last seen at the dorm entrance.',
+      date: daysAgo(16), campusArea: 'Dormitory — North',
+      exactPlace: 'Lobby coat rack by the mailboxes.',
+      identifyingDetails: 'Small loose thread near the fringe on one end.',
+      reporterId: 'u_maya', status: 'returned',
+      selectedResponseId: 'rr_scarf_returned',
+      createdAt: daysAgo(16), updatedAt: daysAgo(10),
+      closedAt: null, returnedAt: daysAgo(10), returnedBy: 'u_riley',
+      receiver: { type: 'default', name: 'Maya Chen' },
+      substituteReceiver: null
+    });
+
     return r;
+  }
+
+  function seedRecoveryResponses() {
+    return {
+      // Selected for Verification on rpt_wallet_lost_pending.
+      rr_wallet_sam: {
+        id: 'rr_wallet_sam',
+        lostReportId: 'rpt_wallet_lost_pending',
+        responderId: 'u_sam',
+        campusArea: 'Student Center',
+        exactPlace: 'Security desk, drawer 3.',
+        observedDetails: 'Brown leather, contains a metro card and a folded photo.',
+        dateFound: daysAgo(6),
+        candidateImageDataUrl: null,
+        status: 'Selected for Verification',
+        createdAt: daysAgo(5), selectedAt: hoursAgo(4),
+        verifiedAt: null, verifiedByAdminId: null,
+        determinedByOwnerId: null, determination: null,
+        withdrawnAt: null, terminalAt: null
+      },
+      // Standby (Submitted while another is selected). Canonical status
+      // remains `Submitted`; UI renders as `Submitted — Standby`.
+      rr_wallet_pat: {
+        id: 'rr_wallet_pat',
+        lostReportId: 'rpt_wallet_lost_pending',
+        responderId: 'u_priya',
+        campusArea: 'Cafeteria',
+        exactPlace: 'Table 7 near the south windows.',
+        observedDetails: 'Black bifold wallet with a faded sticker on the back.',
+        dateFound: daysAgo(2),
+        candidateImageDataUrl: null,
+        status: 'Submitted',
+        createdAt: hoursAgo(20), selectedAt: null,
+        verifiedAt: null, verifiedByAdminId: null,
+        determinedByOwnerId: null, determination: null,
+        withdrawnAt: null, terminalAt: null
+      },
+      // A historical terminal RR — supports My Recovery Responses historical view.
+      rr_scarf_returned: {
+        id: 'rr_scarf_returned',
+        lostReportId: 'rpt_scarf_lost_returned',
+        responderId: 'u_sam',
+        campusArea: 'Outdoor Quad',
+        exactPlace: 'Bench near the oak tree.',
+        observedDetails: 'Burnt orange hand-knit scarf, small loose thread.',
+        dateFound: daysAgo(15),
+        candidateImageDataUrl: null,
+        status: 'Completed — Report Returned',
+        createdAt: daysAgo(15), selectedAt: daysAgo(13),
+        verifiedAt: daysAgo(11), verifiedByAdminId: 'u_riley',
+        determinedByOwnerId: 'u_maya', determination: 'Match Confirmed',
+        withdrawnAt: null, terminalAt: daysAgo(10)
+      }
+    };
   }
 
   function seedClaims() {
@@ -290,6 +428,11 @@
       ],
       clm_phone_alex: [
         { id: 'msg_phone_1', authorId: 'u_maya',  authorName: 'Maya Chen', body: 'The lock screen is my cat Mango. I can describe him if it helps.', createdAt: hoursAgo(9) }
+      ],
+      // Per-Recovery-Response thread (PRD FR-47; D6). One thread per RR,
+      // not one thread per Lost report.
+      rr_wallet_sam: [
+        { id: 'msg_rr_1', authorId: 'u_maya', authorName: 'Maya Chen', body: 'Thanks for turning this in. I can come by the security desk after 2pm today.', createdAt: hoursAgo(3) }
       ]
     };
   }
@@ -338,6 +481,7 @@
       registrations,
       reports: seedReports(),
       claims: seedClaims(),
+      recoveryResponses: seedRecoveryResponses(),
       threads: seedThreads(),
       audit: seedAudit(),
       session: null,
@@ -651,50 +795,374 @@
     return claim;
   }
 
-  // Threads
-  function getThread(claimId) { return state.threads[claimId] || []; }
-  // Read-only lifecycle (PRD FR-26; EXPERIENCE.md §13.5; Pass-3 decision).
-  // Thread is locked as soon as the claim is Approved (no need to wait for
-  // the physical return), when the claim is Rejected, or when the report
-  // is closed/returned. UI must mirror this rule.
-  function isThreadReadOnly(claimId) {
-    const claim = state.claims[claimId];
-    if (!claim) return true;
-    if (claim.status === 'approved') return true;
-    if (claim.status === 'rejected') return true;
-    const r = state.reports[claim.reportId];
-    if (r && (r.status === 'returned' || r.status === 'closed')) return true;
+  // ---------- Recovery Responses (PRD FR-40..FR-45; corrections #2/#16) ----------
+  function listRecoveryResponses() { return Object.values(state.recoveryResponses); }
+  function getRecoveryResponse(id) { return state.recoveryResponses[id] || null; }
+  function listRecoveryResponsesForLostReport(lostReportId) {
+    return listRecoveryResponses().filter((rr) => rr.lostReportId === lostReportId);
+  }
+  function listRecoveryResponsesForUser(userId) {
+    return listRecoveryResponses().filter((rr) => rr.responderId === userId);
+  }
+
+  // Standby is a derived/display condition (correction #2). When the parent
+  // Lost report has a selectedResponseId, the OTHER `Submitted` responses
+  // render as `Submitted — Standby` in the UI. Their canonical persisted
+  // status remains `Submitted`; do not persist `Standby`.
+  function displayStatus(rr) {
+    if (rr.status !== 'Submitted') return rr.status;
+    const lost = state.reports[rr.lostReportId];
+    if (lost && lost.selectedResponseId && lost.selectedResponseId !== rr.id) {
+      return 'Submitted — Standby';
+    }
+    return 'Submitted';
+  }
+
+  function submitRecoveryResponse(input, responderId) {
+    const responder = state.users[responderId];
+    if (!responder || responder.role !== 'member' || responder.accountState !== 'active') return null;
+    const lost = state.reports[input.lostReportId];
+    if (!lost || lost.type !== 'lost') return null;
+    // Once Match Confirmed is recorded, no new RR may be submitted
+    // (correction #14). The Lost report stays Verification Pending while
+    // the selected RR is Match Confirmed.
+    const selected = lost.selectedResponseId ? state.recoveryResponses[lost.selectedResponseId] : null;
+    if (selected && selected.status === 'Match Confirmed') return null;
+    // Reporter cannot submit a Recovery Response on their own Lost report.
+    if (lost.reporterId === responderId) return null;
+    const id = 'rr_' + Math.random().toString(36).slice(2, 9);
+    const rr = {
+      id, lostReportId: input.lostReportId, responderId,
+      campusArea: input.campusArea,
+      exactPlace: (input.exactPlace || '').trim(),
+      observedDetails: (input.observedDetails || '').trim(),
+      dateFound: input.dateFound,
+      candidateImageDataUrl: input.candidateImageDataUrl || null,
+      status: 'Submitted',
+      createdAt: now(), selectedAt: null,
+      verifiedAt: null, verifiedByAdminId: null,
+      determinedByOwnerId: null, determination: null,
+      withdrawnAt: null, terminalAt: null
+    };
+    state.recoveryResponses[id] = rr;
+    addAudit({
+      reportId: lost.id, recoveryResponseId: id, actorId: responderId,
+      action: 'rr_submitted',
+      detail: 'Recovery Response submitted (PRD FR-48 Event 15)',
+      triggeredBy: 'submit'
+    });
+    return rr;
+  }
+
+  // Owner-selects semantics (correction pass #10 — PRD D6 owner-determines /
+  // Administrator-records on selection is owner-only in canonical flow).
+  // Actor must be the Lost-report owner. Administrators and others are
+  // rejected at the state layer; the prototype surface for owner selection
+  // is "My Reports → Review Responses" and is gated to Lost-report owner only.
+  function selectRecoveryResponse(rrId, actorId) {
+    const rr = state.recoveryResponses[rrId];
+    if (!rr) return null;
+    const lost = state.reports[rr.lostReportId];
+    if (!lost) return null;
+    if (rr.status !== 'Submitted') return null;
+    if (lost.selectedResponseId && lost.selectedResponseId !== rrId) return null; // exactly one
+    // Owner-only enforcement
+    if (actorId && actorId !== lost.reporterId) return null;
+    rr.status = 'Selected for Verification';
+    rr.selectedAt = now();
+    lost.status = 'verificationPending';
+    lost.selectedResponseId = rrId;
+    lost.updatedAt = now();
+    addAudit({
+      reportId: lost.id, recoveryResponseId: rrId, actorId: lost.reporterId,
+      action: 'rr_selected_for_verification',
+      detail: 'Recovery Response selected for verification (by Lost-report owner)',
+      triggeredBy: 'select_response'
+    });
+    return rr;
+  }
+
+  function recordMatchDetermination(rrId, determination, ownerId, adminId) {
+    // determination: 'Match Confirmed' | 'Not a Match'
+    const rr = state.recoveryResponses[rrId];
+    if (!rr) return null;
+    if (rr.status !== 'Selected for Verification') return null;
+    if (determination !== 'Match Confirmed' && determination !== 'Not a Match') return null;
+    const lost = state.reports[rr.lostReportId];
+    rr.determination = determination;
+    rr.determinedByOwnerId = ownerId;
+    rr.verifiedByAdminId = adminId;
+    rr.verifiedAt = now();
+    if (determination === 'Match Confirmed') {
+      rr.status = 'Match Confirmed';
+      // Lost report STAYS Verification Pending (correction #22).
+    } else {
+      rr.status = 'Not a Match';
+      rr.terminalAt = now();
+      // Return parent Lost report to Open (correction #1).
+      if (lost) {
+        lost.status = 'open';
+        lost.selectedResponseId = null;
+        lost.updatedAt = now();
+      }
+    }
+    addAudit({
+      reportId: rr.lostReportId, recoveryResponseId: rrId, actorId: adminId,
+      action: determination === 'Match Confirmed' ? 'rr_match_confirmed' : 'rr_not_a_match',
+      detail: 'Owner determined: ' + determination + '; recorded by administrator (PRD FR-48 Event ' +
+              (determination === 'Match Confirmed' ? '18' : '19') + ')',
+      determinedBy: ownerId, recordedBy: adminId, triggeringAction: 'owner_determination_recorded'
+    });
+    return rr;
+  }
+
+  function confirmLostReturned(reportId, adminId, receiverPayload) {
+    const lost = state.reports[reportId];
+    if (!lost || lost.type !== 'lost') return null;
+    if (lost.status !== 'verificationPending') return null;
+    const selected = lost.selectedResponseId ? state.recoveryResponses[lost.selectedResponseId] : null;
+    if (!selected || selected.status !== 'Match Confirmed') return null;
+    const isSubstitute = receiverPayload.type === 'substitute';
+    // Selected RR -> Completed — Report Returned (PRD FR-48 Event 30).
+    selected.status = 'Completed — Report Returned';
+    selected.terminalAt = now();
+    addAudit({
+      reportId: reportId, recoveryResponseId: selected.id, actorId: adminId,
+      action: 'rr_completed_report_returned',
+      detail: 'Selected matched RR -> Completed — Report Returned (PRD FR-48 Event 30)',
+      determinedBy: selected.determinedByOwnerId, recordedBy: adminId
+    });
+    // Other non-terminal RRs -> Resolved — Report Returned (PRD FR-48 Event 26).
+    listRecoveryResponsesForLostReport(reportId).forEach((rr) => {
+      if (rr.id === selected.id) return;
+      if (RR_NON_TERMINAL.has(rr.status)) {
+        rr.status = 'Resolved — Report Returned';
+        rr.terminalAt = now();
+        addAudit({
+          reportId: reportId, recoveryResponseId: rr.id, actorId: adminId,
+          action: 'rr_resolved_report_returned',
+          detail: 'Standby RR -> Resolved — Report Returned (PRD FR-48 Event 26)'
+        });
+      }
+    });
+    lost.status = 'returned';
+    lost.returnedAt = now();
+    lost.returnedBy = adminId;
+    lost.updatedAt = now();
+    lost.receiver = { type: receiverPayload.type, name: receiverPayload.name };
+    lost.substituteReceiver = receiverPayload.substitute || null;
+    addAudit({
+      reportId: reportId, actorId: adminId,
+      action: isSubstitute ? 'lost_returned_substitute' : 'lost_returned_default',
+      detail: 'Lost report Returned to ' + receiverPayload.name +
+              (isSubstitute ? ' (substitute; PRD FR-48 Event 22)' : ' (default receiver; PRD FR-48 Event 21)') +
+              ' — FR-46 Event 7 to owner; FR-46 Event 8 to matched responder'
+    });
+    return lost;
+  }
+
+  // Responder withdraws their own RR. Allowed ONLY when the RR is
+  // `Submitted` AND not currently `Selected for Verification`. Selected,
+  // Match Confirmed, Not a Match, and all terminal statuses cannot be
+  // withdrawn by the responder. Withdrawing a `Submitted` RR does not
+  // release a selection (the RR was not selected) and does not change the
+  // parent Lost-report status.
+  function withdrawRecoveryResponse(rrId, responderId) {
+    const rr = state.recoveryResponses[rrId];
+    if (!rr) return null;
+    if (rr.responderId !== responderId) return null;
+    if (rr.status !== 'Submitted') return null;
+    const lost = state.reports[rr.lostReportId];
+    if (lost && lost.selectedResponseId === rrId) return null;
+    rr.status = 'Withdrawn';
+    rr.terminalAt = now();
+    rr.withdrawnAt = now();
+    addAudit({
+      reportId: rr.lostReportId, recoveryResponseId: rrId, actorId: responderId,
+      action: 'rr_withdrawn',
+      detail: 'Recovery Response withdrawn by responder (PRD FR-48 Event 20)',
+      triggeredBy: 'responder_withdraw'
+    });
+    return rr;
+  }
+
+  // Administrator Close of a Lost report (pre-Match Confirmed).
+  // PRD FR-48 Event 24. Allowed when the parent Lost report is in
+  // `Verification Pending` and the selected RR is still `Selected for
+  // Verification` (no `Match Confirmed` yet). All non-terminal RRs resolve
+  // to `Resolved — Report Closed`. Threads become read-only.
+  function adminCloseLostReport(reportId, adminId, reason) {
+    const lost = state.reports[reportId];
+    if (!lost || lost.type !== 'lost') return null;
+    if (lost.status !== 'verificationPending') return null;
+    const rrs = listRecoveryResponsesForLostReport(reportId);
+    // Refuse if any RR has reached Match Confirmed — that path uses Event 25.
+    const anyMatchConfirmed = rrs.some((rr) => rr.status === 'Match Confirmed');
+    if (anyMatchConfirmed) return null;
+    rrs.forEach((rr) => {
+      if (RR_NON_TERMINAL.has(rr.status) || rr.status === 'Selected for Verification') {
+        rr.status = 'Resolved — Report Closed';
+        rr.terminalAt = now();
+        addAudit({
+          reportId: reportId, recoveryResponseId: rr.id, actorId: adminId,
+          action: 'rr_resolved_report_closed',
+          detail: 'Administrator Close -> Resolved — Report Closed (PRD FR-48 Event 24)'
+        });
+      }
+    });
+    lost.status = 'closed';
+    lost.closedAt = now();
+    lost.closedBy = adminId;
+    lost.closureReason = reason || '';
+    lost.updatedAt = now();
+    addAudit({
+      reportId: reportId, actorId: adminId,
+      action: 'lost_closed_admin',
+      detail: 'Administrator Close (pre-Match Confirmed; PRD FR-48 Event 24)' +
+              (reason ? ' — reason: ' + reason : '')
+    });
+    return lost;
+  }
+
+  // Exceptional Administrator cancellation of a Lost report (post-Match Confirmed).
+  // PRD FR-48 Event 25. Allowed only when at least one RR is `Match Confirmed`.
+  // All non-terminal RRs (including the selected Match Confirmed one) resolve
+  // to `Resolved — Report Closed`. Threads become read-only. This is NOT the
+  // owner "withdrawing"; it is an Administrator-only path that operates after
+  // Match Confirmed.
+  function adminCancelLostReport(reportId, adminId, reason) {
+    const lost = state.reports[reportId];
+    if (!lost || lost.type !== 'lost') return null;
+    if (lost.status !== 'verificationPending') return null;
+    const rrs = listRecoveryResponsesForLostReport(reportId);
+    const anyMatchConfirmed = rrs.some((rr) => rr.status === 'Match Confirmed');
+    if (!anyMatchConfirmed) return null;
+    rrs.forEach((rr) => {
+      if (RR_NON_TERMINAL.has(rr.status) ||
+          rr.status === 'Selected for Verification' ||
+          rr.status === 'Match Confirmed') {
+        rr.status = 'Resolved — Report Closed';
+        rr.terminalAt = now();
+        addAudit({
+          reportId: reportId, recoveryResponseId: rr.id, actorId: adminId,
+          action: 'rr_resolved_report_closed',
+          detail: 'Exceptional Administrator cancellation -> Resolved — Report Closed (PRD FR-48 Event 25)'
+        });
+      }
+    });
+    lost.status = 'closed';
+    lost.closedAt = now();
+    lost.closedBy = adminId;
+    lost.closureReason = reason || '';
+    lost.updatedAt = now();
+    addAudit({
+      reportId: reportId, actorId: adminId,
+      action: 'lost_closed_admin_exceptional',
+      detail: 'Exceptional Administrator cancellation (post-Match Confirmed; PRD FR-48 Event 25)' +
+              (reason ? ' — reason: ' + reason : '')
+    });
+    return lost;
+  }
+
+  // ---------- Threads ----------
+  function getThread(idOrClaimId) { return state.threads[idOrClaimId] || []; }
+  // Read-only lifecycle for per-Claim threads (PRD FR-26; OQ-4 final).
+  // Per-Recovery-Response threads (PRD FR-47): writable while the RR is
+  // Submitted / Selected for Verification / Match Confirmed; read-only
+  // when RR is terminal OR parent Lost report is Returned / Closed.
+  // `Match Confirmed` is non-terminal — physical handoff is still pending.
+  function isThreadReadOnly(threadId) {
+    // Per-Claim thread
+    const claim = state.claims[threadId];
+    if (claim) {
+      if (claim.status === 'approved') return true;
+      if (claim.status === 'rejected') return true;
+      const r = state.reports[claim.reportId];
+      if (r && (r.status === 'returned' || r.status === 'closed')) return true;
+      return false;
+    }
+    // Per-Recovery-Response thread
+    const rr = state.recoveryResponses[threadId];
+    if (rr) {
+      if (RR_TERMINAL.has(rr.status)) return true;
+      const lost = state.reports[rr.lostReportId];
+      if (lost && (lost.status === 'returned' || lost.status === 'closed')) return true;
+      return false;
+    }
+    return true;
+  }
+  function getThreadLockReason(threadId) {
+    const claim = state.claims[threadId];
+    if (claim) {
+      const r = state.reports[claim.reportId];
+      if (r && r.status === 'returned') return 'returned';
+      if (r && r.status === 'closed') return 'closed';
+      if (claim.status === 'approved') return 'approved';
+      if (claim.status === 'rejected') return 'rejected';
+      return null;
+    }
+    const rr = state.recoveryResponses[threadId];
+    if (rr) {
+      const lost = state.reports[rr.lostReportId];
+      if (lost && lost.status === 'returned') return 'returned';
+      if (lost && lost.status === 'closed') return 'closed';
+      if (RR_TERMINAL.has(rr.status)) return 'terminal';
+      // `Match Confirmed` and `Selected for Verification` are non-terminal
+      // and do not lock the thread — return null (writable).
+      return null;
+    }
+    return 'not_found';
+  }
+  // Authorize the actor for a thread (per-Claim or per-RR). Returns true if
+  // the actor may post on this thread. Per PRD FR-26 / FR-47:
+  //   per-Claim: claimant, Found-report owner, all administrators.
+  //   per-RR:    Lost-report owner, the responder who submitted that RR,
+  //              all administrators. (Competing responders cannot post
+  //              on each other's threads.)
+  function canPostOnThread(threadId, authorId) {
+    const author = state.users[authorId];
+    if (!author) return false;
+    const claim = state.claims[threadId];
+    if (claim) {
+      if (author.role === 'administrator') return true;
+      const report = state.reports[claim.reportId];
+      if (report && report.reporterId === author.id) return true;
+      if (claim.claimantId === author.id) return true;
+      return false;
+    }
+    const rr = state.recoveryResponses[threadId];
+    if (rr) {
+      if (author.role === 'administrator') return true;
+      const lost = state.reports[rr.lostReportId];
+      if (lost && lost.reporterId === author.id) return true;
+      if (rr.responderId === author.id) return true;
+      return false;
+    }
     return false;
   }
-  function getThreadLockReason(claimId) {
-    const claim = state.claims[claimId];
-    if (!claim) return 'not_found';
-    // Report-level reasons take priority so the message stays accurate as
-    // the item moves through the lifecycle (Returned supersedes Approved;
-    // Closed supersedes Approved/Rejected).
-    const r = state.reports[claim.reportId];
-    if (r && r.status === 'returned') return 'returned';
-    if (r && r.status === 'closed') return 'closed';
-    if (claim.status === 'approved') return 'approved';
-    if (claim.status === 'rejected') return 'rejected';
-    return null;
-  }
-  function postMessage(claimId, authorId, body) {
+  function postMessage(threadId, authorId, body) {
     const trimmed = String(body || '').trim();
     if (!trimmed) return null;
-    // Enforce read-only lifecycle at the state layer — bypass-resistant.
-    if (isThreadReadOnly(claimId)) return null;
+    // Authorization: only thread participants may post (PRD FR-26 / FR-47).
+    if (!canPostOnThread(threadId, authorId)) return null;
+    // Lifecycle: read-only threads reject posts.
+    if (isThreadReadOnly(threadId)) return null;
     const author = state.users[authorId];
     const message = {
       id: 'msg_' + Math.random().toString(36).slice(2, 9),
       authorId, authorName: author ? author.name : 'Unknown',
       body: trimmed, createdAt: now()
     };
-    if (!state.threads[claimId]) state.threads[claimId] = [];
-    state.threads[claimId].push(message);
+    if (!state.threads[threadId]) state.threads[threadId] = [];
+    state.threads[threadId].push(message);
+    const isClaimThread = !!state.claims[threadId];
     addAudit({
-      reportId: null, claimId, actorId: authorId,
-      action: 'message_posted', detail: 'Message posted in thread'
+      reportId: isClaimThread ? state.claims[threadId].reportId : state.recoveryResponses[threadId].lostReportId,
+      claimId: isClaimThread ? threadId : null,
+      recoveryResponseId: !isClaimThread ? threadId : null,
+      actorId: authorId,
+      action: 'message_posted',
+      detail: 'Message posted in ' + (isClaimThread ? 'per-claim' : 'per-recovery-response') + ' thread'
     });
     return message;
   }
@@ -731,6 +1199,7 @@
     state.registrations = fresh.registrations;
     state.reports = fresh.reports;
     state.claims = fresh.claims;
+    state.recoveryResponses = fresh.recoveryResponses;
     state.threads = fresh.threads;
     state.audit = fresh.audit;
     state.meta = fresh.meta;
@@ -753,7 +1222,8 @@
     return {
       pendingRegistrations: state.registrations.filter((r) => !r.decision).length,
       pendingClaims: listClaims().filter((c) => c.status === 'pending').length,
-      awaitingReturn: listReports().filter((r) => r.status === 'claimApproved').length
+      awaitingReturn: listReports().filter((r) => r.type === 'found' && r.status === 'claimApproved').length,
+      itemsInVerification: listReports().filter((r) => r.type === 'lost' && r.status === 'verificationPending').length
     };
   }
 
@@ -774,8 +1244,16 @@
     // claims
     listClaims, getClaim, listClaimsForUser, listClaimsForReport, listPendingClaimsForReport,
     submitClaim, approveClaim, rejectClaim,
+    // recovery responses
+    listRecoveryResponses, getRecoveryResponse,
+    listRecoveryResponsesForLostReport, listRecoveryResponsesForUser,
+    displayStatus, submitRecoveryResponse, selectRecoveryResponse,
+    recordMatchDetermination, confirmLostReturned, withdrawRecoveryResponse,
+    adminCloseLostReport, adminCancelLostReport,
+    rrStatuses: RR_STATUSES, rrNonTerminal: [...RR_NON_TERMINAL], rrTerminal: [...RR_TERMINAL],
+    lostStatuses: LOST_STATUSES,
     // threads
-    getThread, postMessage, isThreadReadOnly, getThreadLockReason,
+    getThread, postMessage, isThreadReadOnly, getThreadLockReason, canPostOnThread,
     // audit
     listAudit, addAudit,
     // derived

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>My claims — FindBack</title>
+  <title>My recovery responses — FindBack</title>
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/tokens.css">
   <script>
@@ -34,8 +34,8 @@
     <nav class="fb-topbar__nav" aria-label="Primary">
       <a href="02-listings-member.html">Lost &amp; Found</a>
       <a href="08-my-reports.html">My reports</a>
-      <a href="10-my-claims.html" aria-current="page">My claims</a>
-      <a href="18-my-recovery-responses.html">My recovery responses</a>
+      <a href="10-my-claims.html">My claims</a>
+      <a href="18-my-recovery-responses.html" aria-current="page">My recovery responses</a>
     </nav>
     <div class="fb-topbar__spacer"></div>
     <div class="fb-theme-toggle" data-theme-toggle>
@@ -63,11 +63,16 @@
     <div class="fb-topbar__actions" data-account-menu-slot></div>
   </header>
 
-  <main id="main" tabindex="-1" class="fb-page" data-page="my-claims">
+  <main id="main" tabindex="-1" class="fb-page" data-page="my-recovery-responses">
     <div class="fb-row fb-row--between" style="margin-bottom: var(--fb-space-5); flex-wrap: wrap; gap: var(--fb-space-3);">
-      <h1 class="fb-h2">My claims</h1>
+      <h1 class="fb-h2">My recovery responses</h1>
       <a href="02-listings-member.html" class="fb-btn fb-btn--secondary fb-btn--sm">Browse items</a>
     </div>
+
+    <p class="fb-helper" style="margin-bottom: var(--fb-space-4);">
+      Recovery Responses you have submitted on other members' Lost reports.
+      A response is <strong>Standby</strong> while another response is being verified.
+    </p>
 
     <div class="fb-filter-card" style="margin-bottom: var(--fb-space-4);">
       <h3>Filter</h3>
@@ -75,25 +80,30 @@
         <label class="fb-field__label" for="filter-status">Status</label>
         <select class="fb-select" id="filter-status" data-filter="status">
           <option value="">All</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
+          <option value="Submitted">Submitted</option>
+          <option value="Selected for Verification">Selected for Verification</option>
+          <option value="Match Confirmed">Match Confirmed</option>
+          <option value="Not a Match">Not a Match</option>
+          <option value="Completed — Report Returned">Completed — Report Returned</option>
+          <option value="Resolved — Report Returned">Resolved — Report Returned</option>
+          <option value="Resolved — Report Closed">Resolved — Report Closed</option>
+          <option value="Withdrawn">Withdrawn</option>
         </select>
       </div>
     </div>
 
-    <section data-claims-list aria-live="polite">
+    <section data-rr-list aria-live="polite">
       <div class="fb-listings__empty">Loading…</div>
     </section>
   </main>
 
   <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
     <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
-      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>UJ-1 Maya · Step 5 of 13</span>
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>UJ-5 Quinn · Step 11 of 12</span>
       <div style="display: flex; gap: var(--fb-space-4);">
-        <a href="07-dashboard.html">← Previous</a>
+        <a href="10-my-claims.html">← Previous</a>
         <a href="../index.html">All journeys</a>
-        <a href="11-submit-claim.html">Next →</a>
+        <a href="20-submit-recovery-response.html">Next →</a>
       </div>
     </div>
   </nav>
@@ -108,40 +118,56 @@
       if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
 
       var ctx = document.querySelector('[data-mockup-context]');
-      if (ctx) ctx.textContent = user.name + ' · My claims';
+      if (ctx) ctx.textContent = user.name + ' · My recovery responses';
 
       var filterStatus = '';
-      var claims = window.FB.state.listClaimsForUser(user.id);
-      claims.sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+      var rrs = window.FB.state.listRecoveryResponsesForUser(user.id) || [];
+      rrs.sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
 
       function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, function (m) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; }); }
-      function statusLabel(s) { return ({open:'Open', claimRequested:'Claim Requested', claimApproved:'Claim Approved', returned:'Returned', closed:'Closed'})[s] || s; }
-      function claimLabel(s) {
-        return s === 'pending' ? 'Pending' : (s === 'approved' ? 'Approved' : 'Rejected');
+      function rrLabel(s) {
+        if (s === 'Submitted') return 'Submitted';
+        if (s === 'Selected for Verification') return 'Selected for Verification';
+        if (s === 'Match Confirmed') return 'Match Confirmed';
+        if (s === 'Not a Match') return 'Not a Match';
+        if (s === 'Completed — Report Returned') return 'Completed — Report Returned';
+        if (s === 'Resolved — Report Returned') return 'Resolved — Report Returned';
+        if (s === 'Resolved — Report Closed') return 'Resolved — Report Closed';
+        if (s === 'Withdrawn') return 'Withdrawn';
+        return s || '';
+      }
+      function rrSlug(s) { return s.replace(/[^a-z0-9]+/gi, '-').toLowerCase(); }
+      function displayStatus(rr, report) {
+        var canonical = rrLabel(rr.status);
+        if (rr.status === 'Submitted' && report && report.selectedResponseId && report.selectedResponseId !== rr.id) {
+          return 'Submitted — Standby';
+        }
+        return canonical;
       }
 
       function render() {
-        var list = document.querySelector('[data-claims-list]');
-        var rows = claims.filter(function (c) { return !filterStatus || c.status === filterStatus; });
+        var list = document.querySelector('[data-rr-list]');
+        var rows = rrs.filter(function (r) {
+          if (!filterStatus) return true;
+          var report = window.FB.state.getReport(r.reportId);
+          var display = displayStatus(r, report);
+          return filterStatus === display || filterStatus === r.status;
+        });
         if (!rows.length) {
-          list.innerHTML = '<div class="fb-listings__empty"><strong>You haven\'t submitted any claims yet.</strong><div>Browse the <a href="02-listings-member.html">Lost &amp; Found listings</a> and submit a claim if you spot something that\'s yours.</div></div>';
+          list.innerHTML = '<div class="fb-listings__empty"><strong>You haven’t submitted any recovery responses yet.</strong><div>Browse the <a href="02-listings-member.html">Lost &amp; Found listings</a> and click <em>I may have found this item</em> on a Lost report if you think you have it.</div></div>';
           return;
         }
-        var html = '<table class="fb-table"><thead><tr><th>Item</th><th>Submitted</th><th>Claim status</th><th>Item status</th><th></th></tr></thead><tbody>';
-        rows.forEach(function (c) {
-          var r = window.FB.state.getReport(c.reportId);
-          if (!r) return;
-          var detailHref = (c.status === 'rejected' ? '16-claim-rejected-detail.html' : '13-claim-detail.html') + '?claim=' + c.id;
-          var statusBadgeClass = 'fb-status--claim-' + c.status;
-          var statusText = claimLabel(c.status) + (c.autoRejected ? ' (auto)' : '');
-          var itemStatusText = statusLabel(r.status);
-          var itemStatusBadgeClass = 'fb-status--report-' + r.status;
-          html += '<tr onclick="window.location.href=\'' + detailHref + '\';">' +
-                  '  <td data-label="Item"><strong>' + escapeHtml(r.name) + '</strong><div class="fb-cell-meta">Reported by ' + escapeHtml(window.fbFormatDate(r.date)) + ' at ' + escapeHtml(r.campusArea) + '</div></td>' +
-                  '  <td data-label="Submitted">' + window.fbRelativeTime(new Date(c.createdAt)) + '</td>' +
-                  '  <td data-label="Claim status"><span class="fb-status ' + statusBadgeClass + '">' + statusText + '</span></td>' +
-                  '  <td data-label="Item status"><span class="fb-status ' + itemStatusBadgeClass + '">' + itemStatusText + '</span></td>' +
-                  '  <td class="fb-table__actions"><a href="' + detailHref + '" class="fb-btn fb-btn--secondary fb-btn--sm">Open thread</a></td>' +
+        var html = '<table class="fb-table"><thead><tr><th>Lost report</th><th>Submitted</th><th>Status</th><th></th></tr></thead><tbody>';
+        rows.forEach(function (r) {
+          var report = window.FB.state.getReport(r.reportId);
+          if (!report) return;
+          var statusText = displayStatus(r, report);
+          var statusBadgeClass = 'fb-status--rr-' + rrSlug(statusText === 'Submitted — Standby' ? 'submitted' : r.status);
+          html += '<tr onclick="window.location.href=\'19-recovery-response-detail.html?rr=' + r.id + '\';">' +
+                  '  <td data-label="Lost report"><strong>' + escapeHtml(report.name) + '</strong><div class="fb-cell-meta">Reported by ' + escapeHtml(window.fbFormatDate(report.date)) + ' at ' + escapeHtml(report.campusArea) + '</div></td>' +
+                  '  <td data-label="Submitted">' + window.fbRelativeTime(new Date(r.createdAt)) + '</td>' +
+                  '  <td data-label="Status"><span class="fb-status ' + statusBadgeClass + '">' + escapeHtml(statusText) + '</span></td>' +
+                  '  <td class="fb-table__actions"><a href="19-recovery-response-detail.html?rr=' + r.id + '" class="fb-btn fb-btn--secondary fb-btn--sm">Open thread</a></td>' +
                   '</tr>';
         });
         html += '</tbody></table>';

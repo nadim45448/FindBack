@@ -37,7 +37,10 @@
     return 'fb-status--neutral';
   }
 
-  // Admin dashboard renderer — populates stats cards + activity feed.
+  // Admin dashboard renderer — populates four count tiles + four queue cards.
+  // Audit is cross-cutting and is NOT a fifth dashboard tile; there is no
+  // on-dashboard activity feed (the full audit trail lives at /admin/audit
+  // and from any item / Claim / RR detail context).
   function renderAdminDashboard(root) {
     if (!window.FB || !window.FB.state) return;
     var admin = window.FB.state.getCurrentUser();
@@ -49,7 +52,7 @@
     var registrations = window.FB.state.listRegistrations().filter(function (r) { return !r.decision; });
     var pendingClaims = window.FB.state.listClaims().filter(function (c) { return c.status === 'pending'; });
     var awaitingReturn = window.FB.state.listReports().filter(function (r) { return r.status === 'claimApproved'; });
-    var audit = window.FB.state.listAudit({ limit: 8 });
+    var itemsInVerification = window.FB.state.listReports().filter(function (r) { return r.type === 'lost' && r.status === 'verificationPending'; });
 
     var html = '';
     // Polished admin welcome card. Same salutation rule as the member
@@ -135,38 +138,19 @@
     html += '    <p style="margin: var(--fb-space-2) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">' + awaitingReturn.length + ' approved claim' + (awaitingReturn.length === 1 ? '' : 's') + ' pending physical handoff</p>';
     html += '  </a>';
 
+    html += '  <a href="14-items-in-verification.html" class="fb-queue-card" style="text-decoration: none; color: inherit;">';
+    html += '    <p class="fb-queue-card__count">' + itemsInVerification.length + '</p>';
+    html += '    <h3 style="margin: var(--fb-space-1) 0 0; color: var(--fb-on-surface);">Items in verification</h3>';
+    html += '    <p style="margin: var(--fb-space-2) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">Lost reports &middot; awaiting Recovery Response verification</p>';
+    html += '  </a>';
+
     html += '  <a href="12-audit-trail.html" class="fb-queue-card" style="text-decoration: none; color: inherit;">';
-    html += '    <p class="fb-queue-card__count">∞</p>';
+    html += '    <p class="fb-queue-card__count">&infin;</p>';
     html += '    <h3 style="margin: var(--fb-space-1) 0 0; color: var(--fb-on-surface);">Audit trail</h3>';
     html += '    <p style="margin: var(--fb-space-2) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">Append-only record &middot; ' + window.FB.state.listAudit().length + ' events</p>';
     html += '  </a>';
 
     html += '</div>';
-
-    // Recent administrative activity
-    html += '<h2 class="fb-h3" style="margin: var(--fb-space-6) 0 var(--fb-space-3);">Recent administrative activity</h2>';
-    if (!audit.length) {
-      html += '<p class="fb-helper">No activity recorded yet.</p>';
-    } else {
-      html += '<ul class="fb-activity-list">';
-      audit.forEach(function (e) {
-        var verb;
-        if (e.action === 'created') verb = '<strong>' + escapeHtml(e.actorName) + '</strong> created a report';
-        else if (e.action === 'edited') verb = '<strong>' + escapeHtml(e.actorName) + '</strong> edited a report';
-        else if (e.action === 'withdrawn') verb = '<strong>' + escapeHtml(e.actorName) + '</strong> withdrew a report';
-        else if (e.action === 'closed') verb = '<strong>' + escapeHtml(e.actorName) + '</strong> closed a report';
-        else if (e.action === 'claim_submitted') verb = '<strong>' + escapeHtml(e.actorName) + '</strong> submitted a claim';
-        else if (e.action === 'claim_approved') verb = '<strong>' + escapeHtml(e.actorName) + '</strong> approved a claim';
-        else if (e.action === 'claim_rejected') verb = '<strong>' + escapeHtml(e.actorName) + '</strong> rejected a claim';
-        else if (e.action === 'claim_auto_rejected') verb = 'Auto-rejected competing claim';
-        else if (e.action === 'returned') verb = '<strong>' + escapeHtml(e.actorName) + '</strong> confirmed return';
-        else if (e.action === 'message_posted') verb = '<strong>' + escapeHtml(e.actorName) + '</strong> posted a message';
-        else verb = '<strong>' + escapeHtml(e.actorName) + '</strong> &middot; ' + escapeHtml(e.action);
-        html += '<li><div><div>' + verb + '</div><p style="margin: var(--fb-space-1) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">' + window.fbRelativeTime(new Date(e.createdAt)) + ' &middot; ' + escapeHtml(e.detail || '') + '</p></div></li>';
-      });
-      html += '</ul>';
-      html += '<p style="margin-top: var(--fb-space-3);"><a href="12-audit-trail.html" class="fb-btn fb-btn--secondary fb-btn--sm">View full audit trail</a></p>';
-    }
 
     root.innerHTML = html;
   }
@@ -506,6 +490,199 @@
   }
 
   // Expose renderer helpers
+  // Lost-side Items-in-Verification queue renderer.
+  function renderItemsInVerification(root) {
+    if (!window.FB || !window.FB.state) return;
+    var admin = window.FB.state.getCurrentUser();
+    if (!admin || admin.role !== 'administrator') {
+      root.innerHTML = '<div class="fb-listings__empty"><strong>Administrator access required.</strong></div>';
+      return;
+    }
+    var items = window.FB.state.listReports().filter(function (r) {
+      return r.type === 'lost' && r.status === 'verificationPending';
+    });
+    var html = '';
+    html += '<div class="fb-row fb-row--between" style="margin-bottom: var(--fb-space-4); flex-wrap: wrap; gap: var(--fb-space-3);">';
+    html += '  <div>';
+    html += '    <h1 class="fb-h2">Items in verification</h1>';
+    html += '    <p class="fb-helper">Lost reports with a Recovery Response currently selected for verification.</p>';
+    html += '  </div>';
+    html += '  <a href="01-dashboard.html" class="fb-btn fb-btn--secondary fb-btn--sm">Back to dashboard</a>';
+    html += '</div>';
+    if (!items.length) {
+      html += '<div class="fb-listings__empty"><strong>No Lost items are currently in verification.</strong><div>When an administrator selects a Recovery Response, the Lost report enters verification and will appear here.</div></div>';
+      root.innerHTML = html;
+      return;
+    }
+    html += '<table class="fb-table"><thead><tr><th>Lost report</th><th>Reporter</th><th>Selected responder</th><th>Selected at</th><th></th></tr></thead><tbody>';
+    items.forEach(function (r) {
+      var selectedRR = null;
+      if (r.selectedResponseId) selectedRR = window.FB.state.getRecoveryResponse(r.selectedResponseId);
+      var responderName = selectedRR ? window.FB.state.getUserDisplayName(selectedRR.responderId) : '—';
+      var selectedAt = selectedRR && selectedRR.selectedAt ? window.fbRelativeTime(new Date(selectedRR.selectedAt)) : '—';
+      html += '<tr>';
+      html += '  <td data-label="Lost report"><strong>' + escapeHtml(r.name) + '</strong><div class="fb-cell-meta">' + escapeHtml(window.fbFormatDate(r.date)) + ' &middot; ' + escapeHtml(r.campusArea) + '</div></td>';
+      html += '  <td data-label="Reporter">' + escapeHtml(window.FB.state.getUserDisplayName(r.reporterId)) + '</td>';
+      html += '  <td data-label="Selected responder">' + escapeHtml(responderName) + (selectedRR ? '<div class="fb-cell-meta">RR &middot; ' + escapeHtml(statusRR(selectedRR.status)) + '</div>' : '') + '</td>';
+      html += '  <td data-label="Selected at">' + escapeHtml(selectedAt) + '</td>';
+      html += '  <td class="fb-table__actions"><a href="15-verification-review.html?report=' + r.id + '" class="fb-btn fb-btn--primary fb-btn--sm">Manage verification</a></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    root.innerHTML = html;
+  }
+
+  // Lost-side verification review screen — owner confirmation + administrator
+  // record. Owner determines; administrator records.
+  function renderVerificationReview(root) {
+    if (!window.FB || !window.FB.state) return;
+    var admin = window.FB.state.getCurrentUser();
+    if (!admin || admin.role !== 'administrator') {
+      root.innerHTML = '<div class="fb-listings__empty"><strong>Administrator access required.</strong></div>';
+      return;
+    }
+    var params = new URLSearchParams(window.location.search);
+    var reportId = params.get('report');
+    var r = reportId ? window.FB.state.getReport(reportId) : null;
+    if (!r || r.type !== 'lost') {
+      root.innerHTML = '<div class="fb-listings__empty"><strong>Lost report not found.</strong><div><a href="14-items-in-verification.html">Back to Items in Verification</a></div></div>';
+      return;
+    }
+    var owner = (window.FB.state.getUser(r.reporterId) || {}).name || '—';
+    var selectedRR = r.selectedResponseId ? window.FB.state.getRecoveryResponse(r.selectedResponseId) : null;
+    var allRRs = window.FB.state.listRecoveryResponsesForLostReport(r.id) || [];
+    var html = '';
+    html += '<div class="fb-row fb-row--between" style="margin-bottom: var(--fb-space-4); flex-wrap: wrap; gap: var(--fb-space-3);">';
+    html += '  <h1 class="fb-h2">Verification review</h1>';
+    html += '  <a href="14-items-in-verification.html" class="fb-btn fb-btn--secondary fb-btn--sm">Back to queue</a>';
+    html += '</div>';
+    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--fb-space-5);" class="fb-verification-grid">';
+    // Left: Lost report summary + selected RR
+    html += '  <section>';
+    html += '    <h2 class="fb-h3" style="margin-top: 0;">Lost report</h2>';
+    html += '    <div class="fb-card">';
+    html += '      <p><strong>' + escapeHtml(r.name) + '</strong></p>';
+    html += '      <p class="fb-helper">' + escapeHtml(r.category) + ' &middot; ' + escapeHtml(window.fbFormatDate(r.date)) + ' &middot; ' + escapeHtml(r.campusArea) + '</p>';
+    html += '      <p><span class="fb-status fb-status--report-' + r.status + '">' + statusLabel(r.status) + '</span></p>';
+    html += '      <p class="fb-helper">Reported by ' + escapeHtml(owner) + '</p>';
+    if (selectedRR) {
+      html += '    <hr style="margin: var(--fb-space-3) 0; border: none; border-top: 1px solid var(--fb-border-subtle);">';
+      html += '    <h3 class="fb-h4">Currently selected Recovery Response</h3>';
+      html += '    <p><strong>Responder:</strong> ' + escapeHtml((window.FB.state.getUser(selectedRR.responderId) || {}).name || '—') + '</p>';
+      html += '    <p><strong>Status:</strong> <span class="fb-status fb-status--rr-' + statusRRSlug(selectedRR.status) + '">' + escapeHtml(statusRR(selectedRR.status)) + '</span></p>';
+      if (selectedRR.campusArea) html += '    <p><strong>Where found:</strong> ' + escapeHtml(selectedRR.campusArea) + (selectedRR.exactPlace ? ' — ' + escapeHtml(selectedRR.exactPlace) : '') + '</p>';
+      if (selectedRR.dateFound) html += '    <p><strong>Date found:</strong> ' + escapeHtml(window.fbFormatDate(selectedRR.dateFound)) + '</p>';
+      if (selectedRR.observedIdentifyingDetails) html += '    <p><strong>Observed identifying details:</strong> ' + escapeHtml(selectedRR.observedIdentifyingDetails) + '</p>';
+    } else {
+      html += '    <p class="fb-helper">No Recovery Response has been selected yet.</p>';
+    }
+    html += '    </div>';
+    html += '  </section>';
+    // Right: RR list + actions
+    html += '  <section>';
+    html += '    <h2 class="fb-h3" style="margin-top: 0;">Recovery Responses</h2>';
+    if (!allRRs.length) {
+      html += '    <div class="fb-listings__empty">No Recovery Responses submitted yet.</div>';
+    } else {
+      html += '    <table class="fb-table"><thead><tr><th>Responder</th><th>Status</th><th>Submitted</th><th></th></tr></thead><tbody>';
+      allRRs.forEach(function (rr) {
+        var rrLabel = statusRR(rr.status);
+        var displayLabel = rrLabel;
+        if (rr.status === 'Submitted' && r.selectedResponseId && r.selectedResponseId !== rr.id) displayLabel = 'Submitted — Standby';
+        html += '      <tr>';
+        html += '        <td data-label="Responder">' + escapeHtml((window.FB.state.getUser(rr.responderId) || {}).name || '—') + '</td>';
+        html += '        <td data-label="Status"><span class="fb-status fb-status--rr-' + statusRRSlug(rr.status) + '">' + escapeHtml(displayLabel) + '</span></td>';
+        html += '        <td data-label="Submitted">' + window.fbRelativeTime(new Date(rr.createdAt)) + '</td>';
+        html += '        <td class="fb-table__actions">';
+        // Owner-only action (PRD D6 / correction #10). The administrator does
+        // NOT select the RR — the Lost-report owner does. Admins see a
+        // read-only helper here.
+        if (rr.status === 'Submitted' && !r.selectedResponseId) {
+          html += '          <span class="fb-helper">Owner will select</span>';
+        } else {
+          html += '          <span class="fb-helper">&mdash;</span>';
+        }
+        html += '        </td>';
+        html += '      </tr>';
+      });
+      html += '    </tbody></table>';
+    }
+    // Administrator action footer (visible when there is a selected RR)
+    if (selectedRR) {
+      html += '    <div class="fb-card" style="margin-top: var(--fb-space-4);">';
+      html += '      <h3 class="fb-h4">Verification actions</h3>';
+      html += '      <p class="fb-helper">The owner determines whether this is a match. The administrator records the outcome. Use these actions only after confirming with the owner in person. The administrator cannot record a determination on the owner\'s behalf — if the owner is unreachable, leave this report in Verification Pending and use the Administrator Close path below.</p>';
+      html += '      <div style="display: flex; gap: var(--fb-space-2); flex-wrap: wrap;">';
+      if (selectedRR.status === 'Selected for Verification') {
+        html += '        <button class="fb-btn fb-btn--primary fb-btn--sm" data-action="confirm-match">Record Match Confirmed (owner says it\'s theirs)</button>';
+        html += '        <button class="fb-btn fb-btn--danger fb-btn--sm" data-action="not-a-match">Record Not a Match (owner says it\'s not theirs)</button>';
+        html += '        <button class="fb-btn fb-btn--tertiary fb-btn--sm" data-action="admin-close">Administrator Close (pre-Match; FR-48 Event 24)</button>';
+      }
+      if (selectedRR.status === 'Match Confirmed') {
+        html += '        <button class="fb-btn fb-btn--primary fb-btn--sm" data-action="confirm-returned">Confirm Returned (handoff complete)</button>';
+        html += '        <button class="fb-btn fb-btn--tertiary fb-btn--sm" data-action="admin-cancel">Exceptional cancellation (post-Match; FR-48 Event 25)</button>';
+      }
+      html += '      </div>';
+      html += '    </div>';
+    }
+    html += '  </section>';
+    html += '</div>';
+    root.innerHTML = html;
+    // Wire actions — select-rr button is REMOVED. Selection is owner-only.
+    root.querySelectorAll('[data-action]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var action = btn.getAttribute('data-action');
+        if (action === 'confirm-match') {
+          if (!confirm('Record the owner\'s determination that this is a match? The Recovery Response will move to Match Confirmed.')) return;
+          var result = window.FB.state.recordMatchDetermination(r.selectedResponseId, 'Match Confirmed', r.reporterId, admin.id);
+          if (!result) { alert('Could not record match determination.'); return; }
+          window.location.reload();
+        } else if (action === 'not-a-match') {
+          var reason = prompt('Reason (audit-only, ≥ 5 chars):');
+          if (!reason || reason.trim().length < 5) return;
+          var result2 = window.FB.state.recordMatchDetermination(r.selectedResponseId, 'Not a Match', r.reporterId, admin.id);
+          if (!result2) { alert('Could not record Not a Match.'); return; }
+          window.location.reload();
+        } else if (action === 'confirm-returned') {
+          if (!confirm('Record that the owner has received the item? The Lost report will move to Returned.')) return;
+          var result3 = window.FB.state.confirmLostReturned(r.id, admin.id, { type: 'default', name: (window.FB.state.getUser(r.reporterId) || {}).name || 'Owner' });
+          if (!result3) { alert('Could not record Returned.'); return; }
+          window.location.reload();
+        } else if (action === 'admin-close') {
+          var reasonA = prompt('Reason for Administrator Close (audit-only, ≥ 5 chars):');
+          if (!reasonA || reasonA.trim().length < 5) return;
+          if (!confirm('Close this Lost report? All non-terminal Recovery Responses will be marked Resolved — Report Closed and threads become read-only.')) return;
+          var result4 = window.FB.state.adminCloseLostReport(r.id, admin.id, reasonA);
+          if (!result4) { alert('Could not close — the report may already have a Match Confirmed determination.'); return; }
+          window.location.reload();
+        } else if (action === 'admin-cancel') {
+          var reasonB = prompt('Reason for exceptional cancellation (audit-only, ≥ 5 chars):');
+          if (!reasonB || reasonB.trim().length < 5) return;
+          if (!confirm('Cancel this Lost workflow exceptionally? The matched Recovery Response will be marked Resolved — Report Closed. Threads become read-only.')) return;
+          var result5 = window.FB.state.adminCancelLostReport(r.id, admin.id, reasonB);
+          if (!result5) { alert('Could not cancel — pre-conditions not met.'); return; }
+          window.location.reload();
+        }
+      });
+    });
+  }
+
+  // RR status label helpers
+  function statusRR(s) {
+    if (s === 'Submitted') return 'Submitted';
+    if (s === 'Selected for Verification') return 'Selected for Verification';
+    if (s === 'Match Confirmed') return 'Match Confirmed';
+    if (s === 'Not a Match') return 'Not a Match';
+    if (s === 'Completed — Report Returned') return 'Completed — Report Returned';
+    if (s === 'Resolved — Report Returned') return 'Resolved — Report Returned';
+    if (s === 'Resolved — Report Closed') return 'Resolved — Report Closed';
+    if (s === 'Withdrawn') return 'Withdrawn';
+    return s || '';
+  }
+  function statusRRSlug(s) {
+    return s.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+  }
+
   window.FB = window.FB || {};
   window.FB.adminRender = {
     dashboard: renderAdminDashboard,
@@ -514,9 +691,13 @@
     claimReview: renderClaimReview,
     competingClaims: renderCompetingClaims,
     awaitingReturn: renderAwaitingReturn,
+    itemsInVerification: renderItemsInVerification,
+    verificationReview: renderVerificationReview,
     auditTrail: renderAuditTrail,
     statusBadgeClass: statusBadgeClass,
     statusLabel: statusLabel,
+    statusRR: statusRR,
+    statusRRSlug: statusRRSlug,
     escapeHtml: escapeHtml
   };
 })();

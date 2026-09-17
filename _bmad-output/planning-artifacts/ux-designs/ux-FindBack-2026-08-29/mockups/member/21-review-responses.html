@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Review responses — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    .fb-rr-card { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-md); padding: var(--fb-space-4); margin-bottom: var(--fb-space-4); }
+    .fb-rr-card.is-selected { border-color: var(--fb-brand-primary); box-shadow: var(--fb-elev-2); }
+    .fb-rr-meta { display: grid; grid-template-columns: 120px 1fr; row-gap: var(--fb-space-2); column-gap: var(--fb-space-4); font-size: 14px; }
+    .fb-rr-meta dt { color: var(--fb-on-surface-variant); font-weight: 500; }
+    .fb-rr-meta dd { margin: 0; }
+    .fb-rr-card__actions { margin-top: var(--fb-space-3); display: flex; gap: var(--fb-space-2); flex-wrap: wrap; }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="02-listings-member.html">Lost &amp; Found</a>
+      <a href="08-my-reports.html" aria-current="page">My reports</a>
+      <a href="10-my-claims.html">My claims</a>
+      <a href="18-my-recovery-responses.html">My recovery responses</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
+  </header>
+
+  <main id="main" tabindex="-1" class="fb-page" data-page="review-responses">
+    <nav class="fb-helper" aria-label="Breadcrumb" style="margin-bottom: var(--fb-space-3);">
+      <a href="08-my-reports.html">My reports</a> › <span aria-current="page">Review responses</span>
+    </nav>
+    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-3);" data-page-title>Review responses</h1>
+    <p class="fb-helper" style="margin-bottom: var(--fb-space-5);">
+      You see every Recovery Response submitted on your Lost report. Pick the one that looks like yours — an administrator will then record your determination when you meet them.
+    </p>
+
+    <div class="fb-alert" role="status" data-summary></div>
+
+    <div data-rr-list>
+      <div class="fb-listings__empty">Loading…</div>
+    </div>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>UJ-5 Maya · Step 5 (owner selects)</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="08-my-reports.html">← Previous</a>
+        <a href="../index.html">All journeys</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/state.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var user = window.FB.state.getCurrentUser();
+      if (!user) { window.location.href = '../public/02-login.html?next=21-review-responses.html'; return; }
+      if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
+
+      var params = new URLSearchParams(window.location.search);
+      var itemId = params.get('item') || 'rpt_wallet_lost';
+      var lost = window.FB.state.getReport(itemId);
+      if (!lost || lost.type !== 'lost') {
+        document.querySelector('[data-rr-list]').innerHTML = '<div class="fb-listings__empty"><strong>This report is not a Lost report.</strong></div>';
+        return;
+      }
+      if (lost.reporterId !== user.id) {
+        document.querySelector('[data-rr-list]').innerHTML = '<div class="fb-listings__empty"><strong>Only the reporter can review responses.</strong><div>You are not the owner of this Lost report.</div></div>';
+        return;
+      }
+
+      document.title = 'Review responses — ' + lost.name + ' — FindBack';
+      document.querySelector('[data-page-title]').textContent = 'Review responses — ' + lost.name;
+      document.querySelector('[data-mockup-context]').textContent = user.name + ' · Review responses · ' + lost.name;
+
+      var rrs = window.FB.state.listRecoveryResponsesForLostReport(lost.id) || [];
+
+      var summaryEl = document.querySelector('[data-summary]');
+      if (lost.status === 'verificationPending' && lost.selectedResponseId) {
+        summaryEl.className = 'fb-alert fb-alert--info';
+        var sel = window.FB.state.getRecoveryResponse(lost.selectedResponseId);
+        var selName = (window.FB.state.getUser(sel.responderId) || {}).name || 'a responder';
+        summaryEl.innerHTML = '<div><strong>Verification pending.</strong> You selected ' + escape(selName) + '\'s response. An administrator will record your determination when you meet them at the security desk.</div>';
+      } else if (lost.status === 'returned') {
+        summaryEl.className = 'fb-alert';
+        summaryEl.innerHTML = '<div><strong>This Lost report has been returned.</strong> The verification flow is closed.</div>';
+      } else if (lost.status === 'closed') {
+        summaryEl.className = 'fb-alert';
+        summaryEl.innerHTML = '<div><strong>This Lost report has been closed.</strong> The verification flow is closed.</div>';
+      } else {
+        summaryEl.className = 'fb-alert';
+        if (rrs.length === 0) {
+          summaryEl.innerHTML = '<div>No Recovery Responses yet. Members who think they found your item can submit one from the Lost report page.</div>';
+        } else {
+          summaryEl.innerHTML = '<div>Pick the Recovery Response that looks like yours. Once you select, an administrator will record your determination.</div>';
+        }
+      }
+
+      function escape(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (m) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
+        });
+      }
+
+      var listEl = document.querySelector('[data-rr-list]');
+      if (rrs.length === 0) {
+        listEl.innerHTML = '<div class="fb-listings__empty">No Recovery Responses yet.</div>';
+        return;
+      }
+
+      var html = '';
+      rrs.forEach(function (rr) {
+        var responder = window.FB.state.getUser(rr.responderId);
+        var responderName = responder ? responder.name : 'A member';
+        var statusLabel = rr.status;
+        var derived = '';
+        if (rr.status === 'Submitted' && lost.selectedResponseId && lost.selectedResponseId !== rr.id) {
+          statusLabel = 'Submitted';
+          derived = ' — Standby';
+        } else if (rr.status === 'Submitted' && !lost.selectedResponseId) {
+          statusLabel = 'Submitted';
+        }
+        var isSelected = lost.selectedResponseId === rr.id;
+        var isClosed = lost.status === 'returned' || lost.status === 'closed';
+        var canSelect = !isClosed && rr.status === 'Submitted';
+
+        html += '<div class="fb-rr-card' + (isSelected ? ' is-selected' : '') + '">';
+        html += '  <div class="fb-row fb-row--between" style="align-items: flex-start;">';
+        html += '    <div><strong>' + escape(responderName) + '</strong>';
+        if (derived) html += ' <span class="fb-helper">' + escape(derived.replace(/^ — /, '')) + '</span>';
+        html += '</div>';
+        html += '    <span class="fb-status fb-status--rr-' + statusLabel.replace(/\s+/g, '').toLowerCase() + '">' + escape(statusLabel + derived) + '</span>';
+        html += '  </div>';
+        html += '  <dl class="fb-rr-meta" style="margin-top: var(--fb-space-3);">';
+        html += '    <dt>Where found</dt><dd>' + escape(rr.campusArea || '—') + (rr.exactPlace ? ' · ' + escape(rr.exactPlace) : '') + '</dd>';
+        html += '    <dt>Observed</dt><dd>' + escape(rr.observedDetails || '(none)') + '</dd>';
+        html += '    <dt>Date found</dt><dd>' + escape(rr.dateFound || '—') + '</dd>';
+        html += '    <dt>Submitted</dt><dd>' + window.fbRelativeTime(new Date(rr.createdAt)) + '</dd>';
+        html += '  </dl>';
+        html += '  <div class="fb-rr-card__actions">';
+        if (canSelect) {
+          html += '    <button class="fb-btn fb-btn--primary fb-btn--sm" data-select-rr="' + rr.id + '">Select for Verification</button>';
+        } else if (isSelected) {
+          html += '    <span class="fb-helper" style="color: var(--fb-brand-primary);">✓ Selected for verification</span>';
+        } else if (isClosed) {
+          html += '    <span class="fb-helper">Closed</span>';
+        } else {
+          html += '    <span class="fb-helper">&mdash;</span>';
+        }
+        html += '  </div>';
+        html += '</div>';
+      });
+      listEl.innerHTML = html;
+
+      listEl.querySelectorAll('[data-select-rr]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var rrId = btn.getAttribute('data-select-rr');
+          if (!window.confirm('Select this Recovery Response for verification? Your Lost report will move to Verification Pending and an administrator will record your determination at the security desk.')) return;
+          var result = window.FB.state.selectRecoveryResponse(rrId, user.id);
+          if (!result) { alert('Could not select — the response may already be selected, or you are not the owner.'); return; }
+          window.FB.toast && window.FB.toast('Selected for verification.', 'success');
+          setTimeout(function () { window.location.reload(); }, 300);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

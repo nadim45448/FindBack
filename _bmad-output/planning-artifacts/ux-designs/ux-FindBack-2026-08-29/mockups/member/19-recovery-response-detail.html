@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recovery response — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-page { max-width: var(--fb-container-max); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="../public/01-landing.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="02-listings-member.html">Lost &amp; Found</a>
+      <a href="08-my-reports.html">My reports</a>
+      <a href="10-my-claims.html">My claims</a>
+      <a href="18-my-recovery-responses.html" aria-current="page">My recovery responses</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
+  </header>
+
+  <main id="main" tabindex="-1" class="fb-page" data-page="rr-detail">
+    <div data-rr-root>
+      <div class="fb-listings__empty">Loading…</div>
+    </div>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>UJ-5 Quinn · Step 12 of 12</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="18-my-recovery-responses.html">← Previous</a>
+        <a href="../index.html">All journeys</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/state.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var user = window.FB.state.getCurrentUser();
+      if (!user) { window.location.href = '../public/02-login.html'; return; }
+      if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
+
+      var params = new URLSearchParams(window.location.search);
+      var rrId = params.get('rr');
+      var rr = rrId ? window.FB.state.getRecoveryResponse(rrId) : null;
+      if (!rr) {
+        document.querySelector('[data-rr-root]').innerHTML = '<div class="fb-listings__empty"><strong>Recovery response not found.</strong></div>';
+        return;
+      }
+      var report = window.FB.state.getReport(rr.reportId);
+      if (!report) {
+        document.querySelector('[data-rr-root]').innerHTML = '<div class="fb-listings__empty"><strong>Lost report not found.</strong></div>';
+        return;
+      }
+
+      var ctx = document.querySelector('[data-mockup-context]');
+      if (ctx) ctx.textContent = user.name + ' · recovery response on "' + report.name + '"';
+
+      // Visibility: responder + Lost-report owner + admin.
+      var isResponder = (rr.responderId === user.id);
+      var isOwner = (report.reporterId === user.id);
+      var isAdmin = user.role === 'administrator';
+      if (!isResponder && !isOwner && !isAdmin) {
+        document.querySelector('[data-rr-root]').innerHTML = '<div class="fb-listings__empty"><strong>You don\'t have access to this recovery-response thread.</strong><div>Only the responder, the Lost report\'s owner, and administrators can see it.</div></div>';
+        return;
+      }
+
+      function rrLabel(s) {
+        return ({
+          'Submitted': 'Submitted',
+          'Selected for Verification': 'Selected for Verification',
+          'Match Confirmed': 'Match Confirmed',
+          'Not a Match': 'Not a Match',
+          'Completed — Report Returned': 'Completed — Report Returned',
+          'Resolved — Report Returned': 'Resolved — Report Returned',
+          'Resolved — Report Closed': 'Resolved — Report Closed',
+          'Withdrawn': 'Withdrawn'
+        })[s] || s;
+      }
+      function rrSlug(s) { return s.replace(/[^a-z0-9]+/gi, '-').toLowerCase(); }
+      function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, function (m) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; }); }
+
+      // Display label: Submitted becomes "Submitted — Standby" when another RR is selected.
+      var displayLabel = rrLabel(rr.status);
+      if (rr.status === 'Submitted' && report.selectedResponseId && report.selectedResponseId !== rr.id) {
+        displayLabel = 'Submitted — Standby';
+      }
+
+      var thread = window.FB.state.getThread(rrId);
+      var isLocked = window.FB.state.isThreadReadOnly(rrId);
+      var lockReason = window.FB.state.getThreadLockReason ? window.FB.state.getThreadLockReason(rrId) : null;
+
+      var html = '';
+      html += '<nav class="fb-detail__breadcrumb" aria-label="Breadcrumb"><a href="18-my-recovery-responses.html">My recovery responses</a> › <span aria-current="page">' + escapeHtml(report.name) + ' — thread</span></nav>';
+
+      html += '<div class="fb-row fb-row--between" style="margin-bottom: var(--fb-space-4); flex-wrap: wrap; gap: var(--fb-space-3);">';
+      html += '  <div>';
+      html += '    <h1 class="fb-h2" style="margin: 0;">Recovery response on "' + escapeHtml(report.name) + '"</h1>';
+      html += '    <p class="fb-helper" style="margin: 0;">' + escapeHtml(rr.id) + ' · Lost report ' + escapeHtml(report.id) + '</p>';
+      html += '  </div>';
+      html += '  <span class="fb-status fb-status--rr-' + rrSlug(rr.status) + '">' + escapeHtml(displayLabel) + '</span>';
+      html += '</div>';
+
+      // Status banner
+      if (rr.status === 'Submitted') {
+        html += '<div class="fb-alert fb-alert--info" role="status"><span aria-hidden="true">⏳</span><div><strong>Awaiting selection.</strong> Your response is on the list. The Lost-report owner and an administrator will look at it.</div></div>';
+      } else if (rr.status === 'Selected for Verification') {
+        html += '<div class="fb-alert fb-alert--info" role="status"><span aria-hidden="true">🔍</span><div><strong>Your response has been selected for verification.</strong> The owner has been notified. You can post messages here to coordinate.</div></div>';
+      } else if (rr.status === 'Match Confirmed') {
+        html += '<div class="fb-alert" style="background: var(--fb-success-soft); border-color: var(--fb-success);" role="status"><span aria-hidden="true">✓</span><div><strong>Match confirmed.</strong> Owner confirmed this is a match. Physical handoff is pending. You can continue using this thread to coordinate the return.</div></div>';
+      } else if (rr.status === 'Not a Match') {
+        html += '<div class="fb-alert fb-alert--error" role="status"><span aria-hidden="true">✕</span><div><strong>Not a match.</strong> An administrator recorded that this response did not match the Lost report.</div></div>';
+      } else if (rr.status === 'Completed — Report Returned') {
+        html += '<div class="fb-alert" style="background: var(--fb-success-soft); border-color: var(--fb-success);" role="status"><span aria-hidden="true">✓</span><div><strong>Recovery complete.</strong> The item was returned to its owner. Thank you.</div></div>';
+      } else if (rr.status === 'Resolved — Report Returned') {
+        html += '<div class="fb-alert fb-alert--info" role="status"><span aria-hidden="true">ℹ</span><div><strong>Resolved.</strong> The Lost report was returned through another response.</div></div>';
+      } else if (rr.status === 'Resolved — Report Closed') {
+        html += '<div class="fb-alert fb-alert--info" role="status"><span aria-hidden="true">ℹ</span><div><strong>Resolved — Report Closed.</strong> The Lost report was closed by an administrator.</div></div>';
+      } else if (rr.status === 'Withdrawn') {
+        html += '<div class="fb-alert fb-alert--info" role="status"><span aria-hidden="true">ℹ</span><div><strong>Withdrawn.</strong> You withdrew this response.</div></div>';
+      }
+
+      // RR details
+      html += '<section class="fb-detail__section" aria-labelledby="rr-h">';
+      html += '  <h2 id="rr-h" class="fb-detail__section-title">Your recovery response</h2>';
+      html += '  <p class="fb-detail__section-body" style="margin-bottom: var(--fb-space-3);"><strong>Where found:</strong> ' + escapeHtml(rr.campusArea || '—') + (rr.exactPlace ? ' — ' + escapeHtml(rr.exactPlace) : '') + '</p>';
+      html += '  <p class="fb-detail__section-body" style="margin-bottom: var(--fb-space-3);"><strong>Date found:</strong> ' + (rr.dateFound ? escapeHtml(window.fbFormatDate(rr.dateFound)) : '—') + '</p>';
+      html += '  <p class="fb-detail__section-body" style="margin-bottom: var(--fb-space-3);"><strong>Observed identifying details:</strong> ' + escapeHtml(rr.observedDetails || '—') + '</p>';
+      html += '  <p class="fb-helper">Submitted ' + window.fbRelativeTime(new Date(rr.createdAt)) + '</p>';
+      html += '  <p style="margin-top: var(--fb-space-3);"><a href="02-listings-member.html" class="fb-btn fb-btn--secondary fb-btn--sm">Back to listings</a></p>';
+      html += '</section>';
+
+      // Withdraw action (only while Submitted and not currently Selected for Verification)
+      if (rr.status === 'Submitted' && (!report.selectedResponseId || report.selectedResponseId === rr.id)) {
+        html += '<div class="fb-card" style="margin-bottom: var(--fb-space-4);">';
+        html += '  <h3 class="fb-h4">Withdraw this response</h3>';
+        html += '  <p class="fb-helper">If this isn\'t the same item, you can withdraw your response. You can submit a new one only if the Lost report is still being verified or has not been matched.</p>';
+        html += '  <button type="button" class="fb-btn fb-btn--danger fb-btn--sm" data-action="withdraw">Withdraw</button>';
+        html += '</div>';
+      }
+
+      // Messages thread (per-RR)
+      html += '<section class="fb-detail__section" aria-labelledby="thread-h">';
+      html += '  <h2 id="thread-h" class="fb-detail__section-title">Messages</h2>';
+      html += '  <div class="fb-thread" aria-live="polite" data-thread>';
+      html += '    <div class="fb-thread__msg fb-thread__msg--admin"><strong>System</strong> · <time>' + window.fbRelativeTime(new Date(rr.createdAt)) + '</time><p style="margin: var(--fb-space-1) 0 0;">Recovery response submitted.</p></div>';
+      thread.forEach(function (m) {
+        var klass = 'fb-thread__msg--other';
+        if (m.authorId === user.id) klass = 'fb-thread__msg--self';
+        var author = window.FB.state.getUser(m.authorId);
+        if (author && author.role === 'administrator') klass = 'fb-thread__msg--admin';
+        html += '<div class="fb-thread__msg ' + klass + '"><strong>' + escapeHtml(m.authorName) + '</strong> <span class="fb-helper" style="display: inline;">· ' + window.fbRelativeTime(new Date(m.createdAt)) + '</span><p style="margin: var(--fb-space-1) 0 0;">' + escapeHtml(m.body) + '</p></div>';
+      });
+      html += '  </div>';
+
+      if (!isLocked) {
+        html += '<div class="fb-thread__composer">';
+        html += '  <div class="fb-thread__composer-error" data-composer-error role="alert" hidden></div>';
+        html += '  <div class="fb-field"><label class="fb-field__label" for="msg">Post a message</label><textarea class="fb-textarea" id="msg" name="msg" placeholder="Write a message to the responder, the Lost-report owner, and the administrators."></textarea></div>';
+        html += '  <div class="fb-row" style="justify-content: flex-end; margin-top: var(--fb-space-3);"><button type="button" class="fb-btn fb-btn--primary" data-action="post-msg">Post</button></div>';
+        html += '</div>';
+      } else {
+        var lockMsg = 'This thread is read-only.';
+        if (lockReason === 'terminal') {
+          lockMsg = 'This thread is read-only because the recovery response is in a terminal state.';
+        } else if (lockReason === 'returned' || lockReason === 'closed') {
+          lockMsg = 'This thread is read-only because the Lost report has been returned or closed.';
+        }
+        html += '<div class="fb-thread__closed" role="status">🔒 ' + lockMsg + ' Existing messages remain available for reference, but no new messages can be posted.</div>';
+      }
+      html += '</section>';
+
+      document.querySelector('[data-rr-root]').innerHTML = html;
+
+      var postBtn = document.querySelector('[data-action="post-msg"]');
+      if (postBtn) {
+        var msgEl = document.getElementById('msg');
+        var composerErr = document.querySelector('[data-composer-error]');
+        function showComposerError(msg) {
+          if (!composerErr) return;
+          composerErr.textContent = msg;
+          composerErr.hidden = false;
+          msgEl.setAttribute('aria-invalid', 'true');
+        }
+        function clearComposerError() {
+          if (!composerErr) return;
+          composerErr.hidden = true;
+          composerErr.textContent = '';
+          msgEl.removeAttribute('aria-invalid');
+        }
+        msgEl.addEventListener('input', function () {
+          if (!composerErr || composerErr.hidden) return;
+          if ((msgEl.value || '').trim().length > 0) clearComposerError();
+        });
+        postBtn.addEventListener('click', function () {
+          var body = (msgEl.value || '').trim();
+          if (!body) {
+            showComposerError('Write a message before posting.');
+            try { msgEl.focus(); } catch (e) {}
+            return;
+          }
+          var result = window.FB.state.postMessage(rrId, user.id, body);
+          if (!result) {
+            showComposerError("We couldn't send your message. Try again.");
+            return;
+          }
+          msgEl.value = '';
+          clearComposerError();
+          window.FB.toast && window.FB.toast('Message posted.', 'success');
+          var newThread = window.FB.state.getThread(rrId);
+          var threadHtml = '';
+          threadHtml += '<div class="fb-thread__msg fb-thread__msg--admin"><strong>System</strong> · <time>' + window.fbRelativeTime(new Date(rr.createdAt)) + '</time><p style="margin: var(--fb-space-1) 0 0;">Recovery response submitted.</p></div>';
+          newThread.forEach(function (m) {
+            var klass = 'fb-thread__msg--other';
+            if (m.authorId === user.id) klass = 'fb-thread__msg--self';
+            var author = window.FB.state.getUser(m.authorId);
+            if (author && author.role === 'administrator') klass = 'fb-thread__msg--admin';
+            threadHtml += '<div class="fb-thread__msg ' + klass + '"><strong>' + escapeHtml(m.authorName) + '</strong> <span class="fb-helper" style="display: inline;">· ' + window.fbRelativeTime(new Date(m.createdAt)) + '</span><p style="margin: var(--fb-space-1) 0 0;">' + escapeHtml(m.body) + '</p></div>';
+          });
+          document.querySelector('[data-thread]').innerHTML = threadHtml;
+        });
+      }
+
+      var withdrawBtn = document.querySelector('[data-action="withdraw"]');
+      if (withdrawBtn) {
+        withdrawBtn.addEventListener('click', function () {
+          if (!confirm('Withdraw this recovery response? This is final.')) return;
+          var result = window.FB.state.withdrawRecoveryResponse(rrId, user.id);
+          if (!result) { alert('Could not withdraw — it may have already been selected.'); return; }
+          window.location.reload();
+        });
+      }
+    });
+  </script>
+</body>
+</html>

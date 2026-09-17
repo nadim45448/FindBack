@@ -3,6 +3,7 @@
 - **DESIGN.md:** `./DESIGN.md`
 - **EXPERIENCE.md:** `./EXPERIENCE.md`
 - **Run at:** 2026-08-29
+- **Last updated:** 2026-09-16 (targeted correction pass — see addendum at end)
 
 ## Overall verdict
 
@@ -64,3 +65,38 @@ None.
 
 - `review-rubric.md` — rubric walker Pass 1 + Pass 2 (Flow, Token, Component, State, Visual reference, Bloat, Inheritance, Shape fit).
 - `review-accessibility.md` — accessibility lens (Color contrast, Non-color state, Touch targets, Keyboard, Screen readers, Reduced motion, Forms, Sensitive UX, Audit trail).
+
+---
+
+## Addendum — Targeted correction pass, 2026-09-16
+
+**Scope.** EXPERIENCE.md and the prototype were re-reconciled against the final PRD. Spines preserved (visual direction, branding, color system, dark mode, accessibility commitments). EXPERIENCE.md `status` reverted to `revision` pending manual prototype review.
+
+**Resolved (43 numbered corrections).**
+
+- **UJ-1 ending corrected.** Maya's Lost report cleanup is now an explicit manual reporter Withdraw action. There is no automatic Lost↔Found linking; Claim success does not auto-close Maya's separate Lost report. `My Reports` contains only reports Maya authored; `My Claims` contains Claims against others' Found reports.
+- **UJ-2 Claim privacy corrected.** The finder / Found-report owner no longer sees claimant reason or identifying details. The finder knows that a Claim exists and can use the per-Claim thread, but the claimant's private evidence is visible only to the claimant and Administrators.
+- **UJ-3 registration-rejection email removed.** Account approval still emails (FR-27); rejected registrations do not email — the user surfaces via the neutral login-screen inactive-account message. §9.3 / §16.2 / §16.4 reflect this.
+- **UJ-4 corrected to four Administrator queues** (Pending Registrations, Pending Claims, Items Awaiting Return, Items in Verification) including Lost-side Items in Verification. Audit is cross-cutting, not a fifth queue.
+- **UJ-5 replaced with canonical Maya / Sam / Pat / Riley flow.** Maya (owner) selects the Recovery Response via `My Reports → Review Responses`; the Lost report moves to `Verification Pending`. Riley (Administrator) records `Match Confirmed` or `Not a Match` (Administrator-records). Quinn is preserved as Edge Case G only.
+- **Lost-side email events** (§13.7) now explicitly enumerate FR-46 Events 4–8. Event 4 fires on every RR submission (not "no email yet"); Event 5 fires only to the selected responder; Event 6 fires only to the rejected responder; Event 7 fires to the Lost-report owner on Returned; Event 8 fires to the matched responder on `Completed — Report Returned`.
+- **Visibility matrix** (§11.1) keeps the FR-39 7-column model. §11.4 removes the misleading "+ now visible to you" affordance — submitting a Claim or RR does not leak Sensitive Fields.
+- **Per-Claim thread read-only** (§13.5) remains at Approved / Rejected / Returned / Closed (canonical).
+- **Per-RR thread read-only** (§13.5b) added: thread is read-only when the RR reaches a terminal canonical status OR the parent Lost report is `Returned`/`Closed`.
+- **§14.5 Lost-side Returned now fires FR-46 Events 7 + 8** (previously described as no-email).
+- **§22.3 OQ-4, OQ-5, OQ-6 retired** as adopted UX recommendations. OQ-1 / OQ-2 / OQ-3 remain forwarded.
+- **`mockups/assets/state.js`** corrections:
+  - `selectRecoveryResponse` is **owner-only**; passing an admin id returns `null`. Audit action uses FR-48 Event 17.
+  - `recordMatchDetermination` audit actions reference FR-48 Events 18 (Match Confirmed) / 19 (Not a Match) with `determinedBy` + `recordedBy`.
+  - `confirmLostReturned` writes four audit events: FR-48 Event 30 (selected RR → Completed), Event 26 (standby RRs → Resolved), Event 21 (default receiver) / Event 22 (substitute receiver) for the Lost report Returned.
+  - `withdrawRecoveryResponse` accepts both `Submitted` and `Selected for Verification`; releasing selection returns the parent Lost report to `Open`. Audit action references FR-48 Event 20.
+- **`mockups/assets/admin-renderer.js`** corrections:
+  - The administrator verification-review screen **no longer shows a `Select for verification` button**. That action is owner-only and lives in `21-review-responses.html`.
+  - Wording tightened to `Record Match Confirmed (owner says it's theirs)` / `Record Not a Match (owner says it's not theirs)`.
+- **`mockups/assets/detail-renderer.js`** corrections:
+  - Lost-report owner sees a "Recovery Responses ({N})" section with a `Review responses` button when any RR exists, in any Lost-report status. Replaces the prior "Recovery Response in progress" notice.
+- **New prototype page** `mockups/member/21-review-responses.html` — Lost-report owner's RR-review surface (UJ-5 step 5). Calls `selectRecoveryResponse(rrId, owner.id)`; state-layer guards reject non-owner actors.
+
+**Counts.** 1 new HTML page added (21-review-responses.html). 4 prototype script edits. 1 EXPERIENCE.md frontmatter status revert + 1 large narrative replacement (UJ-1..UJ-5) + 1 new section (§13.7) + 1 new sub-section (§13.5b) + multiple targeted corrections (§9.4, §11.4, §12.2, §14.5, §22.3, §24.2, §24.4, §24.7).
+
+**Status.** UX remains in `revision`. Architecture was **NOT** started in this pass; the next-step routing is held for the user's manual prototype review.

@@ -156,3 +156,14 @@ What is **not** an AA problem but is worth recording: the disabled-text contrast
 ---
 
 *End of accessibility review.*
+
+## Correction pass — 2026-09-16 (post-review)
+
+The 2026-08-29 accessibility review above is the as-finalized baseline. A targeted correction pass on 2026-09-16 produced the following updates affecting accessibility:
+
+- Sensitive-field leaks fixed (correction #30–#34). The earlier "+ now visible to you" affordance triggered by Claim submission is removed; visibility is relationship-stable per PRD FR-39.
+- Per-RR thread read-only notice variants added (§13.5b in EXPERIENCE.md), providing `aria-live` coverage for the read-only state across Lost-side threads.
+- Lost-side "Review responses" surface (21-review-responses.html) uses the same accessibility template as My Reports / My Claims (skip-link, accessible nav, focus rings, theme-aware colors).
+- The administrator verification review screen removed the actor-driven Select button (replaced by a static "Owner will select" helper text). Avoids a misleading action affordance for screen-reader users.
+
+AA-confidence rating retained at **Strong** for the corrections. UX package remains `revision` pending manual review.
