@@ -152,6 +152,19 @@
 
     html += '</div>';
 
+    // Administrative account management. NOT an operational queue — the
+    // four queues above are the only operational queues. Accounts is
+    // admin-only lifecycle (deactivate / reactivate) and contextual audit.
+    html += '<h2 class="fb-h3" style="margin: var(--fb-space-5) 0 var(--fb-space-3);">Administrative</h2>';
+    html += '<div class="fb-queue-grid">';
+    var accountCount = window.FB.state.listAccounts().length;
+    html += '  <a href="17-accounts.html" class="fb-queue-card" style="text-decoration: none; color: inherit;">';
+    html += '    <p class="fb-queue-card__count">' + accountCount + '</p>';
+    html += '    <h3 style="margin: var(--fb-space-1) 0 0; color: var(--fb-on-surface);">Manage accounts</h3>';
+    html += '    <p style="margin: var(--fb-space-2) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">Deactivate / reactivate &middot; account-scoped audit disclosure</p>';
+    html += '  </a>';
+    html += '</div>';
+
     root.innerHTML = html;
   }
 
@@ -426,7 +439,13 @@
     html += '<form class="fb-filters" aria-label="Filter audit events" onsubmit="event.preventDefault();" data-audit-filter>';
     html += '  <div><label class="fb-field__label" for="kw">Search</label><input class="fb-input" type="search" id="kw" name="kw" placeholder="Actor, target, action…"></div>';
     html += '  <div><label class="fb-field__label" for="evt">Event type</label><select class="fb-select" id="evt" name="evt"><option value="">All</option>';
-    ['created', 'edited', 'withdrawn', 'closed', 'claim_submitted', 'claim_approved', 'claim_rejected', 'claim_auto_rejected', 'returned', 'message_posted'].forEach(function (a) {
+    ['created', 'edited', 'withdrawn', 'closed', 'claim_submitted', 'claim_approved', 'claim_rejected', 'claim_auto_rejected', 'returned', 'message_posted',
+     'rr_submitted', 'rr_selected_for_verification', 'rr_match_confirmed', 'rr_not_a_match',
+     'rr_completed_report_returned', 'rr_resolved_report_returned', 'rr_resolved_report_closed',
+     'rr_withdrawn', 'lost_closed_admin', 'lost_closed_admin_exceptional',
+     'lost_returned_default', 'lost_returned_substitute',
+     'account_approved', 'account_rejected', 'account_deactivated', 'account_reactivated',
+     'profile_edited'].forEach(function (a) {
       html += '<option>' + a + '</option>';
     });
     html += '</select></div>';
@@ -439,9 +458,33 @@
 
     function actionLabel(a) {
       return ({
-        created: 'Report created', edited: 'Report edited', withdrawn: 'Report withdrawn', closed: 'Report closed',
-        claim_submitted: 'Claim submitted', claim_approved: 'Claim approved', claim_rejected: 'Claim rejected', claim_auto_rejected: 'Claim auto-rejected',
-        returned: 'Return confirmed', message_posted: 'Message posted'
+        created: 'Report created',
+        edited: 'Report edited (reporter)',
+        withdrawn: 'Report withdrawn',
+        closed: 'Report closed',
+        claim_submitted: 'Claim submitted',
+        claim_approved: 'Claim approved',
+        claim_rejected: 'Claim rejected',
+        claim_auto_rejected: 'Claim auto-rejected',
+        returned: 'Return confirmed',
+        message_posted: 'Message posted',
+        rr_submitted: 'RR submitted',
+        rr_selected_for_verification: 'RR selected for verification',
+        rr_match_confirmed: 'Match confirmed',
+        rr_not_a_match: 'Not a match',
+        rr_completed_report_returned: 'RR completed (Returned)',
+        rr_resolved_report_returned: 'RR resolved (Returned)',
+        rr_resolved_report_closed: 'RR resolved (Closed)',
+        rr_withdrawn: 'RR withdrawn',
+        lost_closed_admin: 'Lost admin closed (pre-Match)',
+        lost_closed_admin_exceptional: 'Lost admin cancelled (post-Match)',
+        lost_returned_default: 'Lost returned (default receiver)',
+        lost_returned_substitute: 'Lost returned (substitute)',
+        account_approved: 'Account approved',
+        account_rejected: 'Account rejected',
+        account_deactivated: 'Account deactivated',
+        account_reactivated: 'Account reactivated',
+        profile_edited: 'Member profile edited'
       })[a] || a;
     }
 
@@ -457,7 +500,7 @@
         h += '<td data-label="Timestamp"><time>' + escapeHtml(window.fbFormatDate(e.createdAt, 'datetime')) + '</time></td>';
         h += '<td data-label="Actor">' + escapeHtml(e.actorName) + '</td>';
         h += '<td data-label="Action">' + escapeHtml(actionLabel(e.action)) + '</td>';
-        h += '<td data-label="Target">' + (e.reportId ? escapeHtml(e.reportId) : '—') + (e.claimId ? ' &middot; ' + escapeHtml(e.claimId) : '') + '</td>';
+        h += '<td data-label="Target">' + (e.reportId ? escapeHtml(e.reportId) : '—') + (e.claimId ? ' &middot; ' + escapeHtml(e.claimId) : '') + (e.recoveryResponseId ? ' &middot; ' + escapeHtml(e.recoveryResponseId) : '') + (e.subjectId ? ' &middot; ' + escapeHtml(e.subjectId) : '') + '</td>';
         h += '<td data-label="Notes">' + escapeHtml(e.detail || '') + '</td>';
         h += '</tr>';
       });
@@ -473,9 +516,17 @@
         if (evt && e.action !== evt) return false;
         if (tgt === 'Reports' && !e.reportId) return false;
         if (tgt === 'Claims' && (!e.claimId && e.action.indexOf('claim_') !== 0 && e.action !== 'message_posted')) return false;
-        if (tgt === 'Accounts' && e.action.indexOf('account') !== 0) return false; // placeholder
+        // Accounts target: account/profile lifecycle and registration events.
+        if (tgt === 'Accounts') {
+          var a = e.action || '';
+          if (a.indexOf('account_') !== 0 &&
+              a.indexOf('profile_') !== 0 &&
+              a !== 'message_posted') {
+            return false;
+          }
+        }
         if (kw) {
-          var blob = ((e.actorName || '') + ' ' + (e.detail || '') + ' ' + (e.action || '') + ' ' + (e.reportId || '') + ' ' + (e.claimId || '')).toLowerCase();
+          var blob = ((e.actorName || '') + ' ' + (e.detail || '') + ' ' + (e.action || '') + ' ' + (e.reportId || '') + ' ' + (e.claimId || '') + ' ' + (e.subjectId || '')).toLowerCase();
           if (blob.indexOf(kw) === -1) return false;
         }
         return true;

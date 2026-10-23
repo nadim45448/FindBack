@@ -87,8 +87,9 @@
       if (claimId) {
         window.location.href = '13-claim-detail.html?claim=' + encodeURIComponent(claimId);
       } else if (window.FB && window.FB.state && window.FB.state.getCurrentUser()) {
-        // No claim param — pick the most recent pending claim for the user.
         var user = window.FB.state.getCurrentUser();
+        if (user.accountState === 'deactivated') { window.location.href = '../public/02-login.html?blocked=deactivated'; return; }
+        // No claim param — pick the most recent pending claim for the user.
         var pending = window.FB.state.listClaimsForUser(user.id).filter(function (c) { return c.status === 'pending'; });
         var target = pending[0] || window.FB.state.listClaimsForUser(user.id)[0];
         if (target) {

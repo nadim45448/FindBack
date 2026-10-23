@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Accounts — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-page { max-width: var(--fb-container-wide); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
+    .fb-accounts-toolbar { display: flex; gap: var(--fb-space-3); align-items: center; flex-wrap: wrap; margin-bottom: var(--fb-space-5); padding: var(--fb-space-3); background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); }
+    .fb-accounts-toolbar label { font-size: 14px; font-weight: 600; color: var(--fb-on-surface); }
+    .fb-accounts-toolbar input[type="search"], .fb-accounts-toolbar select {
+      padding: var(--fb-space-2) var(--fb-space-3); border: 1px solid var(--fb-border-default);
+      border-radius: var(--fb-radius-md); background: var(--fb-surface); color: var(--fb-on-surface); font-size: 14px;
+      min-width: 200px;
+    }
+    .fb-accounts-table { width: 100%; border-collapse: collapse; background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); overflow: hidden; box-shadow: var(--fb-elev-1); }
+    .fb-accounts-table th, .fb-accounts-table td { padding: var(--fb-space-3) var(--fb-space-4); text-align: left; border-bottom: 1px solid var(--fb-border-subtle); font-size: 14px; vertical-align: top; }
+    .fb-accounts-table th { background: var(--fb-surface-2); font-weight: 600; color: var(--fb-on-surface); font-size: 13px; }
+    .fb-accounts-table tr:last-child td { border-bottom: 0; }
+    .fb-state-pill { display: inline-block; padding: 2px 10px; border-radius: var(--fb-radius-full); font-size: 12px; font-weight: 600; }
+    .fb-state-pill--active      { background: var(--fb-status-open-soft); color: var(--fb-status-open); }
+    .fb-state-pill--pending     { background: var(--fb-status-claimrequested-soft); color: var(--fb-status-claimrequested); }
+    .fb-state-pill--rejected    { background: var(--fb-status-closed-soft); color: var(--fb-status-closed); }
+    .fb-state-pill--deactivated { background: var(--fb-status-closed-soft); color: var(--fb-status-closed); }
+    .fb-account-history { margin-top: var(--fb-space-3); padding: var(--fb-space-3); background: var(--fb-surface-2); border-radius: var(--fb-radius-md); }
+    .fb-account-history summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--fb-on-surface); }
+    .fb-account-history ul { margin: var(--fb-space-2) 0 0; padding: 0; list-style: none; font-size: 12px; color: var(--fb-on-surface-variant); max-height: 220px; overflow-y: auto; }
+    .fb-account-history li { padding: var(--fb-space-1) 0; border-bottom: 1px solid var(--fb-border-subtle); }
+    .fb-account-history li:last-child { border-bottom: 0; }
+    .fb-account-history code { background: var(--fb-surface); padding: 0 4px; border-radius: 3px; font-size: 12px; }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body class="fb-topbar--admin">
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="01-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="01-dashboard.html">Dashboard</a>
+      <a href="02-pending-registrations.html">Registrations</a>
+      <a href="05-pending-claims.html">Claims</a>
+      <a href="09-items-awaiting-return.html">Awaiting return</a>
+      <a href="14-items-in-verification.html">In verification</a>
+      <a href="12-audit-trail.html">Audit trail</a>
+      <a href="17-accounts.html" aria-current="page">Accounts</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
+  </header>
+
+  <main id="main" tabindex="-1" class="fb-page">
+    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-3);">Accounts</h1>
+    <p class="fb-helper" style="margin-bottom: var(--fb-space-5);">Search and manage member accounts. Account lifecycle states: Active, Pending, Rejected, Deactivated. The audit disclosure under each row reflects the contextual account and profile events for that user (FR-52 records; lifecycle events).</p>
+
+    <div class="fb-accounts-toolbar" role="search">
+      <label for="acct-search">Search</label>
+      <input type="search" id="acct-search" placeholder="Display name or email…" autocomplete="off">
+      <label for="acct-state">Account state</label>
+      <select id="acct-state">
+        <option value="">All states</option>
+        <option value="active">Active</option>
+        <option value="pending">Pending</option>
+        <option value="rejected">Rejected</option>
+        <option value="deactivated">Deactivated</option>
+      </select>
+    </div>
+
+    <div data-accounts-root>
+      <p class="fb-helper">Loading accounts…</p>
+    </div>
+
+    <p class="fb-helper" style="margin-top: var(--fb-space-5);">
+      <strong>What this surface is not:</strong> an operational queue. The four Administrator queues (Pending Registrations, Pending Claims, Items Awaiting Return, Items in Verification) remain on the Dashboard. Accounts is administrative account management, not a workflow queue.
+    </p>
+    <p class="fb-helper" style="margin-top: var(--fb-space-3);">
+      <strong>FR-52 records</strong> ("Member profile edited") and FR-5 lifecycle events appear in each row's Account history disclosure.
+    </p>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>Accounts</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="12-audit-trail.html">← Previous</a>
+        <a href="../index.html">All journeys</a>
+        <a href="01-dashboard.html">Next →</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/state.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (m) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
+        });
+      }
+      function fmt(iso) {
+        if (!iso) return '—';
+        var d = new Date(iso); if (isNaN(d.getTime())) return '—';
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+      }
+      function statePill(state) {
+        return '<span class="fb-state-pill fb-state-pill--' + esc(state) + '">' +
+          state.charAt(0).toUpperCase() + state.slice(1) + '</span>';
+      }
+      function actionLabel(a) {
+        // Surface high-signal labels without altering audit detail.
+        var map = {
+          'created': 'created',
+          'edited': 'edited',
+          'withdrawn': 'withdrawn',
+          'deleted': 'deleted',
+          'closed': 'closed',
+          'returned': 'returned',
+          'claim_submitted': 'claim_submitted',
+          'claim_approved': 'claim_approved',
+          'claim_rejected': 'claim_rejected',
+          'claim_auto_rejected': 'claim_auto_rejected',
+          'rr_submitted': 'rr_submitted',
+          'rr_selected_for_verification': 'rr_selected',
+          'rr_match_confirmed': 'match_confirmed',
+          'rr_not_a_match': 'not_a_match',
+          'rr_completed_report_returned': 'completed_returned',
+          'rr_resolved_report_returned': 'resolved_returned',
+          'rr_resolved_report_closed': 'resolved_closed',
+          'rr_withdrawn': 'rr_withdrawn',
+          'lost_closed_admin': 'admin_closed',
+          'lost_closed_admin_exceptional': 'admin_cancelled',
+          'lost_returned_default': 'lost_returned_default',
+          'lost_returned_substitute': 'lost_returned_substitute',
+          'account_approved': 'account_approved',
+          'account_rejected': 'account_rejected',
+          'account_deactivated': 'account_deactivated',
+          'account_reactivated': 'account_reactivated',
+          'profile_edited': 'profile_edited',
+          'message_posted': 'message_posted'
+        };
+        return map[a] || a;
+      }
+
+      function render() {
+        var root = document.querySelector('[data-accounts-root]');
+        if (!root) return;
+        var q = (document.getElementById('acct-search').value || '').trim().toLowerCase();
+        var stateFilter = document.getElementById('acct-state').value;
+        var accounts = window.FB.state.listAccounts()
+          .filter(function (u) {
+            if (stateFilter && u.accountState !== stateFilter) return false;
+            if (!q) return true;
+            return (u.name && u.name.toLowerCase().indexOf(q) !== -1) ||
+                   (u.email && u.email.toLowerCase().indexOf(q) !== -1);
+          })
+          .sort(function (a, b) {
+            return (a.name || '').localeCompare(b.name || '');
+          });
+
+        if (!accounts.length) {
+          root.innerHTML = '<p class="fb-helper">No accounts match.</p>';
+          return;
+        }
+
+        var rows = accounts.map(function (u) {
+          var audit = window.FB.state.listAuditForActor(u.id);
+          var actionBtns = '';
+          if (u.accountState === 'active') {
+            actionBtns = '<button type="button" class="fb-btn fb-btn--tertiary fb-btn--sm" data-action="deactivate" data-user-id="' + esc(u.id) + '">Deactivate</button>';
+          } else if (u.accountState === 'deactivated') {
+            actionBtns = '<button type="button" class="fb-btn fb-btn--secondary fb-btn--sm" data-action="reactivate" data-user-id="' + esc(u.id) + '">Reactivate</button>';
+          } else if (u.accountState === 'pending') {
+            actionBtns = '<a class="fb-btn fb-btn--secondary fb-btn--sm" href="02-pending-registrations.html">Review</a>';
+          } else if (u.accountState === 'rejected') {
+            actionBtns = '<span class="fb-helper">Terminal</span>';
+          }
+
+          var auditHtml = '<div class="fb-account-history">';
+          auditHtml += '<summary>Account history (' + audit.length + ')</summary>';
+          if (audit.length === 0) {
+            auditHtml += '<p class="fb-helper" style="margin-top: var(--fb-space-2);">No account- or profile-scoped events recorded.</p>';
+          } else {
+            auditHtml += '<ul>';
+            audit.slice(0, 30).forEach(function (a) {
+              auditHtml += '<li><code>' + esc(actionLabel(a.action)) + '</code> · ' +
+                esc(a.actorName) + ' · ' + esc(a.detail || '') +
+                ' · <span style="color: var(--fb-on-surface-variant);">' + esc(fmt(a.createdAt)) + '</span></li>';
+            });
+            auditHtml += '</ul>';
+          }
+          auditHtml += '</div>';
+
+          return '<tr>' +
+            '<td><strong>' + esc(u.name) + '</strong>' +
+              (u.role === 'administrator' ? '<br><span class="fb-helper">Administrator</span>' : '') +
+              auditHtml +
+            '</td>' +
+            '<td>' + esc(u.email) + '</td>' +
+            '<td>' + esc(u.selfRole || u.role || '—') + '</td>' +
+            '<td>' + statePill(u.accountState) + '</td>' +
+            '<td>' + fmt(u.registeredAt) + '</td>' +
+            '<td>' + fmt(u.lastActiveAt) + (u.deactivatedAt ? '<br><span class="fb-helper">Deactivated ' + fmt(u.deactivatedAt) + '</span>' : '') + '</td>' +
+            '<td>' + actionBtns + '</td>' +
+          '</tr>';
+        }).join('');
+
+        root.innerHTML =
+          '<table class="fb-accounts-table" aria-label="Accounts">' +
+          '<thead><tr>' +
+          '<th scope="col">Display name</th>' +
+          '<th scope="col">Registered email</th>' +
+          '<th scope="col">Self-declared role</th>' +
+          '<th scope="col">Account state</th>' +
+          '<th scope="col">Registration date</th>' +
+          '<th scope="col">Last active</th>' +
+          '<th scope="col">Action</th>' +
+          '</tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+          '</table>';
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        if (!window.FB || !window.FB.state) return;
+        var admin = window.FB.state.getCurrentUser();
+        if (!admin || admin.role !== 'administrator') {
+          window.location.href = '../public/02-login.html';
+          return;
+        }
+        var ctx = document.querySelector('[data-mockup-context]');
+        if (ctx) ctx.textContent = 'Accounts · ' + admin.name;
+
+        document.getElementById('acct-search').addEventListener('input', render);
+        document.getElementById('acct-state').addEventListener('change', render);
+
+        document.querySelector('[data-accounts-root]').addEventListener('click', function (e) {
+          var btn = e.target.closest('button[data-action]');
+          if (!btn) return;
+          var userId = btn.getAttribute('data-user-id');
+          var action = btn.getAttribute('data-action');
+          if (action === 'deactivate') {
+            var reason = window.prompt('Optional reason for deactivation (visible in audit):', '') || '';
+            var r = window.FB.state.deactivateAccount(userId, admin.id, reason);
+            if (!r.ok) {
+              if (window.showToast) window.showToast('Could not deactivate: ' + (r.reason || 'unknown'), 'error');
+              return;
+            }
+            // Deactivation-mid-session UX: if the admin just deactivated the
+            // currently-signed-in user, the session is cleared by the state
+            // layer and we route to the neutral blocked-login surface.
+            if (r.sessionCleared) {
+              if (window.showToast) window.showToast('Account deactivated. Returning to sign in.', 'success');
+              setTimeout(function () { window.location.href = '../public/02-login.html?blocked=deactivated'; }, 250);
+              return;
+            }
+            if (window.showToast) window.showToast('Account deactivated.', 'success');
+            render();
+          } else if (action === 'reactivate') {
+            var r2 = window.FB.state.reactivateAccount(userId, admin.id);
+            if (!r2.ok) {
+              if (window.showToast) window.showToast('Could not reactivate: ' + (r2.reason || 'unknown'), 'error');
+              return;
+            }
+            if (window.showToast) window.showToast('Account reactivated.', 'success');
+            render();
+          }
+        });
+
+        render();
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 title: "EXPERIENCE.md — FindBack"
 status: revision
 created: 2026-08-29
-updated: 2026-09-16
+updated: 2026-09-17
 project: FindBack
 run: ux-FindBack-2026-08-29
 design_md: ./DESIGN.md
@@ -10,7 +10,7 @@ prd: ../../prds/prd-FindBack-2026-08-28/prd.md
 brief: ../../briefs/brief-FindBack-2026-08-28/brief.md
 ---
 
-> **Correction pass — 2026-09-16.** This revision is a targeted correction pass against the final PRD. Spines remain authoritative; corrections apply to UJ-1..UJ-5, Lost-side email events, RR lifecycle, Claim privacy, and Administrator-records / owner-determines semantics. See `.memlog.md` "Update — Final correction & validation pass (2026-09-06)" for prior pass and this file's §22 for the change log of THIS pass.
+> **Reconciliation pass — 2026-09-17.** This revision reconciles the UX/Experience artifacts against the now-frozen Product Brief and PRD. Spines remain authoritative; corrections conform UX to frozen upstream documents. Includes FR-51 Forgot Password verification, FR-52 Member Profile addition, FR-53 Administrator Report Edit addition, `/admin/audit` cleanup, member-home `Recent activity` aggregation removal, and refresh of audit-trail access wording. See `.memlog.md` "Update — Reconciliation pass against frozen Brief + PRD (2026-09-17)" for the change log.
 
 # EXPERIENCE.md — FindBack
 
@@ -43,7 +43,7 @@ brief: ../../briefs/brief-FindBack-2026-08-28/brief.md
 
 | Principle | UX translation |
 |---|---|
-| **Simple** | First-time-task completion without help text walls. Defaults that make sense. One primary action per screen. |
+| **Simple** | First-time-task completion without help text walls. Defaults that make sense. Transactional screens have one dominant primary action; the member dashboard uses the documented two equal task-entry actions for `Report Lost Item` and `Report Found Item` (see §5.1). |
 | **Trustworthy** | Information visibility is explained, not hidden. The system never silently changes a report's state. The audit trail is the source of truth. |
 | **Clear** | Every status has a text label, an icon, and a color. No state is communicated by color alone. Every screen answers "what is this?" and "what can I do next?" |
 
@@ -51,18 +51,19 @@ brief: ../../briefs/brief-FindBack-2026-08-28/brief.md
 
 ## 2. Personas & Role Surfaces
 
-FindBack has **four account states** for members and **one operator role** (Administrator). Role is an attribute of an account, not a separate account type — an Administrator is a Member with the `administrator` flag (PRD §3).
+FindBack has **four member account lifecycle states** — `Pending`, `Active`, `Rejected`, `Deactivated` — and **one anonymous audience**. The four member states plus the anonymous audience are listed below as the audiences the UX renders for. `Anonymous` is an audience, not a lifecycle state. Role is an attribute of an account, not a separate account type — an Administrator is a Member with the `administrator` flag (PRD §3).
 
-| Account state | Can do | Cannot do | Realized by |
+| Audience / account state | Can do | Cannot do | Realized by |
 |---|---|---|---|
-| **Anonymous User** | Browse summary listings; search/filter listings | View any item detail; report; claim; submit Recovery Response; message; see audit trail | FR-12, FR-38 |
-| **Pending User** | Log in; see pending banner | Anything else (no browsing detail, no reports, no Claims, no Recovery Responses, no messages) | FR-2 |
-| **Active Member** | Report Lost/Found; browse + view detail; submit Claim on Found items; submit Recovery Response on Lost items; select Recovery Responses on own Lost reports; withdraw own reports; message on own per-Claim and per-RR threads; edit own reports; withdraw own reports | Approve/reject anything; see audit trail; administer accounts; substitute-receiver confirmation | FR-6..FR-15, FR-26, FR-39, FR-40, FR-47 |
-| **Deactivated User** | (cannot log in) | Any active capability | FR-5 |
+| **Anonymous User** (audience — no account) | Browse summary listings; search/filter listings | View any item detail; report; claim; submit Recovery Response; message; see audit trail | FR-12, FR-38 |
+| **Pending User** (lifecycle state) | Authenticate; reach `/pending`; sign out | Browse detail; report; submit Claim; submit Recovery Response; message; use any other member capability | FR-2 |
+| **Active Member** (lifecycle state) | Report Lost/Found; browse + view detail; submit Claim on Found items; submit Recovery Response on Lost items; select Recovery Responses on own Lost reports; withdraw own reports; message on own per-Claim and per-RR threads; edit own reports; manage own profile (FR-52) | Approve/reject anything; see audit trail; administer accounts; substitute-receiver confirmation | FR-6..FR-15, FR-26, FR-39, FR-40, FR-47, FR-52 |
+| **Rejected User** (lifecycle state) | No member session is created on login attempt | Any active capability. Login attempt surfaces a neutral inactive-account message on `/login` (same wording as Deactivated). Rejection reason is **not** exposed. There is no `/rejected` route. | FR-3, FR-4 |
+| **Deactivated User** (lifecycle state) | No member session is created on login attempt | Any active capability. Login attempt surfaces the same neutral inactive-account message on `/login` as Rejected. There is no `/deactivated` route. | FR-4, FR-5 |
 
 **Administrator** = Active Member with the `administrator` flag. Administrators approve/reject registrations, deactivate accounts, approve/reject/auto-reject Claims, confirm Returned (default or substitute receiver), close reports, view the full audit trail, and record the Lost-report owner's Match Confirmed / Not a Match determination during verification.
 
-**Role resolution.** The server resolves role from session and persists the role in the request context. UI never infers role from URL alone.
+**Role resolution.** UX renders role-aware surfaces from the authenticated authorization context. The UI never infers authorization from the URL alone; authorization enforcement and propagation mechanisms are Architecture-owned.
 
 ---
 
@@ -77,11 +78,20 @@ FindBack (single deployment, one organization)
 │
 ├── Public surface
 │   ├── /                          Landing page
-│   ├── /login                     Login
+│   ├── /login                     Login (Active success → /home; Pending success → /pending; Rejected or Deactivated → neutral inactive-account error, no separate Rejected/Deactivated landing page)
 │   ├── /register                  Self-registration
+│   ├── /forgot                    Forgot Password form (FR-51)
+│   ├── /forgot-sent               Forgot Password confirmation (FR-51; neutral wording regardless of account existence)
+│   ├── /pending-registered        Signed-out post-registration confirmation (registration successful; user is NOT signed in)
 │   └── /listings                  Combined Lost & Found summary listing (anonymous-viewable, summary fields only)
 │
-├── Member surface — four authoritative views (FR-49, D5, D8)
+├── Member surface (authenticated; Active member account state)
+│   ├── /home                      Member dashboard / entry surface — task entry to the four authoritative participation views (NOT one of the four FR-49 participation views)
+│   ├── /report/lost               Report Lost Item form (task entry; report type fixed by URL — single-page form, FR-6, FR-8). Not a participation view.
+│   ├── /report/found              Report Found Item form (task entry; report type fixed by URL — single-page form, FR-7, FR-8). Not a participation view.
+│   ├── /my/profile                Member Profile (FR-52; editable display name + self-declared role; read-only email). Not a participation view.
+│   │
+│   │   Four authoritative FR-49 participation views (D5, D8):
 │   │
 │   ├── /my/reports                My Reports (own authored Lost + Found; never own Claims/RRs)
 │   │   ├── /my/reports/:id        Report detail (reporter view; selectable Withdraw action)
@@ -99,10 +109,9 @@ FindBack (single deployment, one organization)
 │   └── /my/recovery-responses     My Recovery Responses (RRs the member submitted on others' Lost items)
 │       └── /my/recovery-responses/:id          RR detail (canonical status + per-RR thread)
 │
-├── Account-lifecycle surfaces
-│   ├── /pending                   Pending state landing
-│   ├── /rejected                  Rejected state landing
-│   └── /deactivated               Deactivated state landing
+│
+├── Account-lifecycle surfaces (authenticated, restricted)
+│   └── /pending                   Pending-account restricted landing (authentication succeeds; member surface is restricted)
 │
 └── Administrator surface (authenticated; requires administrator flag)
     ├── /admin                              Administrator dashboard — four queue tiles
@@ -112,11 +121,20 @@ FindBack (single deployment, one organization)
     ├── /admin/verifications                 Items in Verification queue (FR-50) — Lost-side Verification Pending
     ├── /admin/claims/:id                    Claim review (single)
     ├── /admin/items/:id                     Item administration
-    ├── /admin/items/:id/audit               Audit trail view
+    ├── /admin/items/:id/audit               Audit trail view (Found-side; contextual)
+    ├── /admin/items/:id/edit                Edit Report (FR-53; non-terminal only)
     ├── /admin/items/:id/return              Confirm Returned (Found-side; default or substitute)
     ├── /admin/lost/:id                      Lost report verification (record owner's Match Confirmed / Not a Match)
+    ├── /admin/lost/:id/audit                Audit trail view (Lost-side; contextual)
+    ├── /admin/lost/:id/edit                 Edit Report (FR-53; non-terminal only)
     ├── /admin/lost/:id/return               Confirm Returned (Lost-side; default or substitute)
     └── /admin/accounts                      Account management (search, deactivate)
+
+Note: There is no global `/admin/audit` route. Audit is **contextual** to the relevant entity (report / Claim / Recovery Response / thread) and is reached from `/admin/items/:id/audit` and `/admin/lost/:id/audit` — never from a dashboard tile or top-level menu.
+
+Note: There is no `/rejected` or `/deactivated` route. The PRD requires that Rejected and Deactivated authentication do **not** create a member session, and the UX must not reveal which of those two states applies. Both states are surfaced through a single neutral inactive-account error message on `/login`. Rejected/Deactivated users do not reach the member surface or the `/pending` page.
+
+Note: `/pending-registered` (signed-out post-registration confirmation) and `/pending` (authenticated Pending-account restricted landing) are distinct surfaces and must not be merged. The Pending header on `/pending` shows brand + Pending status + `Log out` only — no anonymous `Sign in` / `Register` controls.
 ```
 
 ### 3.2 Navigation rules
@@ -166,7 +184,7 @@ These terms are surfaced to users verbatim. UX does not paraphrase the PRD gloss
 | Found report lifecycle | `Open`, `Claim Requested`, `Claim Approved`, `Returned`, `Closed` |
 | Lost report lifecycle | `Open`, `Verification Pending`, `Returned`, `Closed` |
 | Claim states | `Pending`, `Approved`, `Rejected` (no `Closed`) |
-| Recovery Response states (8 canonical, PRD FR-41; corrections #16/#2) | `Submitted`, `Selected for Verification`, `Match Confirmed`, `Not a Match`, `Completed — Report Returned`, `Resolved — Report Returned`, `Resolved — Report Closed`, `Withdrawn` |
+| Recovery Response states (8 canonical, PRD FR-41) | `Submitted`, `Selected for Verification`, `Match Confirmed`, `Not a Match`, `Completed — Report Returned`, `Resolved — Report Returned`, `Resolved — Report Closed`, `Withdrawn` |
 | Derived/display only | `Submitted — Standby` (rendered when another RR is Selected; canonical persisted status remains `Submitted`) |
 | Item type | `Lost item`, `Found item` |
 | Roles | `Member`, `Administrator` |
@@ -216,16 +234,16 @@ PRD FR-17 specifies the audit reason "another claim was approved for this item".
 
 **On the rejected claim detail screen.** A neutral banner: "Your claim was not approved because another claim on this item was approved. If you think this is a mistake, contact your administrator." The audit reason ("another claim was approved for this item") is preserved verbatim in the audit trail but is not surfaced as user-facing copy — the user-facing copy uses the language above.
 
-### 4.5 Lost report status microcopy (PRD FR-42; corrections #22/#2)
+### 4.5 Lost report status microcopy (PRD FR-42)
 
 - **Open.** "Active. No Recovery Responses yet." (Action hint: report owner sees "Withdraw" until Match Confirmed.)
-- **Verification Pending.** "An administrator is verifying a Recovery Response on this item."
+- **Verification Pending.** "A Recovery Response is being verified. The Lost-report owner will determine whether it matches, and an administrator will record the determination."
 - **Returned.** "This item has been returned. No further action is needed."
 - **Closed.** "This report is no longer active." (Action hint: none. Read-only history.)
 
 **Important.** `Match Confirmed` is **a Recovery Response status, not a Lost-report status**. The Lost report remains `Verification Pending` throughout the Match Confirmed → physical handoff → Confirm Returned window. UX must not treat `Match Confirmed` as `Returned` or as a Lost-report status.
 
-### 4.6 Recovery Response status microcopy (PRD FR-41; correction #2)
+### 4.6 Recovery Response status microcopy (PRD FR-41)
 
 | Status | Member-facing copy |
 |---|---|
@@ -239,7 +257,7 @@ PRD FR-17 specifies the audit reason "another claim was approved for this item".
 | `Resolved — Report Closed` (terminal) | "Resolved. The Lost report was closed." |
 | `Withdrawn` (terminal) | "Withdrawn by the responder." |
 
-### 4.7 Owner-Determines / Administrator-Records wording (PRD FR-43, FR-45; corrections #3/#15)
+### 4.7 Owner-Determines / Administrator-Records wording (PRD FR-43, FR-45)
 
 The Lost-report owner physically determines whether the candidate is theirs. The acting Administrator **records** that determination in FindBack on the owner's behalf. The Administrator does not independently decide ownership. UX wording must reflect this.
 
@@ -291,6 +309,7 @@ Visual specs live in `{DESIGN.md → Components}`. This section owns the *behavi
 **Behavioral rules.**
 
 - **One primary button per view.** If a screen has two competing primary actions, demote the secondary to `secondary` or move it into a menu.
+- **Member dashboard exception.** The member dashboard (`/home`) is the one surface with two equal-weight entry actions: `Report Lost Item` and `Report Found Item`. They are presented as two paired primary buttons (one per report type), because report type is fixed by URL (`/report/lost` vs `/report/found`) and the two actions do not compete for a single outcome — each routes to a distinct form. No other surface presents two primaries.
 - **Topbar Register / Sign in CTAs must read as buttons in the resting state.** Use `primary` style (filled, brand surface, on-brand text) — not `tertiary`. A tertiary topbar CTA disappears into the navigation labels and only becomes legible on hover, which fails the "visible at rest" expectation for an entry-point action. When a page already has a primary in its main content (e.g., the form's submit button), the topbar CTA is exempt from the "one primary per view" rule because it lives in a separate region (topbar vs content) and serves a different audience (anonymous vs already-filling-the-form). See `§5.2 Topbar` for the topbar's component treatment.
 - **Destructive actions require explicit confirmation.** Confirmation uses a **modal dialog** that names the consequence, not a confirm() call. See Section 7.6.
 - **Loading state.** Buttons enter a disabled + spinner state while the action is in flight (the `executing` state from `{components.button.state.executing}`). The button label remains visible (e.g., "Submitting…").
@@ -299,7 +318,11 @@ Visual specs live in `{DESIGN.md → Components}`. This section owns the *behavi
 
 ### 5.2 Topbar (anonymous + auth-flow pages)
 
-On public / auth-flow pages (`/`, `/login`, `/forgot`, `/forgot-sent`, `/register`, `/pending`, `/rejected`, `/deactivated`), the topbar exposes two actions to the anonymous visitor:
+On public / signed-out auth-flow pages (`/`, `/login`, `/forgot`, `/forgot-sent`, `/register`, `/pending-registered`), the topbar exposes two actions to the anonymous visitor:
+
+The `/pending` surface is **not** an anonymous auth-flow page. It is an authenticated restricted account landing. Its header is the **Pending header**: brand mark + `Pending` status pill + `Log out` only. The `/pending` header exposes no anonymous `Sign in` / `Register` controls, and the topbar's anonymous CTA pattern does not apply.
+
+There is no `/rejected` or `/deactivated` route. Rejected and Deactivated users do not reach the member surface; both states surface as the same neutral inactive-account error on `/login`.
 
 | Action | Style | Why |
 |---|---|---|
@@ -309,7 +332,7 @@ On public / auth-flow pages (`/`, `/login`, `/forgot`, `/forgot-sent`, `/registe
 
 **Why primary, not tertiary.** A tertiary topbar CTA has no border, no fill, and shares its color with the surrounding nav labels. It disappears into the navigation chrome and only becomes legible on hover — which fails the resting-state legibility expectation for an entry-point action. A primary button (filled, brand surface, on-brand text) reads as a button without interaction. The "one primary per view" rule (`§5.1`) is **explicitly exempted** for topbar CTAs: the topbar and the page content are different regions serving different audiences (entry-point for anonymous visitors vs. the in-flow action for the form-filler).
 
-**Where the tertiary topbar CTA pattern is acceptable.** On authenticated pages (member/admin), the topbar exposes account chrome (`Account ▾`, `Theme`, `Logout`) which is genuinely low-emphasis — those stay `tertiary`.
+**Where the tertiary topbar CTA pattern is acceptable.** On authenticated member and administrator pages, the topbar exposes the `Account ▾` menu and the standalone Theme control as low-emphasis account chrome. `Account ▾` contains `Profile` and `Logout`; Theme remains a separate topbar icon control. Both stay `tertiary`. Logout is **not** a standalone topbar control — it lives inside `Account ▾`.
 
 ### 5.3 Inputs & textareas
 
@@ -348,7 +371,7 @@ No image, no exact location, no reporter name (PRD FR-38).
 
 Administrator queues use a table layout on desktop and collapse to stacked rows on mobile. The four operational queues are: **Pending Registrations**, **Pending Claims** (Found-side), **Items Awaiting Return** (Found-side, `Claim Approved`), and **Items in Verification** (Lost-side, `Verification Pending`). Audit is **not** one of the four operational queues — it is cross-cutting and reachable from any item / Claim / RR detail (PRD FR-33; §15.1). Sortable columns: submission time (default), claim/item ID. Action column is right-aligned and exposes the primary action directly (Approve, Review, Confirm Returned, Record Match Confirmed, etc.).
 
-Accessibility: `<th scope="col">`, sortable headers announced as "Sort by {column}, ascending/descending", keyboard navigable rows, and row focus moves to a focusable action when present. The `Items in Verification` queue uses the **ARIA grid pattern** (`role="grid"` / `row` / `gridcell`) with roving `tabindex` and arrow-key row navigation (correction D3).
+Accessibility: `<th scope="col">`, sortable headers announced as "Sort by {column}, ascending/descending", keyboard navigable rows, and row focus moves to a focusable action when present. The `Items in Verification` queue uses the **ARIA grid pattern** (`role="grid"` / `row` / `gridcell`) with roving `tabindex` and arrow-key row navigation.
 
 ### 5.8 Status badges & indicators
 
@@ -402,7 +425,7 @@ Used only when the consequence must be visible before the user commits. Examples
 
 ### 5.11 Dropdowns & menus
 
-Used for `Report ▾` (Lost / Found), `Account ▾` (Profile, Theme, Logout), and `Admin ▾` queues. Single-level menus. Selected option is shown in the trigger.
+Used for `Report ▾` (Lost / Found), `Account ▾` (Profile, Logout), and `Admin ▾` queues. Theme is **not** part of the Account menu — Theme is a separate topbar icon control (see §19). Single-level menus. Selected option is shown in the trigger.
 
 ### 5.12 Pagination
 
@@ -450,7 +473,7 @@ The visibility model is **relationship-aware** and uses the seven canonical audi
 
 - **Anonymous.** Public summary fields only (PRD FR-38). No description, no image, no reporter identity, no exact place, no identifying details, no Claims, no Recovery Responses, no threads, no audit.
 - **Authenticated, unrelated member.** Sees summary + description + image. Sensitive fields (exact place, identifying details) are hidden (PRD FR-13, FR-39).
-- **Found-report owner / finder.** Sees summary + description + image + reporter display name + their own report's exact place + their own report's identifying details + member-facing status history + Claims submitted against this Found report (counts, statuses, per-Claim thread entry points; **not** claimant reason or claimant identifying details — §11.1, UJ-2 correction).
+- **Found-report owner / finder.** Sees summary + description + image + reporter display name + their own report's exact place + their own report's identifying details + member-facing status history + Claims submitted against this Found report (counts, statuses, per-Claim thread entry points; **not** claimant reason or claimant identifying details — §11.1).
 - **Claimant (against a Found report).** Sees summary + description + image + reporter display name + member-facing status history. **Does NOT** see exact place or report identifying details on the Found report. Sees their own Claim thread and their own Claim fields.
 - **Recovery responder (against a Lost report).** Sees summary + description + image + Lost-report owner display name + member-facing status history. **Does NOT** see exact place or report identifying details on the Lost report. Sees their own RR thread and their own RR fields.
 - **Lost-report owner.** Sees summary + description + image + their own report's exact place + their own report's identifying details + member-facing status history + Recovery Responses submitted against this Lost report (responder display name, RR fields, per-RR thread entry points). Owner-only access to the `Select for Verification` action on Submitted RRs.
@@ -602,7 +625,7 @@ Each flow names a protagonist from the PRD (UJ-1 through UJ-5). Mirrors PRD sour
 
 **Climax beat.** Alex is approved in minutes and knows exactly what's happening at each step. Rejected users never learn *why* they were rejected through FindBack, and they are not bombarded with rejection emails. The audit trail preserves administrator reasoning internally without exposing it externally.
 
-> **UX decision (correction pass — 2026-09-16).** Earlier revisions of this journey included a Rejected-account notification email. The final PRD does not list a registration-rejection email in FR-46 Events 1–8, and FR-30 explicitly says no other notifications beyond those listed. Therefore rejected registrations are **not** emailed. The UX surfaces this via the login-screen neutral inactive-account message instead.
+> **UX decision.** Rejected registrations are **not** emailed. The final PRD does not list a registration-rejection email in FR-46 Events 1–8, and FR-30 explicitly says no other notifications beyond those listed. The UX surfaces this via the login-screen neutral inactive-account message instead.
 
 ### 8.4 UJ-4 — Riley, an administrator, handles a busy morning
 
@@ -621,7 +644,7 @@ That is **four operational queues**. Audit is **cross-cutting**, not a fifth que
    - Pending Claims: `6` → `/admin/claims` (Found-side)
    - Items Awaiting Return: `1` → `/admin/awaiting-return` (Found-side, `Claim Approved`)
    - Items in Verification: `1` → `/admin/verifications` (Lost-side, `Verification Pending`)
-   - Audit is cross-cutting and lives at `/admin/audit`; it is **not** a fifth dashboard tile and there is no on-dashboard activity feed. Administrators reach audit from the relevant report, Claim, Recovery Response, or thread context.
+   - Audit is **cross-cutting and contextual**, not a fifth dashboard tile and not on a global `/admin/audit` route. Administrators reach audit from the relevant report, Claim, Recovery Response, or thread context (`/admin/items/:id/audit` for Found-side; `/admin/lost/:id/audit` for Lost-side). There is no on-dashboard activity feed.
 2. **Pending Claims queue (Found-side).** Riley opens `/admin/claims`. Table: claim ID, item name, claimant display name, submission time, action. Default sort: oldest first (PRD §2.3 UJ-4 "ordered by submission time").
 3. **Single-claim review (no competition).** Riley opens the first claim → `/admin/claims/:id`. Two-column layout: item details (left) and current claim (right). The "Other pending claims on this item" strip at the bottom shows `0` other pending claims. This is the non-competing path.
 4. **Approve (no competition).** Riley clicks `Approve`. Confirmation modal: "Approve this claim? The item will move to *Claim Approved*." No auto-rejection warning because no other pending claims exist. Riley confirms. Claim status → `Approved`. Item status → `Claim Approved`. Email to claimant (PRD FR-29).
@@ -674,9 +697,9 @@ Sam, an unrelated Active member, opens `/listings` and filters `Type = Lost`. He
 
 #### Step 3 — Sam submits Recovery Response
 
-Sam clicks the `I may have found this item` CTA. The RR form `/listings/:id/submit-recovery-response` opens. Required: campus area (prefilled with the Lost report's campus area, editable), observed identifying details (textarea), date found (date picker, bounded to today and 30 days past per FR-8). Optional: exact place found (free text), candidate image. Sam submits. RR row is created with canonical status `Submitted`. Audit: **PRD FR-48 Event 15 — Recovery Response submitted** (`actor = Sam`, `triggered_by = submit`). Lost report remains `Open`; the RR submission alone does not change the Lost-report lifecycle.
+Sam clicks the `I may have found this item` CTA. The RR form `/listings/:id/submit-recovery-response` opens. Required: campus area (prefilled with the Lost report's campus area, editable), observed identifying details (textarea), date found (date picker, bounded to today and 30 days past per FR-8). Optional: exact place found (free text), candidate image. Sam submits. RR row is created with canonical status `Submitted`. Audit: **PRD FR-48 Event 15 — Recovery Response submitted** (`actor = Sam`; PRD-defined event information). Lost report remains `Open`; the RR submission alone does not change the Lost-report lifecycle.
 
-**Email — PRD FR-46 Event 4** ("New Recovery Response on my Lost report") fires to Maya. Maya is notified as soon as Sam's RR enters `Submitted`. (Earlier revisions stated "no email to Maya yet"; correction pass #9 says Event 4 fires.)
+**Email — PRD FR-46 Event 4** ("New Recovery Response on my Lost report") fires to Maya. Maya is notified as soon as Sam's RR enters `Submitted`.
 
 #### Step 4 — Pat submits another Recovery Response
 
@@ -694,8 +717,8 @@ Maya chooses Sam. She clicks **`Select for Verification`** on Sam's RR. Atomical
 - **Sam's RR** transitions `Submitted → Selected for Verification`.
 - **Maya's Lost report** transitions `Open → Verification Pending`. The Lost report now appears in the Administrator's `Items in Verification` queue (PRD FR-50).
 - **Pat's RR** remains `Submitted`. UI shows Pat as **`Submitted — Standby`** (derived/display label only; canonical status is `Submitted`).
-- **Audit — PRD FR-48 Event 17** — "Recovery Response selected for verification", `actor = Maya` (the Lost-report owner), `triggered_by = select_response`.
-- **Email — PRD FR-46 Event 5** — "My response was selected for verification" — fires to **Sam** (the selected responder). No "verification started" email fires to Maya here — Maya initiated the selection herself (correction pass #11).
+- **Audit — PRD FR-48 Event 17** — "Recovery Response selected for verification", `actor = Maya` (the Lost-report owner); PRD-defined event information.
+- **Email — PRD FR-46 Event 5** — "My response was selected for verification" — fires to **Sam** (the selected responder). No "verification started" email fires to Maya here — Maya initiated the selection herself.
 - Maya does not need to email or contact the Administrator before the report enters `Verification Pending`. Once she selects, the queue update is immediate.
 
 #### Step 6 — Administrator reviews verification (Administrator-records)
@@ -712,7 +735,7 @@ Riley sees the Lost report in `Items in Verification`. Riley opens `/admin/lost/
 Maya tells Riley in person at the security desk "that's mine." Riley, on `/admin/lost/:id`, clicks **`Record Match Confirmed (owner says it's theirs)`**. Confirmation modal names Maya and Sam. Riley confirms. Atomically:
 
 - **Sam's RR** transitions `Selected for Verification → Match Confirmed`. **Lost report remains `Verification Pending`** — `Match Confirmed` is an RR status, not a Lost-report status (PRD FR-42).
-- **Audit — PRD FR-48 Event 18** — "Match Confirmed determination recorded", `determined_by = Maya`, `recorded_by = Riley`, `triggering_action = record_match_confirmed`.
+- **Audit — PRD FR-48 Event 18** — "Match Confirmed determination recorded", `determined_by = Maya`, `recorded_by = Riley`.
 - Pat's RR remains `Submitted — Standby`.
 - No email fires to either party at this point (Match Confirmed is not yet an email event).
 
@@ -726,7 +749,7 @@ If Maya tells Riley "that's not mine", Riley clicks **`Record Not a Match (owner
 - **Email — PRD FR-46 Event 6** ("Not a Match") fires to Sam.
 - Pat's RR remains `Submitted` and is again eligible for Maya's selection (the Standby label lifts).
 
-> **Owner-determines / Administrator-records rule (correction #13).** Maya (the owner) is the only party who can decide `Match Confirmed` or `Not a Match`. Riley records what Maya says. Riley cannot record `Match Confirmed` without Maya's determination — even if Maya has told Riley in person "just pick it up", Riley still records `determined_by = Maya`, `recorded_by = Riley`. **If Maya is unreachable or has not provided a determination, the verification remains pending: the selected RR stays `Selected for Verification` and the Lost report stays `Verification Pending`. The Administrator cannot independently record `Match Confirmed` or `Not a Match`. The Administrator cannot infer either outcome from Maya's absence.** No `Not a Match` determination is fabricated. Only an already-valid PRD closure path may end a stuck workflow (see §9.5 Administrator Close path, FR-48 Event 24).
+> **Owner-determines / Administrator-records rule.** Maya (the owner) is the only party who can decide `Match Confirmed` or `Not a Match`. Riley records what Maya says. Riley cannot record `Match Confirmed` without Maya's determination — even if Maya has told Riley in person "just pick it up", Riley still records `determined_by = Maya`, `recorded_by = Riley`. **If Maya is unreachable or has not provided a determination, the verification remains pending: the selected RR stays `Selected for Verification` and the Lost report stays `Verification Pending`. The Administrator cannot independently record `Match Confirmed` or `Not a Match`. The Administrator cannot infer either outcome from Maya's absence.** No `Not a Match` determination is fabricated. Only an already-valid PRD closure path may end a stuck workflow (see §9.5 Administrator Close path, FR-48 Event 24).
 
 #### Step 7 — Confirm Returned (Lost-side)
 
@@ -742,7 +765,7 @@ On confirm:
 - **Email — PRD FR-46 Event 8** ("Successful completion") fires to Sam (the matched responder). This event covers BOTH `Match Confirmed → Completed — Report Returned` (RR-side) AND `Verification Pending → Returned` (Lost-report-side) atomically.
 - **Pat receives no Event 8 email** — only the matched responder is notified of successful completion. Pat's RR is terminal `Resolved — Report Returned` and surfaces in Pat's historical view.
 
-(Email split — correction pass #14: the earlier "no email on Lost Returned" wording is **replaced** with FR-46 Event 7 + Event 8 emails. PRD FR-30's "no other notifications" rule is preserved — only PRD-listed events fire.)
+(Email split — the canonical Lost-side Returned flow fires FR-46 Event 7 + Event 8 atomically. PRD FR-30's "no other notifications" rule is preserved — only PRD-listed events fire.)
 
 #### Step 8 — Sam and Pat's views
 
@@ -770,7 +793,7 @@ On confirm:
 
 **Edge Case E — Riley records Not a Match (Step 6b).** Sam's identifying details don't actually match. Riley records `Not a Match`. Sam's RR → `Not a Match`; Lost report → `Open`. Pat's `Submitted — Standby` RR is again eligible for selection (the Standby label lifts when no RR is currently `Selected for Verification`). PRD FR-46 Event 6 email fires to Sam.
 
-**Edge Case F — Lost report is closed by Administrator (moderation) while Pat's RR is `Submitted`.** Riley opens `/admin/items/:id/close` and closes the Lost report (PRD FR-21, FR-50, FR-48 Event 24). Pat's RR → `Resolved — Report Closed`. Pat sees `Resolved — Report Closed` in `My Recovery Responses`.
+**Edge Case F — Lost report is closed by Administrator (moderation) while Pat's RR is `Submitted`.** Riley opens `/admin/lost/:id` and uses Administrator Close (PRD FR-21, FR-50, FR-48 Event 24). Pat's RR → `Resolved — Report Closed`. Pat sees `Resolved — Report Closed` in `My Recovery Responses`. (Lost-side Administrator actions live under `/admin/lost/:id`; the Found-side `/admin/items/:id` surface does not apply to Lost reports.)
 
 **Edge Case G — A third responder (Quinn) appears late.** If a third member submits an RR after Maya has selected Sam, Quinn's RR enters `Submitted` and is rendered as `Submitted — Standby` (canonical status `Submitted`, derived label). At Confirm Returned, Quinn's RR transitions `Submitted → Resolved — Report Returned` alongside Pat's.
 
@@ -783,16 +806,16 @@ On confirm:
 ### 9.1 Anonymous
 
 - **Landing (`/`).** Brand mark, value proposition (1 paragraph), `Sign in` and `Register` CTAs. Below the fold: a "Browse the listings" link to `/listings` so visitors can see what FindBack is before signing up.
-- **Listings (`/listings`).** Summary view (PRD FR-12, FR-38). Filter bar (keyword, category, location, type, status — but status defaults to `Open`, `Claim Requested`, `Claim Approved` only). Clicking a row routes to `/login?return=/listings/:id` with a message: "Sign in to see item details."
+- **Listings (`/listings`).** Summary view (PRD FR-12, FR-38). Filter bar (keyword, category, location, type, status). The default status filter for non-Administrators includes only the **active discoverable** statuses — namely `Open`, `Claim Requested`, `Claim Approved` (Found) and `Open`, `Verification Pending` (Lost). `Returned` and `Closed` reports are excluded from default discovery. Clicking a row routes to `/login?return=/listings/:id` with a message: "Sign in to see item details."
 
 ### 9.2 Pending
 
 - **Pending landing (`/pending`).** Brand mark, banner: "Your account is pending administrator approval." Single CTA: `Log out`. No nav.
 - **If a Pending user deep-links to a member surface**, render the access screen with a non-blocking message (Section 4.5).
 
-### 9.3 Rejected / Deactivated (login attempt)
+### 9.3 Rejected / Deactivated (login attempt — no member session)
 
-- **Login screen with rejection (`/login` error state).** Single message: "We couldn't sign you in. Your account is not active. If you think this is a mistake, contact your administrator." Form stays available so the user can correct typos if applicable; the same neutral message fires for both Rejected and Deactivated states (no internal distinction surfaces).
+- **Login screen with neutral inactive-account error (`/login` error state).** Single message: "We couldn't sign you in. Your account is not active. If you think this is a mistake, contact your administrator." Form stays available so the user can correct typos if applicable. The same neutral message fires for both Rejected and Deactivated states — no internal distinction surfaces (PRD FR-3, FR-4). Rejected/Deactivated do **not** reach the member surface, do **not** reach `/pending`, and have no dedicated landing route.
 
 ### 9.3a Forgot Password / Password Recovery (PRD FR-51)
 
@@ -805,11 +828,11 @@ The Login screen (`/login`) exposes a `Forgot your password?` action beneath the
 - **Anti-account-enumeration behavior.** The system always shows the neutral confirmation message regardless of whether the email belongs to an account (registered, not registered, `Pending`, `Active`, `Rejected`, `Deactivated`). The response, timing, and any subsequent state must not differ in a way that reveals whether the email is associated with an account. UX does not branch on account state at this surface.
 - **Email is an authentication/security message.** The password-reset email is sent under FR-51 and is NOT part of the eight business/workflow email events (FR-46 Events 1–8). It is NOT a ninth FR-46 event. There is no in-app notification and no in-product surface for password-reset status beyond the confirmation screen.
 - **Password reset does not alter account lifecycle state.** A `Pending` account remains `Pending`, a `Rejected` account remains `Rejected`, a `Deactivated` account remains `Deactivated`. Password recovery does not bypass Administrator approval.
-- **Architecture owns implementation details.** Reset-token format, token hashing/storage, token expiry duration, invalidation strategy, email-provider implementation, backend endpoints, and session handling after reset are not specified by UX.
+- **Architecture owns implementation details.** Reset-token format, token hashing/storage, token expiry duration, invalidation strategy, email-provider / transport implementation, backend endpoints, and session handling after reset are not specified by UX.
 
 ### 9.4 Active Member
 
-- **Dashboard (`/home`).** Two primary CTAs (Report Lost, Report Found). Below: a "My recent activity" card showing the most recent 3 of each from `My Reports` and `My Claims`. Tabs to switch. A "Browse Lost & Found" link.
+- **Dashboard (`/home`).** Two primary CTAs (Report Lost, Report Found) presented as paired primaries per the §5.1 member-dashboard exception. Below the fold: clear entry-point links to the four authoritative participation views: `Browse`, `My Reports`, `My Claims`, and `My Recovery Responses`. There is **no aggregate activity feed** on the member home; members navigate into the dedicated view for each kind of participation (PRD FR-49 four-view partition).
 - **Browse (`/listings`).** Same surface as anonymous listings but with richer view (e.g., filter pills, type toggle, sort).
 - **Item detail (`/listings/:id`).** Relationship-aware rendering per PRD FR-39 visibility matrix (§11.1). **The detail page never auto-reveals more sensitive fields when a member submits a Claim.** Sensitive fields (exact place, identifying details) stay hidden from non-owners, including non-owners who happen to have filed a Claim.
   - **Anonymous.** Public summary only; no detail, no image, no description, no reporter name, no Claim content, no RR content (PRD FR-12, FR-13, FR-38).
@@ -819,19 +842,49 @@ The Login screen (`/login`) exposes a `Forgot your password?` action beneath the
   - **Recovery responder (own RR only).** Same as authenticated-no-relationship, plus their own RR fields (where-found, observed identifying details, candidate image, RR status) and the per-RR thread for their own response. They do **NOT** see the Lost report's Sensitive Fields, other responders' RRs, or other responders' per-RR threads (PRD FR-39).
   - **Lost-report owner.** Full visibility on their own Lost report, including cross-RR visibility and per-RR threads for every RR on their Lost report (PRD FR-39). Plus the Lost-report lifecycle status and `Open → Verification Pending → Returned / Closed` transitions.
   - **Administrator.** Everything plus audit trail.
-- **Report form (`/report/lost`, `/report/found`).** Two-step: type is fixed by URL; fields follow PRD FR-8. Helper text is concise; required indicator is `*`. Date picker for date; native selects for category and campus area.
+- **Report form (`/report/lost`, `/report/found`).** Single-page form; report type is fixed by the entry URL (`/report/lost` or `/report/found` — never both, never by in-form toggle). Fields follow PRD FR-8. Helper text is concise; required indicator is `*`. Date picker for date; native selects for category and campus area. See §10.2 for the canonical form structure.
 - **My Reports (`/my/reports`).** Tabs: `Lost`, `Found`, `Closed` (PRD FR-11 closed states land here as historical). Each row shows type badge, item name, status badge, last-updated timestamp. Edit; Delete when Open and interaction-free (Found: no Claim; Lost: no Recovery Response — see §10.4); Withdraw otherwise. **My Reports contains only reports authored by the member — never Claims and never Recovery Responses** (PRD FR-49).
 - **My Claims (`/my/claims`).** Tabs: `Pending`, `Approved`, `Rejected`. Each row shows the item name, item type, status badge, claim submission time. Click → claim detail. **My Claims contains only Claims the member submitted against other members' Found reports — never own authored reports** (PRD FR-49).
 - **Claim detail (`/my/claims/:id`).** Item summary (link), claim reason, identifying details, date lost, claim status. Below: per-Claim message thread (§13) — read-only once the Claim is `approved`, `rejected`, or the item is `returned`/`closed` (§13.5). The thread is writable only while the Claim is `pending` and the item is not yet returned/closed.
 - **My Recovery Responses (`/my/recovery-responses`).** Tabs by canonical RR status. Each row shows related Lost item name, canonical RR status badge (with `Submitted — Standby` derivation when applicable), submission time. Click → RR detail. Historical terminal RRs (e.g., `Resolved — Report Returned`, `Completed — Report Returned`, `Not a Match`, `Withdrawn`) remain visible (PRD FR-41). **My Recovery Responses contains only RRs the member submitted against other members' Lost reports** (PRD FR-49).
 - **Recovery Response detail (`/my/recovery-responses/:id`).** Lost report summary, RR fields (where-found area + exact place, observed identifying details, date found, candidate image if provided), canonical status, per-RR message thread (PRD FR-47). Withdraw action available only while `Submitted` and not currently `Selected for Verification`. Read-only once terminal.
-- **Account (`/account`).** Profile (read-only), Theme toggle, Logout. Email change and password change are out of scope per PRD — keep profile read-only and remove any affordance that would suggest they exist.
+- **Account menu.** Profile entry (FR-52) and Logout. The menu links into the **Member Profile** surface (`/my/profile`); see §9.4a. Email change and password change remain out of scope per PRD; no affordance suggests they exist. The Account menu is navigation chrome, not a separate page; there is no `/account` route. Theme is **not** in the Account menu — it is a separate topbar icon control on every surface (see §19).
+
+### 9.4a Member Profile (PRD FR-52)
+
+> Authority: PRD FR-52. The Member Profile exists solely to support identification of the member within FindBack. It does not introduce a general account-management or social-profile system.
+
+- **Route.** `/my/profile`. Linked from the Account menu and from the topbar account chrome. There is **no public member-profile page** (no `/members/:id` route) and no profile edit by another member.
+- **Profile view (read).** Three fields:
+  - `Display name` (editable).
+  - `Self-declared role` (editable; one of `Student`, `Employee`, `Visitor`, `Other`).
+  - `Registered email` (**read-only**). Email change is not in scope per FR-52.
+- **Profile edit interaction.** A single `Edit` action on the view surface toggles the display-name and role inputs into editable state. The registered email field is rendered as disabled text with helper: "Email changes aren't supported in FindBack."
+- **Save / cancel.** `Save` (primary) commits the change. `Cancel` discards. On save, success toast: "Profile updated." The server writes a non-numbered audit record of type `Member profile edited` (FR-52 — see §17.5a) with actor (the editing member), timestamp, changed fields (e.g., `displayName`, `role`), and previous values. The record is Administrator-visible in the contextual account / profile audit history (§17.7). It is distinct from FR-31 / FR-48 workflow events; no FR-46 email fires on profile edit (PRD FR-30). No workflow audit-event number is consumed by this record.
+- **Forbidden affordances (do not introduce).** No avatar / profile photo. No bio. No social links. No notification preferences. No self-deactivation. No self-deletion. No edit-by-other. No public profile page. No edit of email, lifecycle status, or Administrator flag.
+- **Other members' visibility.** Other members do **not** see an arbitrary profile page. They see identifying information only where the PRD workflow/visibility rules allow it (e.g., the report owner's display name on a report; the responder's display name on a Recovery Response; the message author in a thread) — see §11.1.
+- **Failure states.** Validation error: inline message under the offending field; focus the first invalid field. Server error: "Something went wrong on our side. Try again." — preserve input.
+- **Active vs Pending.** The Profile is visible to an Active member. A Pending member authenticates but does not see profile edit affordances (Pending users do not get member capabilities per §9.2). Rejected / Deactivated accounts do not reach the member surface.
+
+### 9.4b Administrator Edit Report (PRD FR-53)
+
+> Authority: PRD FR-53. Narrow operational capability for moderation and operational correction. Not unrestricted database editing.
+
+- **Route.** `/admin/items/:id/edit` (Found-side) and `/admin/lost/:id/edit` (Lost-side). Linked from the Administrator item administration surface (`/admin/items/:id` and `/admin/lost/:id`) as an `Edit Report` action (next to the existing `Close` action).
+- **Editability rule.** The action is **enabled** while the report is in any non-terminal status: `Open`, `Claim Requested`, `Verification Pending`, `Claim Approved`. The action is **not shown** (not merely disabled) on `Returned` or `Closed` reports. There is no `Edit Report` affordance on terminal reports.
+- **Editable fields.** Report name, category, description, date, campus area (enum), exact-place free text, identifying details, image replacement. That is the full set; nothing else is editable through this surface.
+- **Forbidden edits (do not introduce affordances for).** Reporter identity. Report type (Lost/Found) — type is fixed at creation. Report lifecycle status (use FR-21 close paths and FR-22/FR-42 lifecycle transitions). Any Claim content. Any Recovery Response content. Any audit-trail entry. Any Returned-confirmation field. Any substitute-receiver field. Any receiver history.
+- **Auditability.** Every Administrator report edit writes a non-numbered audit record (FR-53 — see §17.5a) with acting administrator, timestamp, report ID, changed fields, and previous values. The audit record is append-only; previous audit entries are never edited or deleted. No report-edit email fires (PRD FR-30). The record appears in the contextual report audit at `/admin/items/:id/audit` (Found) or `/admin/lost/:id/audit` (Lost). It does **not** introduce a workflow audit event number.
+- **Wording.** The action is labeled `Edit Report` (not `Edit`). It does not look like an unrestricted data-administration panel. The page header reads "Edit report — {item name}" with a one-line description naming moderation or operational correction as the purpose.
+- **Confirm.** A two-step confirmation modal names the report, the changed fields (diff), and the acting administrator. Cancel returns to the report admin surface.
+- **Outcome.** The member-facing item detail surface re-renders on the next visit; no member email fires. The audit-trail row appears immediately in `/admin/items/:id/audit` (or `/admin/lost/:id/audit`).
+- **Not a queue.** This is **not** an Administrator operational queue and does **not** add a fifth dashboard tile. There is no `Reports to edit` queue.
 
 ### 9.5 Administrator
 
-- **Dashboard (`/admin`).** **Four** count tiles (PRD FR-33; correction #26): Pending Registrations, Pending Claims (Found-side), Items Awaiting Return (Found-side `Claim Approved`), Items in Verification (Lost-side `Verification Pending`). Each tile is a link to the corresponding queue. Audit is **not** one of the four operational queues (correction #26); it is cross-cutting, available from the relevant report, Claim, RR, or thread context and at `/admin/audit`. There is no on-dashboard activity feed.
+- **Dashboard (`/admin`).** **Four** count tiles (PRD FR-33): Pending Registrations, Pending Claims (Found-side), Items Awaiting Return (Found-side `Claim Approved`), Items in Verification (Lost-side `Verification Pending`). Each tile is a link to the corresponding queue. Audit is **not** one of the four operational queues; it is **cross-cutting and contextual** — reached from `/admin/items/:id/audit` (Found-side) or `/admin/lost/:id/audit` (Lost-side). There is **no global `/admin/audit` route**, no on-dashboard activity feed, and no audit link in the topbar.
 - **Pending Registrations (`/admin/registrations`).** Table: name, email, self-declared role, registration timestamp, action. Action: `Approve` (primary), `Reject` (danger, opens reason modal, ≥ 5 chars).
-- **Pending Claims (`/admin/claims`).** Table: claim ID, item name (link to item), claimant display name, submission time, action. Action: `Review` → claim review screen. **Found-side only** (correction #26).
+- **Pending Claims (`/admin/claims`).** Table: claim ID, item name (link to item), claimant display name, submission time, action. Action: `Review` → claim review screen. **Found-side only**.
 - **Items Awaiting Return (`/admin/awaiting-return`).** Table: item name, claimant name, approval time, action. Action: `Confirm Returned`. **Found-side only** — Found reports in `Claim Approved`.
 - **Items in Verification (`/admin/verifications`).** Table: Lost report name, Lost-report owner, currently selected responder, verification started at, action. Action: `Manage verification` → Lost-side verification screen. **Lost-side only** — Lost reports in `Verification Pending`.
 - **Claim review (`/admin/claims/:id`).** Two-column on desktop, stacked on mobile:
@@ -844,17 +897,26 @@ The Login screen (`/login`) exposes a `Forgot your password?` action beneath the
 - **Confirm Returned — Found (`/admin/items/:id/return`).** Two-column layout. Left: item summary, approved claimant. Right: form. Default state: receiver = approved claimant (radio "Default receiver" selected). Substitute state: radio "Substitute receiver" → three required fields appear (name, authorization affirmation checkbox, relationship radio).
 - **Lost-side verification (`/admin/lost/:id`).** Two-column layout. Left: Lost report summary (item details, owner, current Lost-report lifecycle status, selected responder). Right: the selected Recovery Response card with where-found, observed identifying details, candidate image, current canonical status, per-RR thread entry point. Action bar: **Record owner's Match Confirmed** | **Record owner's Not a Match** | **Confirm Returned (after Match Confirmed)** | **Administrator Close (pre-Match Confirmed; FR-48 Event 24)** | **Exceptional Administrator cancellation (post-Match Confirmed; FR-48 Event 25)**. Wording reflects owner-determines / Administrator-records (§4.7). The `Cancel workflow` action is **not** a generic pre-Match "cancel to Open"; it has been split into two named, scoped actions tied to specific PRD FR-48 events.
 - **Confirm Returned — Lost (`/admin/lost/:id/return`).** Mirror of Found-side Confirm Returned (default = Lost-report owner; substitute same three fields).
-- **Account management (`/admin/accounts`).** Search by name or email. Table: name, email, role state, registration date, action. Action: `Deactivate`. The PRD does **not** impose self-deactivation restrictions on administrators, nor a "last active administrator" minimum. If such governance is later desired, it requires a Product/Architecture decision.
+- **Account management (`/admin/accounts`).** Search by display name or registered email. Table columns surface the distinct account concepts explicitly (no ambiguous "role state" wording):
+  - `Display name` (the member's FR-52 display name).
+  - `Registered email`.
+  - `Self-declared role` (one of `Student`, `Employee`, `Visitor`, `Other` — FR-52 editable by the member; Administrators do not edit this field).
+  - `Account state` (one of `Pending`, `Active`, `Rejected`, `Deactivated`).
+  - `Registration date`.
+  - `Action`: `Deactivate` where permitted by current PRD governance.
+  - The `Administrator flag` is a separate authorization attribute; it is **not** edited or surfaced as a column on this surface. Email is **not** edited here. The member's profile is **not** edited here.
+  - Each row exposes an expandable account-detail disclosure for contextual account / profile audit history (FR-52 profile-edit records) per §17.7.
+- The PRD does **not** impose self-deactivation restrictions on administrators, nor a "last active administrator" minimum. If such governance is later desired, it requires a Product/Architecture decision. Audit trail records deactivation with administrator and timestamp (PRD FR-31).
 
 ### 9.6 Lost-side Recovery Response surfaces (member)
 
 - **Submit Recovery Response (`/listings/:id/submit-recovery-response`).** Eligibility: Active member, item is Lost, status is Open or Verification Pending before Match Confirmed, member is not the Lost-report owner. CTA on the Lost item detail page reads `I may have found this item` (NOT "Submit claim").
 - **My Recovery Responses (`/my/recovery-responses`).** Each row: related Lost report name, canonical RR status (with `Submitted — Standby` derivation when applicable), submission time, link to per-RR thread. Historical terminal RRs retained.
-- **Recovery Response detail (`/my/recovery-responses/:id`).** Lost report summary, RR fields (where-found, observed identifying details, candidate image if provided, date found), canonical status, per-RR thread. Withdraw action available **only while** `Submitted` and not currently `Selected for Verification` (correction #31). Read-only once terminal.
+- **Recovery Response detail (`/my/recovery-responses/:id`).** Lost report summary, RR fields (where-found, observed identifying details, candidate image if provided, date found), canonical status, per-RR thread. Withdraw action available **only while** `Submitted` and not currently `Selected for Verification`. Read-only once terminal.
 
 ---
 
-## 10. Reporting UX (Section 7 of your PRD brief)
+## 10. Reporting UX (PRD FR-6–FR-11)
 
 > Authority: PRD FR-6, FR-7, FR-8, FR-9, FR-10, FR-11.
 
@@ -998,7 +1060,7 @@ The UX reinforces that sensitive fields are protected **by design**. When a fiel
 - Submitting a Claim on a Found report does **not** reveal the report's Sensitive Fields (exact place, identifying details) to the claimant. The claimant sees only their own Claim details and the per-Claim thread. Sensitive Fields on the Found report remain hidden from the claimant; only the Found-report owner and Administrators see them.
 - Submitting a Recovery Response on a Lost report does **not** reveal the report's Sensitive Fields to the responder. The responder sees only their own RR fields (where-found, observed identifying details, date found, candidate image) and their own per-RR thread. Sensitive Fields on the Lost report remain hidden from non-owner responders.
 
-This is the **explicit correction** of an earlier revision that described a "+ now visible to you" affordance triggered by Claim submission. That affordance violates FR-37 (sensitive fields visible to owner + Administrator only). The affordance is removed across all surfaces (claim detail, RR detail, item detail, thread rendering, summary cards, audit previews, email previews).
+Sensitive information never dynamically unlocks because a member submitted a Claim or a Recovery Response.
 
 ---
 
@@ -1205,7 +1267,7 @@ The PRD lists exactly **eight** notification events. Events 1–3 cover registra
 - **No email on Lost-report → `Closed` (withdrawal or moderation)** — PRD FR-30's "no other notifications" rule applies.
 - **No email on RR transitions during `Verification Pending` aside from the events above.** Specifically, the `Match Confirmed` recording event itself does not email either party — only `Returned` emails via Events 7 and 8.
 
-**Reuse with Found-side events.** The PRD does not duplicate copy between FR-46 and the Found-side notification events (FR-27, FR-28, FR-29). UX copy for Lost-side events follows the same warmth-and-clarity register as Found-side emails; the templates themselves are an architecture decision (PRD A6).
+**Reuse with Found-side events.** The PRD does not duplicate copy between FR-46 and the Found-side notification events (FR-27, FR-28, FR-29). UX copy for Lost-side events follows the same warmth-and-clarity register as Found-side emails; the templates themselves (subject rendering, MIME layout, transport wiring) are an architecture decision (PRD A6). UX owns the user-facing copy direction; architecture owns the email transport implementation.
 
 ---
 
@@ -1274,12 +1336,12 @@ The administrator lands back on the originating queue (Awaiting Return for Found
 
 ### 15.1 Dashboard (`/admin`)
 
-- **Four count tiles** at the top, each linking to the corresponding queue (PRD FR-33; correction #26):
+- **Four count tiles** at the top, each linking to the corresponding queue (PRD FR-33):
   1. Pending Registrations: count + label.
   2. Pending Claims (Found-side): count + label.
   3. Items Awaiting Return (Found-side, `Claim Approved`): count + label.
   4. Items in Verification (Lost-side, `Verification Pending`): count + label.
-- Audit is **not** one of the four operational queues (correction #26). It is cross-cutting, available from any item / Claim / RR detail and at `/admin/audit`. There is no on-dashboard activity feed.
+- Audit is **not** one of the four operational queues. It is **cross-cutting and contextual**, available from the relevant item, Claim, RR, or thread detail at `/admin/items/:id/audit` (Found-side) or `/admin/lost/:id/audit` (Lost-side). There is **no global `/admin/audit` route** and no on-dashboard activity feed.
 - **Empty states.** If all counts are zero, each tile shows "All caught up." with a subtle check icon. Riley can still navigate to the queues.
 
 ### 15.2 Pending Registrations queue (`/admin/registrations`)
@@ -1317,9 +1379,10 @@ The administrator lands back on the originating queue (Awaiting Return for Found
 
 ### 15.7 Account management (`/admin/accounts`)
 
-- Search by name or email.
-- Table: name, email, role state, registration date, action.
-- Action: `Deactivate` (administrator-only). The PRD does **not** impose self-deactivation restrictions on administrators, nor a "last active administrator" minimum. If such governance is later desired, it requires a Product/Architecture decision.
+- Search by display name or registered email.
+- Table columns: `Display name`, `Registered email`, `Self-declared role` (Student / Employee / Visitor / Other), `Account state` (Pending / Active / Rejected / Deactivated), `Registration date`, action.
+- Action: `Deactivate` where permitted by current PRD governance. Administrators do not edit `Self-declared role`, `Registered email`, or any profile field here. The `Administrator flag` is a separate authorization attribute and is **not** edited or surfaced as a column.
+- Each row exposes an expandable account-detail disclosure showing the contextual account / profile audit history (FR-52) per §17.7. This contextual access is not a new operational queue.
 - Audit trail records deactivation with administrator and timestamp (PRD FR-31).
 
 ---
@@ -1360,23 +1423,32 @@ The administrator lands back on the originating queue (Awaiting Return for Found
 
 - Single click from the Account menu. Clears session. Routes to `/`.
 
-### 16.6 Account settings (`/account`)
+### 16.6 Account controls
 
-- Read-only profile (name, email, role).
-- Theme toggle (Section 19).
+- **Member Profile entry** linking to `/my/profile` (see §9.4a). The Profile surface is the editable surface; the Account menu is the entry point.
 - Logout button.
-- **No email change, no password change** (not in scope; PRD is silent; introducing them would be scope creep).
+- The Account menu is a navigation control, not a separate page; there is no `/account` route.
+- **Theme** is **not** part of the Account menu. Theme is a separate topbar icon control (see §19).
+- **No email change, no password change** (not in scope; PRD FR-52 explicitly does not introduce email change; FR-51 is the password recovery flow and is reached from `/login` → `Forgot your password?`, not from the Account menu).
 
 ---
 
 ## 17. Audit Trail UX (Administrator-Only)
 
-> Authority: PRD FR-31, FR-32.
+> Authority: PRD FR-31, FR-32, FR-48, FR-52, FR-53.
+>
+> - FR-31 events 1–14 = numbered core/Found/account workflow-lifecycle catalog.
+> - FR-48 events 15–30 = numbered Lost-side catalog.
+> - FR-52 and FR-53 add **non-numbered** audit record types (`Member profile edited`, `Report edited by Administrator`) that share the append-only, Administrator-only-visible audit model. They do **not** introduce event 31 or any later event number; events 1–30 are unchanged.
+> - All audit records are append-only; previous entries are never edited or deleted.
+> - Full audit visibility remains Administrator-only.
 
 ### 17.1 Access
 
 - Administrators only. PRD FR-32 explicitly forbids members from seeing audit entries.
-- Surface: `/admin/items/:id/audit`.
+- Surface (Found-side, contextual): `/admin/items/:id/audit`.
+- Surface (Lost-side, contextual): `/admin/lost/:id/audit`.
+- **No global `/admin/audit` route.** Audit is reached from the relevant report, Claim, Recovery Response, or thread context only.
 
 ### 17.2 Layout
 
@@ -1385,7 +1457,7 @@ A reverse-chronological list. Each row is an event.
 - **Timestamp.** Full date + time, in the organization's locale (en-US — i18n deferred per PRD §5).
 - **Actor.** Display name + role tag (Member / Administrator).
 - **Action verb.** Plain-English verb (`created`, `edited`, `claimed`, `approved`, `rejected`, `auto-rejected`, `returned`, `withdrawn`, `closed`, `registered`, `deactivated`, `message posted`).
-- **Target.** Item or claim identifier.
+- **Target.** Relevant entity identifier — report/item, Claim, Recovery Response, or account/profile as applicable.
 - **Additional fields.** Per PRD FR-31: claim reason, identifying details (sensitive but admin-visible), substitute receiver fields, etc. These render as a small expandable row ("Show details") so the audit trail stays scannable.
 
 ### 17.3 Filters
@@ -1401,7 +1473,9 @@ Each event has a small icon and a left border accent in the status color, so Ril
 | Event | Icon | Accent color |
 |---|---|---|
 | Report created | plus-circle | `{colors.status-report.open}` |
-| Report edited | edit | `{colors.light.on-surface-variant}` |
+| Report edited by reporter (FR-31) | edit | `{colors.light.on-surface-variant}` |
+| Report edited by Administrator (FR-53; non-numbered audit record — not a workflow event) | shield-edit | `{colors.light.on-surface-variant}` |
+| Member profile edited (FR-52; non-numbered audit record — not a workflow event) | user-edit | `{colors.status-account.active}` |
 | Report withdrawn (Found, by reporter) | archive | `{colors.status-report.closed}` |
 | Report withdrawn (Lost, by reporter) | archive | `{colors.status-report.closed}` |
 | Report closed by admin (Found) | archive-x | `{colors.status-report.closed}` |
@@ -1436,11 +1510,35 @@ Per PRD FR-32, members see a *member-facing* status history on their own items: 
 
 - A short list (most recent first, max 3 entries).
 - Each row: timestamp, status label, "by {actor}" (no audit verb, no additional fields).
-- A "View full status" disclosure at the bottom — but PRD FR-32 says the full audit trail is admin-only, so the disclosure is *not* shown to members. Members see only the member-facing status history.
+- Members see only the short member-facing status history. No control or disclosure exposes the full Administrator audit trail.
+
+### 17.5a Non-numbered audit record types (PRD FR-52, FR-53)
+
+The numbered workflow-lifecycle audit-event catalog is **events 1–14 (FR-31) + events 15–30 (FR-48)**. PRD FR-52 and FR-53 add **non-numbered** audit record types. They do not introduce event 31 or any later event number; events 1–30 are unchanged. All audit records below are append-only and Administrator-only.
+
+- **`Member profile edited` (FR-52).** Required by FR-52. Recorded every time an Active member saves a change to their own Member Profile (`/my/profile`). Does **not** receive a numbered workflow-event ID. No FR-46 email fires. Members do not see this record; Administrators see it in the contextual account/profile audit history (§17.7). Expanded fields visible to Administrators: `actor` (the member making the edit), `member/account target`, `timestamp`, `changed fields` (e.g., `displayName`, `role`), and `previous values`.
+- **`Report edited by Administrator` (FR-53).** Recorded every time an Administrator saves a change via the FR-53 Edit Report surface (`/admin/items/:id/edit`, `/admin/lost/:id/edit`). Does **not** receive a numbered workflow-event ID. No FR-46 email fires. Expanded fields visible to Administrators: `acting Administrator` (actor), `report ID`, `timestamp`, `changed fields`, `previous values`. The reporter-facing generic reporter edit remains the existing **`Report edited by reporter`** entry — distinct label, distinct actor.
+
+The numbered `Report edited` (FR-31 reporter-edit event) is **not** relabeled; FR-31 Event 8 semantics are unchanged. The FR-52 and FR-53 audit records above are additional non-numbered record types.
 
 ### 17.6 Audit access log (PRD §10 Observability)
 
-The PRD requires audit-trail reads to be logged separately from the audit trail. UX does not surface this log to administrators; it is a backend concern. (If exposed later, it would be in `/admin/access-logs`, but that surface is not in scope.)
+The PRD requires audit-trail reads to be logged separately from the audit trail. UX does not surface this log to administrators. Audit-trail-read access logging is a backend/observability concern and is not surfaced in the current UX.
+
+### 17.7 Contextual account / profile audit access (PRD FR-52)
+
+UX provides contextual account / profile audit access **inside the existing Administrator account-management surface** (`/admin/accounts`). It is not a new operational queue and is not on a global `/admin/audit` route.
+
+- **Surface.** Within `/admin/accounts`, when an Administrator opens an account row, an expandable account-detail panel / contextual disclosure reveals the account / profile audit history for that specific account.
+- **Records shown.** The contextual disclosure surfaces the account-relevant audit records already defined by the PRD — specifically:
+  - **FR-31 Event 11** — Registration approved (actor, target account, timestamp).
+  - **FR-31 Event 12** — Registration rejected (actor, target account, timestamp, rejection reason).
+  - **FR-31 Event 13** — Account deactivated (actor, target account, timestamp).
+  - **FR-52 non-numbered `Member profile edited`** records (actor, member/account target, timestamp, changed fields, previous values).
+  No new audit events are introduced. No event is renumbered.
+- **Out of scope here.** Report, Claim, Recovery Response, and thread audit history are **not** moved into `/admin/accounts`. They remain reachable from the contextual entity audit routes — `/admin/items/:id/audit` for Found reports and `/admin/lost/:id/audit` for Lost reports.
+- **No new route, no new queue.** This contextual disclosure lives inside `/admin/accounts`; it does not introduce a fifth dashboard tile, an `Account Audit` queue, a `Profile Audit` queue, a global `/admin/audit` route, or a new workflow audit numbering scheme.
+- **Visibility.** Administrator-only. Members do not see other members' account audit history. The member's own profile-edit history is not surfaced on `/my/profile` (members see only the current profile state).
 
 ---
 
@@ -1492,7 +1590,7 @@ PRD §10 declares **WCAG 2.1 AA** as the design target. UX-implementation checkl
 - **Skip-to-content** link is the first focusable element. The destination is `<main id="main" tabindex="-1">` so screen-reader users can jump past the nav (Finding D2). The destination gets focus on activation.
 - **Modals trap focus** and return focus to the trigger on close.
 - **Dropdowns and menus** open with Enter/Space, close with Escape, navigate with Arrow keys.
-- **Admin queue tables** (registrations, claims, awaiting return) implement the ARIA grid pattern: `role="grid"`, `role="row"`, `role="gridcell"`, with roving `tabindex` on the focused row and arrow-key navigation between rows (Finding D3). Cells inside the focused row are reached with Tab. This keeps keyboard navigation aligned with screen-reader announcement order.
+- **Admin queue tables** (registrations, claims, awaiting return, **items in verification**) implement the ARIA grid pattern: `role="grid"`, `role="row"`, `role="gridcell"`, with roving `tabindex` on the focused row and arrow-key navigation between rows (Finding D3). Cells inside the focused row are reached with Tab. This keeps keyboard navigation aligned with screen-reader announcement order. The four operational queues (Pending Registrations, Pending Claims, Items Awaiting Return, Items in Verification) all use this pattern.
 - **Message thread** (per-claim) navigation: each message is keyboard-reachable in document order; the newest message receives `tabindex="-1"` after send and `scrollIntoView` is invoked (Finding D4).
 
 ### 20.2 Color contrast
@@ -1512,7 +1610,7 @@ PRD §10 declares **WCAG 2.1 AA** as the design target. UX-implementation checkl
 - **Toasts** — decision rule (Finding E3): successful non-blocking actions (filters cleared, claim submitted) use `role="status"` (polite); validation or session errors use `role="alert"` (assertive).
 - **Audit trail row aria-label** template per event type (Finding E2): each row carries `aria-label="{Action verb} {actor display name} {target} at {timestamp}"`. The visible text is the same content in semantic order; the `aria-label` is the screen-reader-friendly single-string summary.
 - **Message thread live region** (Finding E4): the message list carries `aria-live="polite"`, so a newly sent message (and any message received on page reload) is announced without a focus change.
-- **Sensitive-field transitions** (Finding H2): when a field becomes newly visible to a member (e.g., they submit a claim and the claimant's identifying details become visible), the affected section is announced via `aria-live="polite"` once.
+- **Conditional form reveals** (Finding H2): when a previously hidden field group becomes newly visible as a result of a legitimate form-level condition (e.g., the Administrator selects the `Substitute receiver` radio on the Confirm Returned form and the substitute-receiver field group appears), the newly revealed field group is announced via `aria-live="polite"` once. Sensitive report fields never become newly visible to non-owner members via Claim or Recovery Response submission — see §11.4.
 
 ### 20.4 Touch targets
 
@@ -1551,7 +1649,7 @@ Web application across desktop (≥ 1024 px), tablet (640–1023 px), mobile (< 
 | Claim review (admin) | Two-column (current Claim + Found item); other Pending Claims shown as a navigable reference/strip below | Two-column (narrower) or stacked sections; other Pending Claims reference/strip remains navigable | Single-column current Claim review; "Other pending claims" disclosure/list below |
 | Message thread | Thread + composer stacked | Same | Same; composer pins to bottom on focus |
 | Confirm Returned | Two-column | Two-column (narrower) | Single column |
-| Audit trail | List view | List view | List view; details collapse |
+| Audit trail | Table | Table | Stacked cards per event (column headers become row labels; per-event "Show details" disclosure remains) |
 | Administrator dashboard | 4 count cards in a responsive grid (Pending Registrations, Pending Claims, Items Awaiting Return, Items in Verification) | 2 × 2 card grid | 4 stacked cards |
 | Tables (admin queues) | Table | Table with horizontal scroll | Cards (each row becomes a card with stacked fields) |
 
@@ -1582,14 +1680,14 @@ This section explicitly enumerates what UX owns and what UX does *not* own, to p
 - Database schema (FR-8 fields, FR-31 events).
 - API architecture (REST vs GraphQL, endpoints).
 - Image storage provider and budget (PRD OQ-2).
-- Email provider and templates (PRD A6).
-- Session implementation (cookie-based; PRD A2).
+- Email provider / transport implementation. UX owns the user-facing email copy direction (subject line intent, body semantics) per FR-27, FR-28, FR-29, FR-46, and FR-51. Architecture owns the provider, transport, delivery implementation, retry policy, bounce handling, and template rendering pipeline.
+- Session mechanism, storage strategy, revocation implementation, and expiry enforcement — Architecture-owned per PRD A2. The PRD requires revocable sessions with inactivity expiry; UX does not prescribe the mechanism (no cookies, JWT, Redis, database sessions, or token sessions are imposed by UX).
 - Authentication password hashing (PRD §10 Security).
 - Concurrency implementation for competing claims (PRD D3 — "Implementation is a database-level atomic write per item").
 - CSRF, rate limiting, CSP, image URL non-predictability (PRD §10 Security).
-- Audit-trail retention policy (PRD FR-31).
+- **Audit storage topology and implementation — Architecture-owned.** The audit retention **behavior** is defined by the PRD (the audit log is append-only, administrator-only, scoped to parent entities). Architecture decides how and where audit entries are stored; UX renders the audit-trail surface. The PRD's retention behavior — not its implementation — is preserved verbatim here.
 - Campus area enum configuration mechanism (PRD OQ-1).
-- Date lost 365-day hard rule vs relaxable (PRD OQ-3) — PM-owned.
+- Date lost 365-day rule (PRD OQ-3) — see §22.3; UX does not delegate any choice here.
 
 ### 22.3 Open and resolved upstream questions
 
@@ -1601,7 +1699,7 @@ The final PRD opens **OQ-1, OQ-2, OQ-3** for downstream owners. **OQ-4** and **O
 |---|---|---|
 | OQ-1 (Campus area enum) | Architecture | UX renders the list as a native select; the list itself comes from deployment configuration. |
 | OQ-2 (Image storage budget) | Architecture | UX caps at 5 MB / JPEG/PNG/WebP per FR-8. No UX change needed. |
-| OQ-3 (Date lost beyond 365 days) | PM | UX supports a server-side override if PM relaxes the rule; no UX change otherwise. |
+| OQ-3 (Date lost beyond 365 days) | PM | UX implements the current 365-day rule (PRD §4.8). Any future relaxation requires a later Product decision; no override is designed in the current FindBack project scope. |
 
 #### Resolved / retired upstream questions
 
@@ -1636,7 +1734,7 @@ The final PRD opens **OQ-1, OQ-2, OQ-3** for downstream owners. **OQ-4** and **O
 
 These are surfaced by UX for PM/Architecture follow-up. None are blockers for downstream story creation; all are documented to preserve traceability.
 
-- **UX-OQ-A: Empty email-state handling.** If a user's email bounces (PRD FR-27/28/29), no UX surface surfaces this to administrators. Should the administrator item page indicate "claimant's email is bouncing"? Recommendation: *defer to v2; not in scope.* Logged here so it isn't lost.
+- **UX-OQ-A: Empty email-state handling.** If a user's email bounces (PRD FR-27/28/29), no UX surface surfaces this to administrators. Should the administrator item page indicate "claimant's email is bouncing"? Recommendation: *defer to a future PRD revision; not in scope for the current FindBack project scope.* Logged here so it isn't lost.
 - **UX-OQ-B: Approve claim after status has changed.** If the administrator's screen shows a Pending claim and another admin approves it while Riley is reading, the server-side conflict response handles it (Section 6.4). If the Claim state changes while an Administrator is reviewing it, the UI must surface the updated state when the next server interaction or architecture-defined freshness mechanism detects it. Architecture owns the freshness mechanism.
 - **UX-OQ-C: Audit trail length.** With 10,000 reports × 50 events (PRD NFR target), the audit trail could be long. UX uses reverse-chronological pagination (load 25, "Load older" button). No infinite scroll (which can confuse screen readers).
 
@@ -1700,6 +1798,9 @@ This section is the **rubric walker Pass 1 reference** for downstream consumers 
 | FR-48 (Lost-side Audit Events 15–30) | §17.4 (RR audit table) |
 | FR-49 (Four-View Member Partition) | §3, §9.4 |
 | FR-50 (Items-in-Verification Queue) | §15.5 |
+| FR-51 (Forgot Password / Password Recovery) | §9.3a (route + neutral confirmation + lifecycle preservation; password-reset email documented separately from FR-46 Events 1–8) |
+| FR-52 (Member Profile) | §9.4a (`/my/profile`; editable display name + self-declared role; read-only email; no public profile page); profile-edit audit record `Member profile edited` — non-numbered, see §17.5a; contextual account / profile audit history via `/admin/accounts` per §17.7 |
+| FR-53 (Administrator Report Edit) | §9.4b (`/admin/items/:id/edit`, `/admin/lost/:id/edit`; non-terminal only; editable fields listed; no lifecycle / Claim / RR / audit / receiver / status / type / reporter edits; audit-recorded; no email); report-edit audit record `Report edited by Administrator` — non-numbered, see §17.5a; appears in the contextual report audit at `/admin/items/:id/audit` (Found) or `/admin/lost/:id/audit` (Lost) |
 
 ### 24.2 User journeys
 
@@ -1715,7 +1816,7 @@ This section is the **rubric walker Pass 1 reference** for downstream consumers 
 
 | Principle | UX translation |
 |---|---|
-| Simple | §1.2; one primary action per screen; native controls; helper text concise |
+| Simple | §1.2; transactional screens use one dominant primary action; the `/home` dashboard uses the documented two equal task-entry actions for `Report Lost Item` and `Report Found Item` (§5.1); native controls; helper text concise |
 | Trustworthy | §11.4 (visibility is intentional); audit trail visible to admins; no silent state changes |
 | Clear | §5.8 (every status has color + icon + text); §4.2 (canonical status labels) |
 
@@ -1766,6 +1867,20 @@ The baseline brief explicitly defers brand and visual identity to this UX phase.
   - §22.3 retires OQ-4 and OQ-5 as adopted UX recommendations; the per-RR thread read-only lifecycle is recorded as UX-RR-1 (a resolved UX decision, not a PRD open question).
 - **OQ-1 / OQ-2 / OQ-3 remain open** and forwarded to Architecture / PM as in §22.3.
 - All other UX recommendations stay within the PRD's existing rules.
+- **Reconciliation pass — 2026-09-17.** Conformed UX to the now-frozen Product Brief and PRD. Specifically:
+  - §9.4 member dashboard simplified: removed the prior `Recent activity` aggregation; the dashboard now shows entry points only (Report Lost, Report Found, Browse, My Reports, My Claims, My Recovery Responses) — no fifth aggregation that mixes the four authoritative views.
+  - §9.5 dashboard / §15.1 / §3.1 IA / UJ-4 step 1: removed the global `/admin/audit` route concept; audit is **cross-cutting and contextual** at `/admin/items/:id/audit` and `/admin/lost/:id/audit` only.
+  - §9.4a added (FR-52 Member Profile): route `/my/profile`; editable display name + self-declared role; read-only email; explicit forbidden-affordance list (no avatar, bio, social, notification prefs, email change, self-deactivation, self-deletion, edit-by-other, public profile page, lifecycle/Administrator-flag edits).
+  - §9.4b added (FR-53 Administrator Report Edit): routes `/admin/items/:id/edit` and `/admin/lost/:id/edit`; non-terminal reports only; explicit editable-field set and explicit forbidden edits (reporter, type, lifecycle, Claim content, RR content, audit entries, Returned/Closed confirmation, receiver history); audit-recorded; no email; not a queue.
+  - §9.3a (FR-51 Forgot Password) verified: neutral copy, anti-account-enumeration, lifecycle preservation (Pending / Active / Rejected / Deactivated all unchanged), password-reset email documented as an authentication/security message separate from FR-46 Events 1–8.
+  - Account lifecycle surfaces (§16) verified: Pending gets restricted experience; Active gets normal application access; Rejected and Deactivated share the same generic inactive-account login message with no internal distinction surfaced.
+  - Removed all release-stage terminology describing FindBack itself (`MVP`, `prototype product`, `proof of concept`, `Phase 1`, `Initial Release`, `First Release`, `v1`/`v2`/`v3`). One `v2` reference in UX-OQ-A replaced with "future PRD revision".
+  - `My Reports` / `Browse` / `My Claims` / `My Recovery Responses` four-view partition preserved (§3.1, §9.4). No automatic Lost↔Found linkage; UJ-1 step 10 manual Withdraw preserved.
+  - 8 canonical RR statuses + `Submitted — Standby` derivation preserved (§4.2, §4.6). `Match Confirmed` confirmed non-terminal — owner-determines / Administrator-records wording preserved (§4.7, §9.5, §14.5, UJ-5 step 6).
+  - 7-column visibility matrix preserved (§11.1). Sensitivity-doesn't-leak-on-submit rule preserved (§11.4).
+  - 8 business/workflow notification events + 1 authentication/security email (FR-51) preserved (§13.7, §9.3a). No in-app notification stream.
+  - Four Administrator operational queues preserved: Pending Registrations / Pending Claims / Items Awaiting Return / Items in Verification. No fifth queue.
+  - FR-31 audit-event catalog (events 1–14) + FR-48 audit-event catalog (events 15–30) preserved; FR-52 / FR-53 records are append-only administrator-visible and do not introduce new event numbers.
 
 ---
 
@@ -1801,7 +1916,7 @@ A condensed reference for story authors and engineers:
 This document plus `DESIGN.md` complete the UX phase. The downstream handoff is **deferred** until the user manually reviews the prototype and confirms the corrections in this pass. The following consumers can begin once that review is complete:
 
 1. **`bmad-architecture`** — Architecture owns: database schema, API contracts, image storage, email provider, session implementation, concurrency, audit-trail storage, campus area enum configuration.
-2. **`bmad-create-epics-and-stories`** — Epic / story authoring can begin against the FR-1..FR-50 traceability in §24.1.
+2. **`bmad-create-epics-and-stories`** — Epic / story authoring can begin against the FR-1 through FR-53 traceability in §24.1.
 3. **`bmad-sprint-planning`** — Sprint sequencing follows the user journeys in §8.
 4. **`bmad-build`** — Implementation. Spines are the contract; key-screen mocks in `mockups/` (promoted at Finalize) are an additional reference for visual surfaces.
 

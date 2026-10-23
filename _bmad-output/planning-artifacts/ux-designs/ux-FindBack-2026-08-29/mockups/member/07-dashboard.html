@@ -92,12 +92,34 @@
       </div>
 
       <div class="fb-section-header">
-        <h2 class="fb-h3">Recent activity</h2>
-        <a href="08-my-reports.html" class="fb-helper" style="text-decoration: underline;">All my reports →</a>
+        <h2 class="fb-h3">Where would you like to go?</h2>
       </div>
-      <ul class="fb-activity-list" data-activity-list>
-        <li>Loading your activity…</li>
-      </ul>
+      <div class="fb-action-grid">
+        <div class="fb-action-card">
+          <div class="fb-action-card__icon" aria-hidden="true">⌕</div>
+          <h3 class="fb-action-card__title">Browse Lost &amp; Found</h3>
+          <p class="fb-action-card__body">See what other members have reported. Browse never shows your own reports.</p>
+          <div class="fb-action-card__cta"><a href="02-listings-member.html" class="fb-btn fb-btn--secondary">Open Browse</a></div>
+        </div>
+        <div class="fb-action-card">
+          <div class="fb-action-card__icon" aria-hidden="true">≣</div>
+          <h3 class="fb-action-card__title">My Reports</h3>
+          <p class="fb-action-card__body">Your authored Lost and Found reports. Edit, withdraw, or follow up.</p>
+          <div class="fb-action-card__cta"><a href="08-my-reports.html" class="fb-btn fb-btn--secondary">Open My Reports</a></div>
+        </div>
+        <div class="fb-action-card">
+          <div class="fb-action-card__icon" aria-hidden="true">✉</div>
+          <h3 class="fb-action-card__title">My Claims</h3>
+          <p class="fb-action-card__body">Claims you submitted against other members' Found items.</p>
+          <div class="fb-action-card__cta"><a href="10-my-claims.html" class="fb-btn fb-btn--secondary">Open My Claims</a></div>
+        </div>
+        <div class="fb-action-card">
+          <div class="fb-action-card__icon" aria-hidden="true">↺</div>
+          <h3 class="fb-action-card__title">My Recovery Responses</h3>
+          <p class="fb-action-card__body">Recovery Responses you submitted against other members' Lost items.</p>
+          <div class="fb-action-card__cta"><a href="18-my-recovery-responses.html" class="fb-btn fb-btn--secondary">Open My Recovery Responses</a></div>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -119,6 +141,7 @@
       if (!window.FB || !window.FB.state) return;
       var user = window.FB.state.getCurrentUser();
       if (!user) { window.location.href = '../public/02-login.html'; return; }
+      if (user && user.accountState === 'deactivated') { window.location.href = '../public/02-login.html?blocked=deactivated'; return; }
       if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
       var adminLink = document.querySelector('[data-admin-link]');
       if (adminLink) adminLink.hidden = (user.role !== 'administrator');
@@ -137,58 +160,6 @@
 
       var ctx = document.querySelector('[data-mockup-context]');
       if (ctx) ctx.textContent = 'Member dashboard · ' + user.name;
-
-      var myReports = window.FB.state.listReportsForUser(user.id);
-      var myClaims = window.FB.state.listClaimsForUser(user.id);
-      var reportIds = {};
-      myReports.forEach(function (r) { reportIds[r.id] = true; });
-      var claimIds = {};
-      myClaims.forEach(function (c) { claimIds[c.id] = true; });
-      var events = window.FB.state.listAudit().filter(function (a) {
-        return (a.actorId === user.id) ||
-               (a.reportId && reportIds[a.reportId]) ||
-               (a.claimId && claimIds[a.claimId]);
-      }).slice(0, 6);
-
-      var list = document.querySelector('[data-activity-list]');
-      if (!events.length) {
-        list.innerHTML = '<li class="fb-helper" style="text-align:center;">No activity yet. Start by reporting a lost or found item.</li>';
-        return;
-      }
-      var html = '';
-      events.forEach(function (e) {
-        var verb;
-        if (e.action === 'created') {
-          // Resolve the report type so the activity title distinguishes a
-          // lost report from a found report — a single verb ("reported an
-          // item") is too generic for a member who needs to scan recent
-          // activity at a glance. Falls back to the generic verb only if
-          // the report record cannot be found.
-          var createdReport = e.reportId ? window.FB.state.getReport(e.reportId) : null;
-          if (createdReport && createdReport.type === 'lost')  verb = 'You reported a lost item';
-          else if (createdReport && createdReport.type === 'found') verb = 'You reported a found item';
-          else verb = 'You reported an item';
-        }
-        else if (e.action === 'claim_submitted') verb = 'You submitted a claim';
-        else if (e.action === 'claim_approved') verb = 'A claim you made was approved';
-        else if (e.action === 'claim_rejected') verb = 'A claim you made was not approved';
-        else if (e.action === 'claim_auto_rejected') verb = 'A claim you made was not approved (another claim was approved)';
-        else if (e.action === 'returned') verb = 'A report was returned';
-        else if (e.action === 'edited') verb = 'You edited a report';
-        else if (e.action === 'withdrawn') verb = 'You withdrew a report';
-        else if (e.action === 'closed') verb = 'A report was closed';
-        else if (e.action === 'message_posted') verb = 'A new message was posted in a claim thread';
-        else verb = e.action;
-        var link = '';
-        if (e.reportId && e.action.indexOf('claim_') === 0 && e.claimId) link = '<a href="13-claim-detail.html?claim=' + e.claimId + '" class="fb-btn fb-btn--secondary fb-btn--sm">View</a>';
-        else if (e.reportId) link = '<a href="03-item-detail-member.html?item=' + e.reportId + '" class="fb-btn fb-btn--secondary fb-btn--sm">View</a>';
-        else link = '';
-        html += '<li><div class="fb-row fb-row--between">' +
-                '<div><strong>' + verb + '</strong>' +
-                '<p style="margin: var(--fb-space-1) 0 0; color: var(--fb-on-surface-variant); font-size: 13px;">' + window.fbRelativeTime(new Date(e.createdAt)) + ' &middot; ' + (e.detail || '') + '</p></div>' +
-                link + '</div></li>';
-      });
-      list.innerHTML = html;
     });
   </script>
 </body>

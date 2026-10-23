@@ -140,6 +140,7 @@
       if (!window.FB || !window.FB.state) return;
       var user = window.FB.state.getCurrentUser();
       if (!user) { window.location.href = '../public/02-login.html?next=15-report-found.html'; return; }
+      if (user && user.accountState === 'deactivated') { window.location.href = '../public/02-login.html?blocked=deactivated'; return; }
       if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
       if (user.accountState !== 'active') {
         document.querySelector('main').innerHTML = '<div class="fb-listings__empty"><strong>Your account is not active.</strong><div>Pending accounts cannot report items. Please contact your administrator.</div></div>';

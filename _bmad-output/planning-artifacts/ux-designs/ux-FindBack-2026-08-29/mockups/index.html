@@ -89,14 +89,10 @@
 
   <main id="main" tabindex="-1" class="fb-page">
     <h1 class="fb-h2" style="margin-bottom: var(--fb-space-3);">FindBack — interactive prototype</h1>
-    <p class="fb-helper" style="margin-bottom: var(--fb-space-5);">High-fidelity prototype using shared client-side state. Persona actions persist across pages and across personas. Click into any of the four user journeys below; each screen has a mockup-nav at the bottom with Previous / All journeys / Next links.</p>
+    <p class="fb-helper" style="margin-bottom: var(--fb-space-5);">High-fidelity prototype using shared client-side state. Actions persist across pages through the normal Sign in flow (use the Demo credentials in the prototype controls above). Click into any of the six user journeys below; each screen has a mockup-nav at the bottom with Previous / All journeys / Next links.</p>
 
     <div class="fb-aside">
-      <p><strong>Source of truth:</strong> PRD FR-1..FR-39, EXPERIENCE.md (behavior), DESIGN.md (visual). The mockups below are a prototype of the product — not a redesign.</p>
-    </div>
-
-    <div class="fb-aside" style="border-left-color: var(--fb-brand-primary); background: var(--fb-brand-primary-soft);">
-      <p><strong>Claim demo item (Active Member flow):</strong> <a href="member/03-item-detail-member.html?item=rpt_backpack_found"><strong>Found Black Backpack</strong></a> &mdash; reported by Sam, Main Library study carrel 4C, <code>open</code> status, no existing claim from Maya. Maya can sign in → open this item → Submit a claim &rarr; the claim becomes <em>Pending</em>, appears in <a href="member/10-my-claims.html">My Claims</a>, and shows up in Riley's <a href="admin/05-pending-claims.html">Pending Claims</a> queue. Use this item to walk UJ-1 end-to-end without needing to first reject any other seed claim.</p>
+      <p><strong>Source of truth:</strong> PRD FR-1..FR-53, EXPERIENCE.md (behavior), DESIGN.md (visual). The mockups below are a prototype of the product — not a redesign.</p>
     </div>
 
     <!-- Prototype-only controls: clearly isolated from production FindBack UX.
@@ -107,7 +103,7 @@
     <h2 class="fb-h3" style="margin: var(--fb-space-6) 0 var(--fb-space-4);">Theme &amp; accessibility</h2>
     <p>Toggle <strong>Auto / Light / Dark</strong> in the top bar. Light and dark use the same brand tokens; status colors rebalance for dark backgrounds.</p>
 
-    <h2 class="fb-h3" style="margin: var(--fb-space-6) 0 var(--fb-space-4);">The four journeys</h2>
+    <h2 class="fb-h3" style="margin: var(--fb-space-6) 0 var(--fb-space-4);">The six journeys</h2>
 
     <!-- UJ-1 Maya -->
     <section class="fb-journey" aria-labelledby="uj1">
@@ -187,9 +183,25 @@
       </div>
     </section>
 
-    <!-- UJ-5 Anonymous Visitor -->
+    <!-- UJ-5 (PRD) Maya / Sam / Pat / Riley — Recovery Response (owner-determines / Administrator-records) -->
     <section class="fb-journey" aria-labelledby="uj5">
-      <h2 id="uj5"><span class="fb-flow__step-num">UJ-5</span> Anonymous Visitor — "I'm looking for something I lost" <span class="fb-journey__tag">Public → Sign-in CTA</span></h2>
+      <h2 id="uj5"><span class="fb-flow__step-num">UJ-5</span> Maya / Sam / Pat / Riley — Recovery Response (owner-determines / Administrator-records) <span class="fb-journey__tag">Member → Member → Admin</span></h2>
+      <p class="fb-journey__lede">Maya's Lost wallet is found by two responders (Sam, Pat). Maya selects Sam; Riley records Match Confirmed, then confirms the return. Standby responders auto-resolve. <em>(Per PRD UJ-5 / EXPERIENCE.md §8.5.)</em></p>
+      <div class="fb-flow">
+        <a href="member/08-my-reports.html">1. Maya: My Reports (Lost wallet)</a><span class="fb-flow__arrow">→</span>
+        <a href="member/03-item-detail-member.html">2. Sam: opens the Lost detail</a><span class="fb-flow__arrow">→</span>
+        <a href="member/20-submit-recovery-response.html">3. Sam submits a Recovery Response</a><span class="fb-flow__arrow">→</span>
+        <a href="member/18-my-recovery-responses.html">4. Pat (and Sam) appear in Maya's queue</a><span class="fb-flow__arrow">→</span>
+        <a href="member/21-review-responses.html">5. Maya selects Sam (owner-determines)</a><span class="fb-flow__arrow">→</span>
+        <a href="admin/14-items-in-verification.html">6. Riley: Items in Verification queue</a><span class="fb-flow__arrow">→</span>
+        <a href="admin/15-verification-review.html">7. Riley records Match Confirmed</a><span class="fb-flow__arrow">→</span>
+        <a href="member/19-recovery-response-detail.html">8. Sam: Completed — Report Returned (read-only thread)</a>
+      </div>
+    </section>
+
+    <!-- UJ-6 Anonymous Visitor -->
+    <section class="fb-journey" aria-labelledby="uj6-anon">
+      <h2 id="uj6-anon"><span class="fb-flow__step-num">UJ-6</span> Anonymous Visitor — "I'm looking for something I lost" <span class="fb-journey__tag">Public → Sign-in CTA</span></h2>
       <p class="fb-journey__lede">Visits the public landing, browses and filters the public Lost &amp; Found summary, hits the authentication boundary on any item detail or authenticated action, then chooses to sign in or register.</p>
       <p class="fb-helper" style="margin: 0 0 var(--fb-space-3);">Anonymous visitors see only <strong>type, category, location, date, and status</strong>. Item detail pages, claims, reports, member dashboard, my-reports, my-claims, and all administrator pages are gated.</p>
       <div class="fb-flow">
@@ -207,6 +219,8 @@
       <p class="fb-helper" style="margin: var(--fb-space-2) 0 0;"><strong>Anonymous CANNOT:</strong> open item detail · submit a claim · post claim messages · create Lost/Found reports · view My reports / My claims / Member Dashboard · access any administrator page. Attempts redirect to <a href="public/02-login.html">Sign in</a> with <code>?next=</code> preserved.</p>
     </section>
 
+    <!-- ─── Supplemental acceptance scenarios removed ─── -->
+
     <h2 class="fb-h3" style="margin: var(--fb-space-6) 0 var(--fb-space-4);">Quick links</h2>
     <div class="fb-flow">
       <a href="public/01-landing.html">Public landing</a>
@@ -219,11 +233,15 @@
       <a href="member/15-report-found.html">Report found</a>
       <a href="member/09-edit-report.html">Edit report</a>
       <a href="member/17-item-detail-closed.html">Closed report</a>
+      <a href="member/22-my-profile.html">My profile</a>
+      <a href="member/18-my-recovery-responses.html">My recovery responses</a>
       <a href="public/06-pending-account.html">Pending state</a>
       <a href="public/07-rejected-account.html">Rejected state</a>
       <a href="public/08-deactivated-account.html">Deactivated state</a>
       <a href="public/09-forgot-password.html">Forgot password</a>
       <a href="public/10-forgot-password-sent.html">Reset link sent</a>
+      <a href="admin/16-admin-edit-report.html">Edit report (admin)</a>
+      <a href="admin/17-accounts.html">Manage accounts (admin)</a>
     </div>
   </main>
 

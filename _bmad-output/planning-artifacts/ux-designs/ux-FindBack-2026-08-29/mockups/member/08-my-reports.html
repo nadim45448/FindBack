@@ -110,6 +110,7 @@
       if (!window.FB || !window.FB.state) return;
       var user = window.FB.state.getCurrentUser();
       if (!user) { window.location.href = '../public/02-login.html'; return; }
+      if (user && user.accountState === 'deactivated') { window.location.href = '../public/02-login.html?blocked=deactivated'; return; }
       if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
 
       var ctx = document.querySelector('[data-mockup-context]');

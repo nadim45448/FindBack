@@ -41,7 +41,7 @@ mockups/
 │   ├── 04-item-detail-reporter.html # Sam viewing their own found report
 │   ├── 05-item-detail-claimant.html # Maya after her claim is approved
 │   ├── 06-item-detail-returned.html
-│   ├── 07-dashboard.html
+│   ├── 07-dashboard.html            # Member dashboard (entry points; no aggregate activity feed)
 │   ├── 08-my-reports.html
 │   ├── 09-edit-report.html
 │   ├── 10-my-claims.html
@@ -51,7 +51,12 @@ mockups/
 │   ├── 14-report-lost.html
 │   ├── 15-report-found.html
 │   ├── 16-claim-rejected-detail.html
-│   └── 17-item-detail-closed.html
+│   ├── 17-item-detail-closed.html
+│   ├── 18-my-recovery-responses.html
+│   ├── 19-recovery-response-detail.html
+│   ├── 20-submit-recovery-response.html
+│   ├── 21-review-responses.html     # Lost-owner RR review (FR-43; owner-selects)
+│   └── 22-my-profile.html           # Member Profile (FR-52)
 └── admin/                     # Administrator surfaces (Riley)
     ├── 01-dashboard.html
     ├── 02-pending-registrations.html
@@ -66,10 +71,14 @@ mockups/
     ├── 10-confirm-returned-default.html
     ├── 11-confirm-returned-substitute.html
     ├── 12-audit-trail.html
-    └── 13-close-content.html
+    ├── 13-close-content.html
+    ├── 14-items-in-verification.html # Lost-side queue
+    ├── 15-verification-review.html   # Lost-side Administrator-records
+    ├── 16-admin-edit-report.html     # FR-53 Administrator Report Edit
+    └── 17-accounts.html              # Account Management surface (FR-30 lifecycle / FR-52)
 ```
 
-**Totals:** 48 HTML files + 10 shared assets.
+**Totals:** 52 HTML files + 10 shared assets.
 
 ---
 
@@ -81,6 +90,8 @@ mockups/
 - **UJ-2 Sam** — found phone → receives claim → approves handoff
 - **UJ-3 Alex** — registers → pending → approved
 - **UJ-4 Riley** — admin: registrations, single claim, competing claims, return, audit, close
+- **UJ-5 Maya / Sam / Pat / Riley** — Lost-side Recovery Response flow (owner-determines / Administrator-records; FR-43 / FR-45 / FR-48)
+- **UJ-6 Anonymous Visitor** — public browse → authentication boundary → sign-in / register
 
 Every screen has a sticky **mockup-nav** at the bottom with **Previous · All journeys · Next** links so a reviewer never loses their place.
 
@@ -122,8 +133,8 @@ Landing · Sign in · Register · Register validation errors · Registration con
 ### Member (17)
 Listings (anonymous + signed-in) · search & filter · item detail with **4 visibility variants** (anonymous, member no relationship, reporter, claimant) · returned detail · closed detail · dashboard · my reports · my claims · report-lost form · report-found form · edit report · submit claim · claim pending · claim thread (with read-only state after Approved) · claim rejected (auto).
 
-### Administrator (13)
-Dashboard · pending registrations queue · approve · reject · pending claims queue · single claim review · competing-claims review (3 claims) · approve confirmation · reject confirmation · items awaiting return · confirm returned (default receiver) · confirm returned (substitute receiver, all three required fields) · audit trail (14-event scope) · close inappropriate content.
+### Administrator (14)
+Dashboard · pending registrations queue · approve · reject · pending claims queue · single claim review · competing-claims review (3 claims) · approve confirmation · reject confirmation · items awaiting return · confirm returned (default receiver) · confirm returned (substitute receiver, all three required fields) · audit trail (14-event scope) · close inappropriate content · **accounts (search + lifecycle filter + per-row audit disclosure; Deactivate / Reactivate actions)**.
 
 ### Required states and edge cases
 
@@ -138,6 +149,8 @@ Dashboard · pending registrations queue · approve · reject · pending claims 
 | Account Active | Topbar pill on member/admin pages |
 | Account Rejected | `07-rejected-account.html` |
 | Account Deactivated | `08-deactivated-account.html` |
+| Account Management surface | `admin/17-accounts.html` (search · state filter · per-row audit disclosure · Deactivate/Reactivate) |
+| Deactivation mid-session | `admin/17-accounts.html` Deactivate action clears the session if it belongs to the target; the next protected interaction routes to `02-login.html?blocked=deactivated` |
 | Report Open / Claim Requested / Claim Approved / Returned / Closed | Status badges in `tokens.css`; used across member + admin |
 | Multiple competing claims | `07-claim-review-competing.html` |
 | Auto-rejection | `16-claim-rejected-detail.html` (claimant view) + `12-audit-trail.html` (audit view) |
@@ -181,6 +194,10 @@ Other interactions:
 | Register → Rejected | Public → Rejected login state | `03-register.html` → `04-registration-reject.html` → `07-rejected-account.html` |
 | Account deactivated | Active → Deactivated | `08-deactivated-account.html` (state) |
 | Withdraw report | Open → Closed | `09-edit-report.html` (Withdraw link) → `17-item-detail-closed.html` |
+| Member profile edited | Active → Active (audit recorded) | `member/22-my-profile.html` → `admin/12-audit-trail.html` filtered by Accounts |
+| Administrator edits report | unchanged status (audit recorded as `Report edited by administrator (FR-53)`) | `admin/16-admin-edit-report.html` → `admin/12-audit-trail.html` |
+| Deactivate / Reactivate account | Active ⇄ Deactivated | `admin/17-accounts.html` (Riley) → audit row under account filter |
+| Deactivation mid-session | Active session → routed to `/login?blocked=deactivated` | `admin/17-accounts.html` Deactivate (Riley) then any member interaction in target window |
 
 ---
 
@@ -198,7 +215,7 @@ Other interactions:
 
 ## 8. Source-of-truth fidelity check
 
-- **PRD FR-1..FR-39** — every requirement has at least one mockup. Cross-reference:
+- **PRD FR-1..FR-53** — every requirement has at least one mockup. Cross-reference:
   - FR-1 (Self-registration): `03-register.html`
   - FR-2 (Pending restrictions): `06-pending-account.html`
   - FR-3 (Admin review of pending registrations): `02-pending-registrations.html`, `03-registration-approve.html`, `04-registration-reject.html`
@@ -235,18 +252,34 @@ Other interactions:
   - FR-35 (Audit immutability): documented; not visually verifiable
   - FR-36 (Audit trail search/filter): filter UI on `12-audit-trail.html`
   - FR-37, FR-38, FR-39 (Visibility matrix): `03-item-detail-member.html` (anonymous + member no-relationship hide exact place + identifying details) + `04-item-detail-reporter.html` (reporter sees all) + `05-item-detail-claimant.html` (claimant sees all) + `06-item-detail-returned.html` (Return record shown to claimant) + admin views (full info)
+  - FR-40..FR-50 (Lost-side Recovery Response flow): `20-submit-recovery-response.html`, `18-my-recovery-responses.html`, `19-recovery-response-detail.html`, `21-review-responses.html` (owner-determines), `14-items-in-verification.html`, `15-verification-review.html` (Administrator-records), substitute-receiver on `11-confirm-returned-substitute.html` mirrored for Lost-side via `admin/lost/:id/return`.
+  - FR-51 (Forgot Password / Password Recovery): `public/09-forgot-password.html` and `public/10-forgot-password-sent.html`; the password-reset email is documented as an authentication/security message separate from FR-46 Events 1–8.
+  - FR-52 (Member Profile): `member/22-my-profile.html` — editable display name + self-declared role; read-only email; no public profile page.
+  - FR-53 (Administrator Report Edit): `admin/16-admin-edit-report.html` — moderation/operational correction only; non-terminal reports only; explicit editable-field set and explicit forbidden edits.
 
-- **PRD D1, D2, D3, D4** (PRD-author decisions):
+- **PRD D1..D8** (PRD-author decisions):
   - D1 (Per-claim thread): `13-claim-detail.html` — and the read-only state after Approved
   - D2 (Sensitive fields): `fb-sensitive-flag` + `fb-hidden-from-members`; demonstrated on `03-item-detail-member.html`
   - D3 (Competing claims auto-rejection): `07-claim-review-competing.html` shows three pending; `08-claim-approve.html` approval cascades; `16-claim-rejected-detail.html` shows the auto-rejected claimant's view
-  - D4 (Audit trail 14 events): `12-audit-trail.html` filter dropdown lists them all
+  - D4 (Pending registration review queue): `02-pending-registrations.html`
+  - D5 (Listing partition: `My Reports` / `Browse`): `08-my-reports.html` vs `02-listings-member.html`; own authored reports never appear in Browse
+  - D6 (Per-Recovery-Response thread): `19-recovery-response-detail.html` with read-only lifecycle
+  - D7 (Standby derivation): `18-my-recovery-responses.html` shows `Submitted — Standby` label when another RR is selected
+  - D8 (Four member participation views): `08-my-reports.html`, `02-listings-member.html` (Browse), `10-my-claims.html`, `18-my-recovery-responses.html` — disjoint per FR-49
 
-- **EXPERIENCE.md Key Flows** — UJ-1 through UJ-5 are all walked step-by-step in `index.html`.
+- **EXPERIENCE.md Key Flows** — UJ-1 through UJ-5 are all walked step-by-step in `index.html`; UJ-6 (Anonymous Visitor) covers the public/auth-flow boundary.
 - **DESIGN.md** — every visual decision uses tokens from `tokens.css`. No hard-coded colors, font sizes, or spacing values outside the token system.
-- **No source artifacts were modified.** Brief, PRD, DESIGN.md, EXPERIENCE.md remain untouched.
+- **No source artifacts were modified.** Brief, PRD remain untouched. EXPERIENCE.md was reconciled to the frozen upstream in 2026-09-17; DESIGN.md unchanged.
 
 ---
+
+## 9. Acceptance scenarios
+
+The Prototype Guide (`index.html`) carries a dedicated **Acceptance scenarios** (`AC`) section listing each product rule that is not fully exercised by a single primary journey, with a direct entry point per rule: anonymous browsing, FR-51 forgot password (anti-enumeration wording is identical across emails), FR-52 Member Profile edit (with audit confirmation under the Accounts filter), FR-53 Administrator Report Edit (audit detail reads "Report edited by administrator"), competing Claims auto-rejection, substitute receiver (all three fields required), Rejected login and Deactivated login (identical neutral messaging — Rejected ≠ Deactivated is not exposed), Pending restricted access (no member capabilities), **account deactivation mid-session** (sign in Maya in window A, sign in Riley in window B, Riley → `admin/17-accounts.html` → Deactivate Maya; window A's next protected interaction routes to `02-login.html?blocked=deactivated`), report withdraw vs delete rules, Lost-owner withdrawal, Lost-side Administrator normal close (pre-Match), post-Match exceptional cancellation, Recovery Responder withdrawal (Submitted unselected), new RR during Verification Pending before Match Confirmed, same responder NEW RR after Not a Match, privacy matrix rendering, Claim thread lifecycle (Pending → Approved → read-only), RR thread lifecycle, contextual audit views (per-report and per-account), default discovery including `Verification Pending`, Returned/Closed historical views, theme modes (System/Light/Dark; persisted; observed live), responsive/accessibility-critical interactions (skip-link, focus order, status colors, keyboard theme menu), and Reset Demo Data.
+
+New surfaces introduced in this closure pass:
+- `admin/17-accounts.html` — Account Management surface (search · state filter · per-row audit disclosure · Deactivate / Reactivate). Linked from the admin topbar and from a new "Manage accounts" tile on `admin/01-dashboard.html`.
+- Mid-session deactivation is exercised by the `AC → Authentication & account lifecycle → Deactivation mid-session` scenario above.
 
 ## How to open
 

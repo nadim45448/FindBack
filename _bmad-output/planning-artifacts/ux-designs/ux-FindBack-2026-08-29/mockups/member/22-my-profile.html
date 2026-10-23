@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My profile — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
+    .fb-form-card { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-5); box-shadow: var(--fb-elev-1); }
+    .fb-field { display: flex; flex-direction: column; gap: var(--fb-space-2); margin-bottom: var(--fb-space-4); }
+    .fb-field__label { font-size: 14px; font-weight: 600; color: var(--fb-on-surface); }
+    .fb-field__helper { font-size: 13px; color: var(--fb-on-surface-variant); }
+    .fb-actions { display: flex; justify-content: flex-end; gap: var(--fb-space-3); margin-top: var(--fb-space-5); flex-wrap: wrap; }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="07-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="02-listings-member.html">Browse</a>
+      <a href="08-my-reports.html">My reports</a>
+      <a href="10-my-claims.html">My claims</a>
+      <a href="18-my-recovery-responses.html">My recovery responses</a>
+      <a href="../admin/01-dashboard.html" data-admin-link hidden>Admin</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
+  </header>
+
+  <main id="main" tabindex="-1" class="fb-page">
+    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-3);">My profile</h1>
+    <p class="fb-helper" style="margin-bottom: var(--fb-space-5);">The information FindBack uses to identify you in reports, claims, recovery responses, and messages.</p>
+
+    <div class="fb-form-card" data-profile-root>
+      <div class="fb-field">
+        <label class="fb-field__label" for="profile-name">Display name</label>
+        <input id="profile-name" name="displayName" type="text" data-profile-field="displayName" maxlength="80" autocomplete="name">
+        <p class="fb-field__helper">Visible to other members where your identity matters (report owner, claimant, responder, message author).</p>
+      </div>
+
+      <div class="fb-field">
+        <label class="fb-field__label" for="profile-role">Self-declared role</label>
+        <select id="profile-role" name="role" data-profile-field="role">
+          <option value="student">Student</option>
+          <option value="employee">Employee</option>
+          <option value="visitor">Visitor</option>
+          <option value="other">Other</option>
+        </select>
+        <p class="fb-field__helper">Helps your community understand who is reporting or responding.</p>
+      </div>
+
+      <div class="fb-field">
+        <label class="fb-field__label" for="profile-email">Registered email</label>
+        <input id="profile-email" name="email" type="email" data-profile-field="email" disabled>
+        <p class="fb-field__helper">Email changes aren't supported in FindBack.</p>
+      </div>
+
+      <div class="fb-actions">
+        <a class="fb-btn fb-btn--tertiary" href="07-dashboard.html">Back to dashboard</a>
+        <button type="button" class="fb-btn fb-btn--primary" data-profile-save>Save changes</button>
+      </div>
+    </div>
+
+    <p class="fb-helper" style="margin-top: var(--fb-space-5);">
+      <strong>What you can't change here:</strong> email, account lifecycle status, administrator flag.
+      Profile edits do not affect pending or rejected registrations.
+    </p>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>Member profile</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="07-dashboard.html">← Previous</a>
+        <a href="../index.html">All journeys</a>
+        <a href="08-my-reports.html">Next →</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/state.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var user = window.FB.state.getCurrentUser();
+      if (!user) { window.location.href = '../public/02-login.html'; return; }
+      if (user && user.accountState === 'deactivated') { window.location.href = '../public/02-login.html?blocked=deactivated'; return; }
+      if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
+
+      var ctx = document.querySelector('[data-mockup-context]');
+      if (ctx) ctx.textContent = 'Member profile · ' + user.name;
+
+      var nameInput = document.querySelector('[data-profile-field="displayName"]');
+      var roleSelect = document.querySelector('[data-profile-field="role"]');
+      var emailInput = document.querySelector('[data-profile-field="email"]');
+
+      if (nameInput) nameInput.value = user.name || '';
+      if (roleSelect) roleSelect.value = user.selfRole || user.role || 'student';
+      if (emailInput) emailInput.value = user.email || '';
+
+      var saveBtn = document.querySelector('[data-profile-save]');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', function () {
+          var newName = nameInput ? nameInput.value.trim() : '';
+          var newRole = roleSelect ? roleSelect.value : 'student';
+          if (!newName) {
+            window.FB.app && window.FB.app.showToast && window.FB.app.showToast('Display name is required.', 'error');
+            return;
+          }
+          var result = window.FB.state.updateProfile({ id: user.id, name: newName, role: newRole });
+          if (result && result.ok) {
+            window.FB.app && window.FB.app.showToast && window.FB.app.showToast('Profile updated. Audit recorded.', 'success');
+            // Refresh the role-select and email fields from the updated user.
+            var fresh = window.FB.state.getCurrentUser();
+            if (fresh && roleSelect) roleSelect.value = fresh.selfRole || fresh.role || 'student';
+            // Update the visible account-name (topbar reads via state on next page load).
+            var ctx2 = document.querySelector('[data-mockup-context]');
+            if (ctx2) ctx2.textContent = 'Member profile · ' + (fresh ? fresh.name : newName);
+          } else {
+            var reason = (result && result.reason) || 'unknown';
+            window.FB.app && window.FB.app.showToast && window.FB.app.showToast('Could not save your profile (' + reason + '). Try again.', 'error');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

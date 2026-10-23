@@ -4,7 +4,7 @@
 // On DOMContentLoaded:
 //   - mounts the theme toggle widget
 //   - wires authentication-aware navigation (topbar account menu, redirects)
-//   - mounts shared prototype controls (Reset Demo Data, persona switcher)
+//   - mounts shared prototype controls (Reset Demo Data, demo credentials)
 //   - intercepts forms with [data-mock-form] / data-action="..." and applies
 //     state-mutating actions instead of hard-coded page redirects
 // ============================================================================
@@ -131,7 +131,7 @@
 
   // ---------- Mount: production-like Account menu on topbar ----------
   // This menu exposes ONLY actions supported by the locked PRD/EXPERIENCE.
-  // Prototype-only utilities (Switch persona, Reset demo data) live in a
+  // Prototype-only utilities (Reset demo data, demo credentials) live in a
   // separate "Prototype controls" panel mounted via mountPrototypePanel().
   function mountAccountMenu() {
     const slot = document.querySelector('[data-account-menu-slot]');
@@ -192,17 +192,9 @@
   function mountPrototypePanel() {
     const slot = document.querySelector('[data-prototype-controls-slot]');
     if (!slot) return;
-    const user = window.FB.state.getCurrentUser();
-    const persona = user
-      ? `${user.name} · ${user.role === 'administrator' ? 'Administrator' : 'Member'}`
-      : 'Anonymous';
     slot.innerHTML = `
       <aside class="fb-prototype-panel" aria-label="Prototype controls — not part of production FindBack" data-prototype-panel>
         <div class="fb-prototype-panel__badge">Prototype controls — not part of production FindBack</div>
-        <div class="fb-prototype-panel__current">
-          <span class="fb-caption">Current persona</span>
-          <strong>${persona}</strong>
-        </div>
         <div class="fb-prototype-panel__actions">
           <button type="button" class="fb-btn fb-btn--secondary fb-btn--sm" data-action="reset-state">Reset demo data</button>
         </div>

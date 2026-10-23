@@ -88,6 +88,7 @@
       if (!window.FB || !window.FB.state) return;
       var user = window.FB.state.getCurrentUser();
       if (!user) { window.location.href = '../public/02-login.html?next=' + encodeURIComponent(window.location.pathname.split('/').pop() + window.location.search); return; }
+      if (user && user.accountState === 'deactivated') { window.location.href = '../public/02-login.html?blocked=deactivated'; return; }
       if (user.role === 'administrator') { window.location.href = '../admin/01-dashboard.html'; return; }
       var root = document.querySelector('[data-detail-root]');
       window.FB.renderItemDetail(root, {

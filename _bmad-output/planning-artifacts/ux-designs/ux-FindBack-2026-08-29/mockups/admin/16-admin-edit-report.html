@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit report (admin) — FindBack</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem('findback.theme') || 'system';
+        var actual = pref === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : pref;
+        document.documentElement.setAttribute('data-theme', actual);
+        document.documentElement.setAttribute('data-theme-pref', pref);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <style>
+    .fb-page { max-width: var(--fb-container-narrow); margin: 0 auto; padding: var(--fb-space-6) var(--fb-page-margin); padding-top: calc(var(--fb-space-6) + 40px); }
+    .fb-form-card { background: var(--fb-surface); border: 1px solid var(--fb-border-subtle); border-radius: var(--fb-radius-lg); padding: var(--fb-space-5); box-shadow: var(--fb-elev-1); }
+    .fb-field { display: flex; flex-direction: column; gap: var(--fb-space-2); margin-bottom: var(--fb-space-4); }
+    .fb-field__label { font-size: 14px; font-weight: 600; color: var(--fb-on-surface); }
+    .fb-field__helper { font-size: 13px; color: var(--fb-on-surface-variant); }
+    .fb-actions { display: flex; justify-content: flex-end; gap: var(--fb-space-3); margin-top: var(--fb-space-5); flex-wrap: wrap; }
+    body { padding-bottom: 80px; }
+  </style>
+</head>
+<body class="fb-topbar--admin">
+  <a href="#main" class="fb-skip-link">Skip to main content</a>
+
+  <header class="fb-topbar">
+    <a href="01-dashboard.html" class="fb-topbar__brand" aria-label="FindBack home">
+      <img src="../assets/logo-wordmark-light.svg" alt="FindBack" class="fb-logo-light">
+      <img src="../assets/logo-wordmark-dark.svg" alt="FindBack" class="fb-logo-dark" aria-hidden="true">
+    </a>
+    <nav class="fb-topbar__nav" aria-label="Primary">
+      <a href="01-dashboard.html">Dashboard</a>
+      <a href="02-pending-registrations.html">Registrations</a>
+      <a href="05-pending-claims.html">Claims</a>
+      <a href="09-items-awaiting-return.html">Awaiting return</a>
+      <a href="12-audit-trail.html">Audit trail</a>
+      <a href="17-accounts.html">Accounts</a>
+    </nav>
+    <div class="fb-topbar__spacer"></div>
+    <div class="fb-theme-toggle" data-theme-toggle>
+      <button type="button" class="fb-theme-toggle__trigger"
+              aria-haspopup="menu" aria-expanded="false"
+              aria-label="Theme: System. Click to change."
+              title="Theme: System">
+        <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" data-theme-icon aria-hidden="true"></span>
+      </button>
+      <div class="fb-theme-toggle__menu" role="menu" aria-label="Theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="system" aria-checked="true">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--half" aria-hidden="true"></span>
+          <span>System</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="light" aria-checked="false">
+          <span class="fb-theme-toggle__icon" aria-hidden="true"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" role="menuitemradio" data-theme-option="dark" aria-checked="false">
+          <span class="fb-theme-toggle__icon fb-theme-toggle__icon--moon" aria-hidden="true"></span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+    <div class="fb-topbar__actions" data-account-menu-slot></div>
+  </header>
+
+  <main id="main" tabindex="-1" class="fb-page">
+    <h1 class="fb-h2" style="margin-bottom: var(--fb-space-3);" data-edit-heading>Edit report</h1>
+    <p class="fb-helper" style="margin-bottom: var(--fb-space-5);">For moderation and operational correction only. The report lifecycle status, claim content, recovery response content, audit history, and receiver history are not editable through this surface. Returned and Closed reports cannot be edited.</p>
+
+    <div class="fb-form-card" data-edit-root>
+      <div class="fb-field">
+        <label class="fb-field__label" for="edit-name">Name</label>
+        <input id="edit-name" name="name" type="text" maxlength="80" data-edit-field="name">
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="edit-category">Category</label>
+        <select id="edit-category" name="category" data-edit-field="category">
+          <option value="wallets">Wallets &amp; purses</option>
+          <option value="phones">Phones</option>
+          <option value="keys">Keys</option>
+          <option value="bags">Bags &amp; backpacks</option>
+          <option value="clothing">Clothing</option>
+          <option value="books">Books &amp; notebooks</option>
+          <option value="electronics">Electronics</option>
+          <option value="accessories">Accessories</option>
+          <option value="documents">Documents</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="edit-description">Description</label>
+        <textarea id="edit-description" name="description" maxlength="2000" data-edit-field="description"></textarea>
+        <p class="fb-field__helper">10–2000 characters.</p>
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="edit-date">Date</label>
+        <input id="edit-date" name="date" type="date" data-edit-field="date">
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="edit-campus-area">Campus area</label>
+        <select id="edit-campus-area" name="campusArea" data-edit-field="campusArea">
+          <option value="library">Main Library</option>
+          <option value="union">Student Union</option>
+          <option value="engineering">Engineering Building</option>
+          <option value="athletics">Athletics Center</option>
+          <option value="dining">Dining Hall</option>
+          <option value="science">Science Center</option>
+          <option value="residence">Residence Hall</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="edit-exact-place">Exact place <span class="fb-sensitive-flag">Sensitive</span></label>
+        <input id="edit-exact-place" name="exactPlace" type="text" maxlength="200" data-edit-field="exactPlace">
+        <p class="fb-field__helper">Hidden from other members. Visible to the reporter and administrators.</p>
+      </div>
+      <div class="fb-field">
+        <label class="fb-field__label" for="edit-identifying-details">Identifying details <span class="fb-sensitive-flag">Sensitive</span></label>
+        <textarea id="edit-identifying-details" name="identifyingDetails" maxlength="500" data-edit-field="identifyingDetails"></textarea>
+        <p class="fb-field__helper">Hidden from other members. Visible to the reporter and administrators.</p>
+      </div>
+
+      <div class="fb-actions">
+        <a class="fb-btn fb-btn--tertiary" href="01-dashboard.html">Cancel</a>
+        <button type="button" class="fb-btn fb-btn--primary" data-edit-save>Save changes</button>
+      </div>
+    </div>
+
+    <p class="fb-helper" style="margin-top: var(--fb-space-5);">
+      <strong>What's not editable here:</strong> reporter identity, report type (Lost/Found), report lifecycle status, claim content, recovery response content, audit-trail entries, Returned/Closed confirmation, substitute-receiver fields.
+    </p>
+  </main>
+
+  <nav class="fb-mockup-nav" aria-label="Mockup navigation" style="position:fixed; bottom:0; left:0; right:0; background: var(--fb-surface); border-top: 1px solid var(--fb-border-subtle); padding: var(--fb-space-3) var(--fb-page-margin); z-index: var(--fb-z-sticky); font-size: 13px;">
+    <div style="max-width: var(--fb-container-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--fb-space-4);">
+      <span style="color: var(--fb-on-surface-variant); font-weight: 500;" data-mockup-context>Edit report (admin)</span>
+      <div style="display: flex; gap: var(--fb-space-4);">
+        <a href="12-audit-trail.html">← Previous</a>
+        <a href="../index.html">All journeys</a>
+        <a href="13-close-content.html">Next →</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="../assets/state.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.FB || !window.FB.state) return;
+      var user = window.FB.state.getCurrentUser();
+      if (!user || user.role !== 'administrator') {
+        window.location.href = '../public/02-login.html';
+        return;
+      }
+
+      var ctx = document.querySelector('[data-mockup-context]');
+      if (ctx) ctx.textContent = 'Edit report (admin) · ' + user.name;
+
+      var url = new URL(window.location.href);
+      var itemId = url.searchParams.get('item');
+      var report = itemId ? window.FB.state.getReport(itemId) : null;
+      if (!report) {
+        var fallback = window.FB.state.listReports && window.FB.state.listReports()[0];
+        report = fallback || null;
+      }
+
+      var heading = document.querySelector('[data-edit-heading]');
+      if (report && heading) heading.textContent = 'Edit report — ' + report.name;
+
+      var fields = document.querySelectorAll('[data-edit-field]');
+      fields.forEach(function (el) {
+        var name = el.getAttribute('data-edit-field');
+        if (report && report[name] !== undefined) el.value = report[name];
+      });
+
+      var saveBtn = document.querySelector('[data-edit-save]');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', function () {
+          if (!report) return;
+          if (report.status === 'returned' || report.status === 'closed') {
+            window.FB.app && window.FB.app.showToast && window.FB.app.showToast('This report is in a terminal state and cannot be edited.', 'error');
+            return;
+          }
+          var updates = {};
+          fields.forEach(function (el) {
+            var name = el.getAttribute('data-edit-field');
+            updates[name] = el.value;
+          });
+          if (window.FB.state.updateReport) {
+            // FR-53: pass actorRole so audit detail records the edit as
+            // 'Report edited by administrator (FR-53)' rather than the
+            // reporter-self-edit wording.
+            window.FB.state.updateReport(report.id, updates, user.id, user.role === 'administrator' ? 'administrator' : 'member');
+          }
+          window.FB.app && window.FB.app.showToast && window.FB.app.showToast('Report updated. The audit trail records this edit.', 'success');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

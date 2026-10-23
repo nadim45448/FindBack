@@ -643,13 +643,18 @@
     addAudit({ reportId: id, actorId, action: 'created', detail: 'Report created' });
     return r;
   }
-  function updateReport(id, patch, actorId) {
+  function updateReport(id, patch, actorId, actorRole) {
     const r = state.reports[id];
     if (!r) return null;
     const allowed = ['name', 'category', 'description', 'date', 'campusArea', 'exactPlace', 'identifyingDetails'];
     allowed.forEach((k) => { if (k in patch) r[k] = patch[k]; });
     r.updatedAt = now();
-    addAudit({ reportId: id, actorId, action: 'edited', detail: 'Report edited' });
+    // FR-53: Administrator edits and FR-31: reporter edits are written to
+    // the audit trail with distinct detail strings. Non-terminal reports only.
+    const detail = actorRole === 'administrator'
+      ? 'Report edited by administrator (FR-53)'
+      : 'Report edited by reporter (FR-31)';
+    addAudit({ reportId: id, actorId, subjectId: r.reporterId, action: 'edited', detail });
     return r;
   }
   function withdrawReport(id, actorId) {
@@ -1167,16 +1172,116 @@
     return message;
   }
 
+  // ---------- Member profile (PRD FR-52) ----------
+  // Active member edits display name + self-declared role. Registered email
+  // remains read-only (no email-change surface exists). Audit row is
+  // non-numbered (`profile_edited`) — distinct from FR-31 / FR-48 events.
+  function updateProfile({ id, name, role }) {
+    const u = state.users[id];
+    if (!u) return { ok: false, reason: 'not_found' };
+    if (u.accountState !== 'active') return { ok: false, reason: 'not_active' };
+    if (u.role !== 'member' && u.role !== 'administrator') return { ok: false, reason: 'bad_role' };
+    const trimmedName = String(name || '').trim();
+    if (!trimmedName) return { ok: false, reason: 'empty_name' };
+    if (trimmedName.length > 80) return { ok: false, reason: 'name_too_long' };
+    const allowedRoles = SELF_ROLES;
+    // Accept either case so form `<option value="employee">` and the
+    // canonical `Employee` value both succeed.
+    const canonical = allowedRoles.find((r) => r.toLowerCase() === String(role || '').toLowerCase());
+    if (!canonical) return { ok: false, reason: 'bad_role' };
+    u.name = trimmedName;
+    u.role = 'member';
+    u.selfRole = canonical;
+    u.updatedAt = now();
+    addAudit({
+      actorId: id, subjectId: id,
+      action: 'profile_edited',
+      detail: 'Member profile edited (FR-52)'
+    });
+    save(state);
+    return { ok: true, user: u };
+  }
+
+  // ---------- Account management / FR-5 / deactivation ----------
+  function listAccounts() {
+    return Object.values(state.users).filter((u) =>
+      u.accountState === 'active' ||
+      u.accountState === 'pending' ||
+      u.accountState === 'rejected' ||
+      u.accountState === 'deactivated'
+    );
+  }
+  function getAccount(id) { return state.users[id] || null; }
+  function deactivateAccount(id, adminId, reason) {
+    const u = state.users[id];
+    if (!u) return { ok: false, reason: 'not_found' };
+    if (u.role === 'administrator') return { ok: false, reason: 'cannot_deactivate_admin' };
+    if (u.accountState !== 'active') return { ok: false, reason: 'not_active' };
+    u.accountState = 'deactivated';
+    u.deactivatedAt = now();
+    u.deactivatedBy = adminId;
+    u.lastActiveAt = u.lastActiveAt || now();
+    // If the currently signed-in session belongs to the target, clear it.
+    // This is what makes "deactivation mid-session" reviewable: subsequent
+    // page loads see no session and the existing app.js guard redirects.
+    let sessionCleared = false;
+    if (state.session && state.session.userId === id) {
+      state.session = null;
+      sessionCleared = true;
+    }
+    addAudit({
+      actorId: adminId, subjectId: id,
+      action: 'account_deactivated',
+      detail: 'Account deactivated by administrator' + (reason ? ' — reason: ' + reason : '')
+    });
+    save(state);
+    return { ok: true, user: u, sessionCleared };
+  }
+  function reactivateAccount(id, adminId) {
+    const u = state.users[id];
+    if (!u) return { ok: false, reason: 'not_found' };
+    if (u.accountState !== 'deactivated') return { ok: false, reason: 'not_deactivated' };
+    u.accountState = 'active';
+    u.deactivatedAt = null;
+    u.deactivatedBy = null;
+    addAudit({
+      actorId: adminId, subjectId: id,
+      action: 'account_reactivated',
+      detail: 'Account reactivated by administrator'
+    });
+    save(state);
+    return { ok: true, user: u };
+  }
+  // Audit-by-subject: returns rows where the account is the subject
+  // (account_approved, account_rejected, account_deactivated,
+  // account_reactivated, profile_edited) OR where the account is the actor
+  // (edits/withdrawals/messages performed BY this account). Descending by
+  // createdAt. Used by the /admin/accounts Account history disclosure.
+  function listAuditForActor(userId) {
+    return state.audit
+      .filter((a) => a.subjectId === userId || a.actorId === userId)
+      .slice()
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  }
+  function listAuditForAccount(userId) {
+    return state.audit
+      .filter((a) => a.subjectId === userId)
+      .slice()
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  }
+
   // Audit
-  function addAudit({ reportId, claimId, actorId, action, detail }) {
+  function addAudit({ reportId, claimId, recoveryResponseId, actorId, action, detail, subjectId }) {
     const actor = state.users[actorId];
     state.audit.push({
       id: 'aud_' + Math.random().toString(36).slice(2, 9),
       reportId: reportId || null,
       claimId: claimId || null,
+      recoveryResponseId: recoveryResponseId || null,
       actorId: actorId || null,
       actorName: actor ? actor.name : 'System',
       action, detail: detail || '',
+      subjectId: subjectId || null,
       createdAt: now()
     });
     // Keep audit bounded for prototype performance.
@@ -1255,9 +1360,11 @@
     // threads
     getThread, postMessage, isThreadReadOnly, getThreadLockReason, canPostOnThread,
     // audit
-    listAudit, addAudit,
+    listAudit, addAudit, listAuditForActor, listAuditForAccount,
     // derived
     getDashboardStats, getAdminStats,
+    // accounts / FR-52 / FR-5 deactivation
+    listAccounts, getAccount, deactivateAccount, reactivateAccount, updateProfile,
     // meta
     reset, categories: CATEGORIES, campusAreas: CAMPUS_AREAS,
     selfRoles: SELF_ROLES, relationships: RELATIONSHIPS
