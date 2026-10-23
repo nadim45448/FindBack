@@ -1,0 +1,32 @@
+# Project Configuration
+# Created by BMAD → SpecsMD AI-DLC migration (master-agent / project-init)
+# Source evidence:
+#   Product Brief (FINAL, frozen) : _bmad-output/planning-artifacts/briefs/brief-FindBack-2026-08-28/brief.md
+#   PRD           (FINAL, frozen) : _bmad-output/planning-artifacts/prds/prd-FindBack-2026-08-28/prd.md
+#   UX spines                    : _bmad-output/planning-artifacts/ux-designs/ux-FindBack-2026-08-29/{EXPERIENCE.md,DESIGN.md}
+#   Baseline brief (BMAD inputs) : docs/baseline-project-brief.md
+#   BMAD config                  : _bmad/bmm/config.yaml  (communication_language: English)
+
+project_type: full-stack-web
+
+initialized_at: 2026-10-23T11:28:55Z
+
+# --- Migration provenance (read-only record; not a SpecsMD schema field) -------
+migration:
+  source_methodology: BMAD-MMM v6.11.0 (_bmad/, see _bmad/_config/manifest.yaml)
+  target_methodology: SpecsMD AI-DLC (specsmd v0.1.74, .specsmd/manifest.yaml)
+  migrated_at: 2026-10-23T11:28:55Z
+  assessment: memory-bank/migration-assessment.md
+  preserved_artifacts_index: memory-bank/preserved-artifacts.md
+  intent: 001-findback-lost-and-found
+
+# --- Frozen product definition (do not reopen) --------------------------------
+frozen_product_definition:
+  brief:
+    path: _bmad-output/planning-artifacts/briefs/brief-FindBack-2026-08-28/brief.md
+    status: final
+  prd:
+    path: _bmad-output/planning-artifacts/prds/prd-FindBack-2026-08-28/prd.md
+    status: final
+    authoritative: true
+    requirement_identifiers: FR-1..FR-53, UJ-1..UJ-5, D1..D8, A1..A6, OQ-1..OQ-5, audit events 1-30
