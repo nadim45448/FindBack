@@ -75,9 +75,19 @@ are append-only and administrator-visible but **introduce no new event numbers**
 5. **The trail is retained for the parent entity's lifetime**, and indefinitely for
    `Returned`/`Closed` reports. When an `Open` report with no interaction is
    hard-deleted under FR-10, its audit entries go with it — the only deletion path.
-6. **No sensitive values in the trail.** Claim reasons, identifying details, exact
-   places, thread bodies, passwords, and tokens are **never** written to an audit
-   record or a log.
+6. **No sensitive values in the log; catalog-named values only in the trail.**
+   The audit **trail** is a separate record from the **operational log**, and
+   the two have different rules. In the log, Claim reasons, identifying
+   details, exact places, thread bodies, passwords, and tokens are **never**
+   written — the log records the *fact* of an action, never its content. In
+   the trail, a Sensitive Field is written **only** where the frozen PRD names
+   it for that specific event (FR-31 event 2 claim reason and identifying
+   details; FR-48 event 15 where-found and observed identifying details; FR-31
+   event 14 / FR-48 event 16 thread message text; and the audit-significant
+   reasons on events 4, 5, 10, 12, 24, 25) — the trail is administrator-only
+   (FR-32) and the UX spine §17.2 renders these as expandable "Show details"
+   rows. Passwords, hashes, and tokens are **never** written to either. A
+   field no catalog entry names is refused, not written.
 7. **Reason strings that are audit-significant stay verbatim** — for example
    "another claim was approved for this item" — even when user-facing copy is
    softened (OQ-5).

@@ -2,11 +2,11 @@
 id: 006-operational-logging-and-quota
 unit: 006-audit-and-observability
 intent: 001-findback-lost-and-found
-status: draft
+status: implemented
 priority: must
 created: 2026-10-23T12:53:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 001-audit-core
+implemented: true
 traces_to: [FR-31]
 ---
 
@@ -22,7 +22,7 @@ Acceptance Criteria
 
 - [ ] **Given** any logged operation, **When** the log line is emitted, **Then** it carries requestId, actorId, action, and targetId in a structured format
 - [ ] **Given** any log line, **When** it is inspected, **Then** no secret, password hash, or token appears in it
-- [ ] **Given** any log line or audit record, **When** it is inspected, **Then** no claim reason, identifying detail, exact place, or thread body appears in it
+- [ ] **Given** any log line, **When** it is inspected, **Then** no claim reason, identifying detail, exact place, or thread body appears in it. The **operational log** never carries a Sensitive Field. The **audit trail** is a separate record and carries one only where the frozen PRD names it for that event (see story `001` acceptance criterion 4); passwords, hashes, and tokens appear in neither
 - [ ] **Given** Vercel Blob storage usage, **When** it reaches 70% or 90% of the 1 GB limit, **Then** a warning is surfaced
 - [ ] **Given** Vercel Blob storage is at its 1 GB limit, **When** a new upload is attempted, **Then** the upload is refused
 - [ ] **Given** Blob simple operations, advanced operations, data transfer, fast origin transfer, function invocations, or database storage, **When** usage reaches 70% or 90% of its limit, **Then** a warning is surfaced

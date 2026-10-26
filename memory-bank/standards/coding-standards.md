@@ -159,6 +159,13 @@ Rules:
 - **Never log** passwords, password-reset tokens, session tokens, Claim reasons,
   identifying details, thread message bodies, or any FR-37 sensitive value. Log
   the *fact* of the action, never its content.
+- The **audit trail** is a separate record from the operational log, and it
+  has one exception to the rule above: a Sensitive Field may appear in a trail
+  entry **only** where the frozen PRD names it for that event (FR-31 event 2,
+  FR-48 event 15, FR-31 event 14 / FR-48 event 16, and the audit-significant
+  reasons on events 4, 5, 10, 12, 24, 25). The trail is administrator-only
+  (FR-32). The exception does **not** extend to the log, and it does not
+  cover passwords, hashes, or tokens, which are never written to either.
 - Audit-trail **reads** are logged separately with administrator ID, query, and
   timestamp (PRD §10) — and are written to the database, not only to stdout,
   because Vercel Hobby retains runtime logs for only 1 hour.

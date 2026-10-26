@@ -3,14 +3,31 @@ id: 002-audit-reads
 unit: 006-audit-and-observability
 intent: 001-findback-lost-and-found
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 005-audit-visibility-and-read-logging
 created: 2026-10-23T13:05:30Z
-started: null
-completed: null
-current_stage: null
-stages_completed: []
+started: 2026-10-26T11:14:35Z
+completed: 2026-10-26T13:15:34Z
+current_stage: complete
+stages_completed:
+  - name: model
+    completed: 2026-10-26T11:14:35Z
+    artifact: ddd-01-domain-model.md
+  - name: design
+    completed: 2026-10-26T11:30:58Z
+    artifact: ddd-02-technical-design.md
+  - name: adr
+    completed: 2026-10-26T12:32:12Z
+    artifact:
+      - adr-7-audit-read-record-durability.md
+      - adr-8-audit-read-authorization-and-scope.md
+  - name: implement
+    completed: 2026-10-26T13:00:00Z
+    artifact: source
+  - name: test
+    completed: 2026-10-26T13:15:34Z
+    artifact: ddd-03-test-report.md
 
 requires_bolts:
   - 001-audit-core
@@ -49,10 +66,16 @@ query meets the 1s p95 budget at the PRD's scale of 10,000 reports × 50 events.
 
 ## Stages
 
-- [ ] **1. model**: Pending → `ddd-01-domain-model.md`
-- [ ] **2. design**: Pending → `ddd-02-technical-design.md`
-- [ ] **3. implement**: Pending → source
-- [ ] **4. test**: Pending → `ddd-03-test-report.md`
+- [x] **1. model**: ✅ 2026-10-26 → `ddd-01-domain-model.md`
+- [x] **2. design**: ✅ 2026-10-26 → `ddd-02-technical-design.md`
+- [x] **3. adr**: ✅ 2026-10-26 → `adr-7-audit-read-record-durability.md`, `adr-8-audit-read-authorization-and-scope.md`
+- [x] **4. implement**: ✅ 2026-10-26 → source
+- [x] **5. test**: ✅ 2026-10-26 → `ddd-03-test-report.md`
+
+> Stage list corrected 2026-10-26 to the 5 stages defined by
+> `.specsmd/aidlc/templates/construction/bolt-types/ddd-construction-bolt.md`,
+> matching bolt `001-audit-core`. The original 4-item list omitted the optional
+> ADR Analysis stage.
 
 ## Dependencies
 
@@ -65,12 +88,12 @@ query meets the 1s p95 budget at the PRD's scale of 10,000 reports × 50 events.
 
 ## Success Criteria
 
-- [ ] A non-administrator cannot reach any audit view or receive trail content
-- [ ] Every read writes an AuditReadLog record with administrator, query, filters, count, timestamp
-- [ ] AuditReadLog is a distinct record type, not an event on the audited entity
-- [ ] Reads are reviewable later than one hour, which requires a table rather than a log line
-- [ ] Trail query completes within 1s p95 at 10,000 reports × 50 events
-- [ ] Pagination is reverse-chronological, 25 per page, no infinite scroll
+- [x] A non-administrator cannot reach any audit view or receive trail content
+- [x] Every read writes an AuditReadLog record with administrator, query, filters, count, timestamp
+- [x] AuditReadLog is a distinct record type, not an event on the audited entity
+- [x] Reads are reviewable later than one hour, which requires a table rather than a log line
+- [x] Trail query completes within 1s p95 at 10,000 reports × 50 events
+- [x] Pagination is reverse-chronological, 25 per page, no infinite scroll
 
 ## Notes
 

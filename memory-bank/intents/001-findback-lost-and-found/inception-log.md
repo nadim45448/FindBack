@@ -26,7 +26,7 @@ definition). No application source exists in the repository.
 | 1 | Clarifying questions | ✅ **satisfied by frozen PRD** — not re-asked |
 | 2 | Requirements review | ✅ **satisfied at Checkpoint 3** |
 | 3 | Artifacts review (context + units + stories + bolts) | ✅ **owner-approved 2026-10-23** |
-| 4 | Ready for Construction | ⏳ **awaiting explicit owner confirmation** |
+| 4 | Ready for Construction | ✅ **owner-approved 2026-10-26** |
 
 ## Artifacts
 
@@ -47,6 +47,7 @@ definition). No application source exists in the repository.
 | Units | ✅ **7 units · 53/53 FRs assigned** | `units.md` + `units/*/unit-brief.md` |
 | Stories | ✅ **63 stories · 53/53 FRs traced** | `units/*/stories/*.md` + `memory-bank/story-index.md` |
 | Bolt Plan | ✅ **23 bolts · 11 waves** | `memory-bank/bolts/*/bolt.md` |
+| Construction Protocol | ✅ **owner-mandated 2026-10-25** | `memory-bank/standards/construction-protocol.md` + `puku.md` |
 
 ## Summary so far
 
@@ -96,12 +97,27 @@ by this migration.
 - [x] Units decomposed — 7 units, 53/53 FRs assigned, dependency graph has no cycles
 - [x] Stories created for all units — 63 stories, all `draft`, 53/53 FRs traced
 - [x] Bolts planned — 23 bolts, 63/63 stories assigned, 11 execution waves, no cycles
-- [x] Human review complete — Checkpoint 3 approved 2026-10-23; Checkpoint 4 pending
+- [x] Human review complete — Checkpoint 3 approved 2026-10-23; Checkpoint 4 approved 2026-10-26
 
 ## Next steps
 
-1. Checkpoint 4 — Ready for Construction, requires explicit user confirmation
-2. `/specsmd-construction-agent --bolt-id="001-audit-core"`
+1. **Bolt `001-audit-core`, Stage 2 — Technical Design.** Stage 1 (Domain Model) completed 2026-10-26; awaiting owner confirmation to proceed.
+2. `/specsmd-construction-agent --bolt-id="001-audit-core" --stage="design"`
+
+
+Construction runs **one bolt stage per turn** under
+`memory-bank/standards/construction-protocol.md`: complete the stage, verify it
+locally, report, then stop and wait for owner confirmation before the next
+stage.
+
+### Construction protocol decisions
+
+| ID | Decision |
+|---|---|
+| CP-1 | One bolt stage per turn, with owner confirmation between stages |
+| CP-2 | Local verification uses a Docker PostgreSQL container, not the host cluster |
+| CP-3 | The dev server is left running after Implement/Test steps for owner inspection |
+| CP-4 | Blob and email paths are verified by automated test only, and reported as such |
 
 ## Bolt plan
 

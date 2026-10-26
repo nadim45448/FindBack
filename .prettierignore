@@ -1,0 +1,25 @@
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+package-lock.json
+
+# Harness and workflow directories — not application source, and not formatted
+# by this project's Prettier config.
+.agents/
+.claude/
+.gemini/
+.puku/
+.puku-cli/
+.specsmd/
+_bmad/
+_bmad-output/
+aidlc/
+design-process/
+docs/
+memory-bank/
+plans/
+.tmp/
+

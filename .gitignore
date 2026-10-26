@@ -33,3 +33,20 @@ aidlc/spaces/*/intents/*/.aidlc-*
 aidlc/diagnostics/
 .claude/settings.local.json
 # END AI-DLC:gitignore
+
+# FindBack local development
+# Real environment files hold secrets; only .env.example is committed.
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-error.log*
+/node_modules
+/.next
+/out
+/coverage
+/playwright-report
+/test-results
+*.tsbuildinfo
+next-env.d.ts
+

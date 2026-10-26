@@ -1,0 +1,99 @@
+// Prisma schema — FindBack
+//
+// Shape is fixed by the frozen PRD glossary (`data-stack.md` § Schema outline)
+// and by the Audit and Observability technical design
+// (`memory-bank/bolts/001-audit-core/ddd-02-technical-design.md`).
+//
+// The audit tables are append-only. There is deliberately NO update path and
+// NO delete path in the application layer, and the database refuses both. The
+// single removal path in the system is the FR-10 hard delete of an
+// interaction-free Open report, which removes its trail with it — gated by a
+// transaction-scoped flag (ADR-6).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Prisma 7 takes the connection URL from prisma.config.ts, not from here.
+}
+
+/// Append-only audit trail.
+///
+/// FR-31 events 1–14 and FR-48 events 15–30, plus non-numbered FR-52
+/// profile-edit and FR-53 report-edit records.
+///
+/// `eventNumber` is nullable: a numbered event stores its frozen catalog
+/// number (1–30), a non-numbered record stores NULL. The range is enforced by
+/// a CHECK constraint in the migration, so an application bug cannot invent
+/// event 31.
+///
+/// There is no `updatedAt` and no soft-delete column. A column that could
+/// change invites a code path that changes it.
+model AuditEvent {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventNumber Int?
+  eventType   String
+  parentType  String
+  parentId    String   @db.Uuid
+
+  actorId    String @db.Uuid
+  actorRole  String
+
+  actingAdministratorId     String? @db.Uuid
+  determinedByUserId        String? @db.Uuid
+  recordedByAdministratorId String? @db.Uuid
+
+  reason         String?
+  previousValues Json?
+  changedFields  Json?
+  metadata       Json?
+
+  occurredAt DateTime @default(now()) @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  // The trail view's index. `parentType` leads because the trail query
+  // filters on it, and an index whose leading column is unconstrained cannot
+  // supply the `occurredAt DESC, id DESC` ordering — the planner would sort
+  // the matched rows instead of reading them in order.
+  @@index([parentType, parentId, occurredAt(sort: Desc), id(sort: Desc)], map: "idx_audit_events_trail")
+  @@index([parentId, occurredAt(sort: Desc), id(sort: Desc)], map: "idx_audit_events_parent_occurred")
+  @@index([actorId, occurredAt(sort: Desc)], map: "idx_audit_events_actor_occurred")
+  @@index([parentType, parentId], map: "idx_audit_events_parent_type")
+  @@index([eventNumber], map: "idx_audit_events_event_number")
+  @@index([occurredAt(sort: Desc)], map: "idx_audit_events_occurred")
+}
+
+/// PRD §10: audit-trail reads are themselves logged.
+///
+/// A distinct record type, not an event on the audited entity. Written to the
+/// database rather than only to stdout, because Vercel Hobby retains runtime
+/// logs for one hour.
+model AuditReadLog {
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  administratorId String @db.Uuid
+  query           String?
+  filters         Json?
+  resultCount     Int
+  requestId       String?
+
+  readAt    DateTime @default(now()) @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([administratorId, readAt(sort: Desc)], map: "idx_audit_read_logs_admin_read_at")
+}
+
+/// A recorded usage reading against a verified free-tier limit.
+///
+/// A reading is a fact, not a decision. It never triggers a purchase, a plan
+/// upgrade, or an automatic scale-out.
+model QuotaSnapshot {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  resource    String
+  usedAmount  BigInt
+  limitAmount BigInt
+  observedAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([resource, observedAt(sort: Desc)], map: "idx_quota_snapshots_resource_observed")
+}

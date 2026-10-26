@@ -2,11 +2,11 @@
 id: 005-audit-visibility-and-read-logging
 unit: 006-audit-and-observability
 intent: 001-findback-lost-and-found
-status: draft
+status: implemented
 priority: must
 created: 2026-10-23T12:52:30Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 002-audit-reads
+implemented: true
 traces_to: [FR-32]
 ---
 
@@ -20,13 +20,13 @@ I want to know who has reviewed my project's audit trail
 
 Acceptance Criteria
 
-- [ ] **Given** a non-administrator member, **When** they attempt to reach any audit view, **Then** the request is refused and no trail content is returned
-- [ ] **Given** an administrator, **When** they open a report's audit trail, **Then** the trail is returned in reverse-chronological order
-- [ ] **Given** an administrator viewing a trail, **When** the read occurs, **Then** a record is written capturing administrator, query, filters, result count, and timestamp
-- [ ] **Given** an audit read record, **When** it is inspected, **Then** it is a distinct record type and not an event on the audited entity
-- [ ] **Given** audit trail storage, **When** a read must be reviewable later, **Then** it is stored in the database rather than only in runtime logs
-- [ ] **Given** a trail query, **When** it is executed at the PRD scale of 10,000 reports with 50 events each, **Then** it completes within 1 second at the 95th percentile
-- [ ] **Given** a trail listing, **When** it is paginated, **Then** it shows 25 entries per page with no infinite scroll
+- [x] **Given** a non-administrator member, **When** they attempt to reach any audit view, **Then** the request is refused and no trail content is returned
+- [x] **Given** an administrator, **When** they open a report's audit trail, **Then** the trail is returned in reverse-chronological order
+- [x] **Given** an administrator viewing a trail, **When** the read occurs, **Then** a record is written capturing administrator, query, filters, result count, and timestamp
+- [x] **Given** an audit read record, **When** it is inspected, **Then** it is a distinct record type and not an event on the audited entity
+- [x] **Given** audit trail storage, **When** a read must be reviewable later, **Then** it is stored in the database rather than only in runtime logs
+- [x] **Given** a trail query, **When** it is executed at the PRD scale of 10,000 reports with 50 events each, **Then** it completes within 1 second at the 95th percentile
+- [x] **Given** a trail listing, **When** it is paginated, **Then** it shows 25 entries per page with no infinite scroll
 
 Technical Notes
 

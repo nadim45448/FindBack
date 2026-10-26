@@ -1,0 +1,38 @@
+# Local development services for FindBack.
+#
+# PostgreSQL runs in Docker because the host cluster at /var/run/postgresql:5432
+# is not accessible to the local user (role does not exist, superuser needs a
+# password we do not have). See memory-bank/standards/construction-protocol.md,
+# decision CP-2.
+#
+# Host port 5433 is used because 5432 is occupied by the host cluster.
+#
+# Usage:
+#   docker compose up -d      # start
+#   docker compose ps         # check
+#   docker compose down       # stop (keeps data)
+#   docker compose down -v    # stop and delete the database volume
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: findback-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: findback
+      POSTGRES_PASSWORD: findback_dev
+      POSTGRES_DB: findback
+    ports:
+      # Host 5433 -> container 5432. The host's own PostgreSQL already owns 5432.
+      - '5433:5432'
+    volumes:
+      - findback-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U findback -d findback']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  findback-pgdata:

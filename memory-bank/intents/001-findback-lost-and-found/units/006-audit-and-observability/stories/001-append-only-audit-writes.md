@@ -2,11 +2,11 @@
 id: 001-append-only-audit-writes
 unit: 006-audit-and-observability
 intent: 001-findback-lost-and-found
-status: draft
+status: implemented
 priority: must
 created: 2026-10-23T12:51:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 001-audit-core
+implemented: true
 traces_to: [FR-31]
 ---
 
@@ -24,7 +24,7 @@ Acceptance Criteria
 - [ ] **Given** a state-changing action that rolls back, **When** the rollback completes, **Then** no audit record for that action exists
 - [ ] **Given** an audit record is written, **When** it is stored, **Then** it carries the event number or non-numbered marker, actor, acting administrator where applicable, target, and timestamp
 - [ ] **Given** FR-31 events 1 through 14, **When** any of them fires, **Then** it is recorded with actor and timestamp
-- [ ] **Given** an audit write, **When** it is inspected, **Then** it contains no claim reason, no identifying details, no exact place, no thread body, no password, and no token
+- [ ] **Given** an audit write, **When** it is inspected, **Then** it contains no password, hash, or token, and no FR-37 value that the event's catalog entry does not name. A field the catalog *does* name for that event — the claim reason and identifying details on event 2, the where-found and observed identifying details on event 15, the thread message text on events 14 and 16 — is recorded on the administrator-only trail, and is never written to an operational log
 - [ ] **Given** a caller that attempts to write an audit record outside its transaction, **When** the attempt is made, **Then** it is refused
 
 Technical Notes

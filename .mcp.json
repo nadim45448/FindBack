@@ -18,21 +18,15 @@
     },
     "aws-pricing": {
       "command": "uvx",
-      "args": [
-        "awslabs.aws-pricing-mcp-server@latest"
-      ]
+      "args": ["awslabs.aws-pricing-mcp-server@latest"]
     },
     "aws-iac": {
       "command": "uvx",
-      "args": [
-        "awslabs.aws-iac-mcp-server@latest"
-      ]
+      "args": ["awslabs.aws-iac-mcp-server@latest"]
     },
     "aws-serverless": {
       "command": "uvx",
-      "args": [
-        "awslabs.aws-serverless-mcp-server@latest"
-      ]
+      "args": ["awslabs.aws-serverless-mcp-server@latest"]
     }
   }
 }

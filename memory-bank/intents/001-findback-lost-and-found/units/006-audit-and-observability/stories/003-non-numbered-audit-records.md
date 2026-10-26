@@ -2,11 +2,11 @@
 id: 003-non-numbered-audit-records
 unit: 006-audit-and-observability
 intent: 001-findback-lost-and-found
-status: draft
+status: implemented
 priority: must
 created: 2026-10-23T12:51:30Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 001-audit-core
+implemented: true
 traces_to: [FR-31]
 ---
 

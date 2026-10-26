@@ -1,0 +1,116 @@
+:root {
+  /* Tokens transcribed from the frozen DESIGN.md.
+     See src/ui/tokens.ts for the typed source of truth. */
+
+  --brand-primary: #7c2907;
+  --brand-primary-hover: #9a3412;
+  --brand-primary-active: #7f1d1d;
+  --brand-primary-soft: #ffe7d6;
+  --brand-on-primary: #ffffff;
+  --brand-secondary: #1e5a4e;
+
+  --background: #faf7f2;
+  --surface: #ffffff;
+  --surface-dim: #f2ede4;
+  --surface-container-low: #f7f2ea;
+  --surface-container: #f2ede4;
+  --surface-container-high: #ece5d9;
+  --surface-overlay: #00000080;
+  --on-background: #1f1b16;
+  --on-surface: #1f1b16;
+  --on-surface-variant: #5c5246;
+  --border-subtle: #e7dfd1;
+  --border-default: #d1c5b0;
+  --border-strong: #9a8e78;
+  --focus-ring: #7c2907;
+  --disabled-bg: #ece5d9;
+  --disabled-text: #9a8e78;
+  --link: #7c2907;
+
+  --semantic-success: #2d7a4f;
+  --semantic-success-soft: #d6f0df;
+  --semantic-warning: #b45309;
+  --semantic-warning-soft: #ffe7d6;
+  --semantic-error: #b91c1c;
+  --semantic-error-soft: #fde2e2;
+  --semantic-info: #1e5a8e;
+  --semantic-info-soft: #d6e8f5;
+
+  --font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --touch-target: 44px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #161310;
+    --surface: #211c18;
+    --surface-dim: #1b1613;
+    --surface-container-low: #1f1a16;
+    --surface-container: #251f1a;
+    --surface-container-high: #2d2620;
+    --surface-overlay: #000000b3;
+    --on-background: #f5efe5;
+    --on-surface: #f5efe5;
+    --on-surface-variant: #c4b8a4;
+    --border-subtle: #2d2620;
+    --border-default: #3d352c;
+    --border-strong: #5c5246;
+    --focus-ring: #fb923c;
+    --disabled-bg: #251f1a;
+    --disabled-text: #5c5246;
+    --link: #fb923c;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--on-background);
+  font-family: var(--font-family);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--link);
+}
+
+/* Visible focus indicator on every interactive element. */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

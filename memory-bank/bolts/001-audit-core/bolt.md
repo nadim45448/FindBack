@@ -3,17 +3,29 @@ id: 001-audit-core
 unit: 006-audit-and-observability
 intent: 001-findback-lost-and-found
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-append-only-audit-writes
   - 003-non-numbered-audit-records
   - 004-append-only-enforcement
   - 006-operational-logging-and-quota
 created: 2026-10-23T13:05:00Z
-started: null
-completed: null
-current_stage: null
-stages_completed: []
+started: 2026-10-26T08:23:50Z
+completed: 2026-10-26T11:14:35Z
+current_stage: complete
+stages_completed:
+  - name: model
+    completed: 2026-10-26T08:23:50Z
+    artifact: ddd-01-domain-model.md
+  - name: design
+    completed: 2026-10-26T09:13:30Z
+    artifact: ddd-02-technical-design.md
+  - name: adr
+    completed: 2026-10-26T09:41:00Z
+    artifact: adr-6-fr10-audit-deletion-flag.md
+  - name: implement
+    completed: 2026-10-26T10:22:00Z
+    artifact: src/domain/audit, src/application/audit, src/infrastructure/audit
 
 requires_bolts: []
 enables_bolts:
@@ -58,10 +70,16 @@ path, structured operational logging, and quota monitoring against the $0 budget
 
 ## Stages
 
-- [ ] **1. model**: Pending → `ddd-01-domain-model.md`
-- [ ] **2. design**: Pending → `ddd-02-technical-design.md`
-- [ ] **3. implement**: Pending → source
-- [ ] **4. test**: Pending → `ddd-03-test-report.md`
+- [x] **1. model**: ✅ 2026-10-26 → `ddd-01-domain-model.md`
+- [x] **2. design**: ✅ 2026-10-26 → `ddd-02-technical-design.md`
+- [x] **3. adr**: ✅ 2026-10-26 → `adr-6-fr10-audit-deletion-flag.md`
+- [x] **4. implement**: ✅ 2026-10-26 → `src/domain/audit/`, `src/application/`, `src/infrastructure/audit/`
+- [x] **5. test**: ✅ 2026-10-26 → `ddd-03-test-report.md`
+
+> Stage list corrected 2026-10-26 to the 5 stages defined by
+> `.specsmd/aidlc/templates/construction/bolt-types/ddd-construction-bolt.md`.
+> The bolt type is the execution plan; the earlier 4-item list omitted the
+> optional ADR Analysis stage.
 
 ## Dependencies
 
@@ -76,12 +94,12 @@ path, structured operational logging, and quota monitoring against the $0 budget
 
 ## Success Criteria
 
-- [ ] An audit write cannot commit outside its caller's transaction
-- [ ] A rolled-back state change leaves no audit record
-- [ ] No code path can update or delete an audit record, enforced at the schema level
-- [ ] No password, hash, token, claim reason, identifying detail, exact place, or thread body appears in any log or audit record
-- [ ] Blob storage at its limit refuses new uploads; all other quotas warn at 70% and 90%
-- [ ] No paid logging, analytics, or APM dependency was introduced
+- [x] An audit write cannot commit outside its caller's transaction
+- [x] A rolled-back state change leaves no audit record
+- [x] No code path can update or delete an audit record, enforced at the schema level
+- [x] No password, hash, token, claim reason, identifying detail, exact place, or thread body appears in any log or audit record
+- [x] Blob storage at its limit refuses new uploads; all other quotas warn at 70% and 90%
+- [x] No paid logging, analytics, or APM dependency was introduced
 
 ## Notes
 
