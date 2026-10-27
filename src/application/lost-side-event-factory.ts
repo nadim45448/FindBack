@@ -108,6 +108,15 @@ export interface ResponseSubmittedDraft extends LostSideRef {
 
 /** Draft for event 16 — a message posted in a per-Recovery-Response thread. */
 export interface ThreadMessagePostedDraft extends LostSideRef {
+  /**
+   * The thread message's own id.
+   *
+   * The event's parent is the **message**, not the response — the trail's
+   * retention follows the parent entity's own lifetime, and the design
+   * specifies `parent_id = message`. The response id is carried in the
+   * payload, so the event is still queryable by response.
+   */
+  readonly threadMessageId: string;
   /** The owner, the responder, or an administrator. */
   readonly actorId: string;
   readonly actorRole: HumanRole;
@@ -283,8 +292,12 @@ export class LostSideEventFactory {
   /**
    * Record event 16 — a message was posted in a per-Recovery-Response thread.
    *
-   * The thread message is parented to the **message**, not the response,
-   * because the trail's retention follows the thread message's own lifetime.
+   * The event's parent is the **thread message**, not the response. The
+   * trail's retention follows the parent entity's own lifetime, and a
+   * per-Recovery-Response thread message is its own parent type — the same
+   * way FR-31 event 14 hangs from the per-Claim thread message. The response
+   * id is carried in the payload, so the event is still queryable by
+   * response.
    */
   async recordThreadMessagePosted(
     draft: ThreadMessagePostedDraft,
@@ -295,7 +308,7 @@ export class LostSideEventFactory {
         eventType: EVENT.threadMessagePosted,
         parent: {
           parentType: 'recovery_response_thread_message',
-          parentId: draft.recoveryResponseId,
+          parentId: draft.threadMessageId,
         },
         actor: { actorId: draft.actorId, actorRole: draft.actorRole },
         payload: {

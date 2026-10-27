@@ -58,6 +58,9 @@ last_updated: 2026-10-26T13:20:00Z
 | 2026-10-27 | `003-audit-lost-side-events` | stage-complete | adr → implement (pending owner review). Owner selected "all" — three ADRs created, all `status: proposed` pending approval. Decision index now at 11 |
 | 2026-10-27 | `003-audit-lost-side-events` | stage-complete | implement → test. The Lost-side domain module, the thirteen-method factory, and the reconciled catalog are in place. 311/311 tests pass, typecheck, lint, build, and Prettier green |
 | 2026-10-27 | `003-audit-lost-side-events` | decision | Owner accepted ADR-9, ADR-10, and ADR-11, and confirmed the PRD's reading of criterion 3. The three ADRs are now `status: accepted` and the decision index records them as such. The story's acceptance criterion 3 and the bolt's success criterion were corrected to "21 or 22, 26, and 30", each annotated in place. No source code changed |
+| 2026-10-27 | `003-audit-lost-side-events` | stage-complete | implement → test (pending owner review). The acceptance, security, and performance suites are written; the PRD-parity check closes bolt 001's open recommendation |
+| 2026-10-27 | `003-audit-lost-side-events` | stage-complete | test → complete (pending owner review). 353/353 tests pass across 31 files, 95.02% coverage, typecheck, lint, build, and Prettier green. **Two real defects found and fixed in the Stage 4 implementation** — event 16's parent id and the `reason` column's credential bypass. The smoke run against the live database passed all eight checks |
+| 2026-10-27 | `003-audit-lost-side-events` | completed | Owner approved the Stage 5 test report. Bolt closed with 353/353 tests passing, 95.02% coverage, and two High-severity defects found and fixed by the acceptance suite (event 16 was filed against the Recovery Response rather than the thread message, and the `reason` column bypassed the credential check). Bolt 001's open PRD-parity recommendation is closed |
 
 ## Execution Summary
 
@@ -311,6 +314,33 @@ figures are from local Docker PostgreSQL, not a Hobby-tier deployment.
 **The bolt is complete pending the owner's review of the test report.** The
 Stage 5 checkpoint is mandatory: the report is presented, and the bolt is not
 marked complete until the owner confirms.
+
+### Bolt `003-audit-lost-side-events` — closed
+
+Owner approved the Stage 5 test report. Bolt closed: **353/353 tests passing
+across 31 files, 95.02% line coverage**, and **two real defects found in the
+Stage 4 implementation and fixed** — event 16's `parent_id` was the Recovery
+Response id rather than the thread message id, and the `reason` column
+bypassed the payload sanitizer's credential check. Both were rated **High**,
+and both were caught by the acceptance suite rather than by the Stage 4 unit
+tests.
+
+**Verification re-run at close time, not carried over from Stage 5.** Typecheck
+pass · lint pass · Prettier pass · 353/353 tests across 31 files · coverage
+95.02% lines / 92.76% branches / 100% functions · build pass ·
+`npm run smoke:lost-side` 8/8 against the live database · dev server HTTP 200
+on port 3000.
+
+**Bolt 001's open recommendation is closed.** The PRD-parity check now guards
+the catalog against drift from the frozen PRD, and the check was verified
+against four injected drifts.
+
+**Two questions carried forward.** Units 004, 005, and 007 must call the
+factory rather than write events directly — the factory is the only place the
+determination-owner check (ADR-11) and the batch-shape check live. And
+Unit 007's trail view should link to each response's thread trail, because
+event 16's parent is the thread message and so a report's own trail does not
+show the message posts.
 
 ### Bolt `001-audit-core` — closed
 
@@ -1110,3 +1140,77 @@ and 005 do not exist yet, so the *firing* modules' half of the contract is
 exercised by the factory's API rather than by the callers that will use it.
 That is the shape Stage 2 predicted, and it is Stage 5's job to assert it
 against the real calling patterns.
+
+## Stage 5 — Test (`003-audit-lost-side-events`)
+
+Artifact: `memory-bank/bolts/003-audit-lost-side-events/ddd-03-test-report.md`
+
+**Stage 5 found two real defects in the Stage 4 implementation.** Both are
+fixed. Neither was caught by the unit tests written in Stage 4 — they were
+caught by writing the acceptance criteria as executable statements, which is
+what the acceptance suite is for.
+
+1. **Event 16's `parent_id` was the Recovery Response id, not the thread
+   message id.** The Stage 2 design specifies `parent_id = message`, and the
+   trail's retention follows the parent entity's own lifetime. The event was
+   therefore filed against the wrong parent, and the report's own trail could
+   not show the message post. Fixed by adding `threadMessageId` to
+   `ThreadMessagePostedDraft`; the response id stays in the payload, so the
+   event is still queryable by response. Rated **High**: the trail is the
+   evidence a verification is reconstructed from, and an event filed against
+   the wrong parent is a record of the wrong thing.
+
+2. **The `reason` column bypassed the payload sanitizer, so a credential
+   pasted into an administrator's reason was written to the trail.** The
+   standards say a password, hash, or token is never written to the trail
+   *or* the log, and the trail's Sensitive-Field exception covers
+   catalog-named *fields*, not credentials — and a reason is
+   administrator-supplied free text that could carry one by accident. Fixed
+   in `AuditWriter.record`, which now applies the sanitizer's
+   `looksLikeSecret` heuristic to the reason. The check errs towards
+   refusing, and the ordinary reason is still stored verbatim, so the
+   verbatim rule (OQ-5) is not weakened. Rated **High**.
+
+**The PRD-parity check closes bolt 001's open recommendation.** The catalog
+exists in two places — the frozen PRD and `event-catalog.ts` — and the shape
+tests did not catch a drift between them. `src/domain/audit/prd-parity.test.ts`
+reads the PRD, parses the FR-31 and FR-48 event lists, and asserts the
+catalog's numbers, titles, and named fields against it. The check was
+verified against four injected drifts — renaming event 15, dropping a field
+from it, moving event 30 to number 31, and breaking the numbered set's
+completeness — and caught all four.
+
+**The performance suite measures both FR-48 NFRs.** The Lost-side trail query
+at the PRD's scale (10,000 reports × 50 events) measured p95 **0.7 ms** against
+a 1,000 ms budget; the 50-Recovery-Response verification-screen trail — every
+page, not one — measured p95 **1.2 ms**. The plan is an index-only scan on
+`idx_audit_events_trail` with no sort, so **no new index** was needed. The
+plan assertion is the one with teeth: the timing assertion alone would pass
+even with a sorting plan, because the budget is 1,000 ms and the measured
+time is under 2 ms either way.
+
+**Verification re-run at close time.** Typecheck pass · lint pass · Prettier
+pass · **353/353 tests across 31 files** · coverage **95.02%** lines / 92.76%
+branches / 100% functions · build pass · `npm run smoke:lost-side` 8/8 against
+the live database · dev server HTTP 200 on port 3000, left running for the
+owner.
+
+**Not manually tested, and stated plainly.** Units 004, 005, and 007 do not
+exist yet, so no Recovery Response can be submitted, selected, or determined
+through a screen; the Lost-side behaviour was exercised through the same
+factory and the same reader the firing modules and the trail view will use.
+The Vercel Blob path and the outbound email path are not touched by this bolt
+and remain covered by automated test only, per `construction-protocol.md`
+CP-4. The performance figures are from local Docker PostgreSQL, not a
+Hobby-tier deployment.
+
+**One question carried forward to Unit 007.** Event 16's parent is the thread
+message, so a report's own trail does not show the message posts. That is
+correct under the retention rule, but a reader of the Lost report's trail
+will not see the messages and may conclude the thread was never posted to.
+The trail view should therefore link to each response's thread trail. This is
+a UI decision, and it is worth making before the trail view is built.
+
+**The bolt is complete pending the owner's review of the test report.** The
+Stage 5 checkpoint is mandatory: the report is presented, and the bolt is not
+marked complete until the owner confirms.

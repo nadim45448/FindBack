@@ -24,6 +24,7 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "smoke:audit": "tsx scripts/smoke-audit.ts",
+    "smoke:lost-side": "tsx scripts/lost-side-smoke.ts",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build"
   },
   "prisma": {

@@ -3,13 +3,13 @@ id: 003-audit-lost-side-events
 unit: 006-audit-and-observability
 intent: 001-findback-lost-and-found
 type: ddd-construction-bolt
-status: in-progress
+status: complete
 stories:
   - 002-lost-side-audit-events
 created: 2026-10-23T13:06:00Z
 started: 2026-10-26T13:20:00Z
-completed: null
-current_stage: implement
+completed: 2026-10-27T09:30:00Z
+current_stage: complete
 stages_completed:
   - name: model
     completed: 2026-10-26T13:20:00Z
@@ -29,6 +29,9 @@ stages_completed:
       - src/domain/audit/lost-side-events.ts
       - src/application/lost-side-event-factory.ts
       - src/domain/audit/event-catalog.ts
+  - name: test
+    completed: 2026-10-27T09:00:00Z
+    artifact: ddd-03-test-report.md
 
 requires_bolts:
   - 001-audit-core
@@ -73,7 +76,7 @@ closeout performed by Unit 005.
 - [x] **2. design**: ✅ 2026-10-26 → `ddd-02-technical-design.md`
 - [x] **3. adr**: ✅ 2026-10-27 → `adr-9-fr48-catalog-ownership.md`, `adr-10-batch-resolution-contract.md`, `adr-11-determination-owner-check.md`
 - [x] **4. implement**: ✅ 2026-10-27 → `src/domain/audit/lost-side-events.ts`, `src/application/lost-side-event-factory.ts`, `src/domain/audit/event-catalog.ts`
-- [ ] **5. test**: Pending → `ddd-03-test-report.md`
+- [x] **5. test**: ✅ 2026-10-27 → `ddd-03-test-report.md`
 
 > Stage list corrected 2026-10-26 to the 5 stages defined by
 > `.specsmd/aidlc/templates/construction/bolt-types/ddd-construction-bolt.md`,
@@ -91,13 +94,13 @@ closeout performed by Unit 005.
 
 ## Success Criteria
 
-- [ ] Every FR-48 event from 15 to 30 is defined with actor and timestamp
-- [ ] Events 18 and 19 store `determined_by` and `recorded_by` as distinct values
-- [ ] Events 21 or 22, 26, and 30 fire from Unit 005's closeout in the same transaction
+- [x] Every FR-48 event from 15 to 30 is defined with actor and timestamp
+- [x] Events 18 and 19 store `determined_by` and `recorded_by` as distinct values
+- [x] Events 21 or 22, 26, and 30 fire from Unit 005's closeout in the same transaction
   - *Corrected 2026-10-27 on owner confirmation.* The criterion previously read "Events 24–26 and 30". Events 24 and 25 are **Closed-path** events, and FR-21 makes `Returned → Closed` unavailable ("Returned is terminal"), so neither can occur in the Returned closeout's transaction. The corrected set is the four events the PRD names for that path. No code change follows from the correction — `recordReturnedCloseout` has no path to event 24 or 25.
-- [ ] The trail shows no gap between events emitted by Unit 004 and Unit 005
-- [ ] Audit reasons are verbatim even where user-facing copy was softened
-- [ ] No event records an observed identifying detail, exact place, or thread body
+- [x] The trail shows no gap between events emitted by Unit 004 and Unit 005
+- [x] Audit reasons are verbatim even where user-facing copy was softened
+- [x] No event records an observed identifying detail, exact place, or thread body
 
 ## Notes
 

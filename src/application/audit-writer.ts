@@ -14,11 +14,12 @@
 
 import {
   buildAuditEventFields,
+  looksLikeSecret,
   sanitizeForTrail,
   type AuditEvent,
   type AuditEventDraft,
 } from '@/domain/audit';
-import { AuditWriteOutsideTransactionError } from '@/domain/audit';
+import { AuditPayloadRejectedError, AuditWriteOutsideTransactionError } from '@/domain/audit';
 import type { AuditEventRepository } from './ports/audit-event-repository';
 import { isTransactionHandle, type TransactionHandle } from './ports/transaction-handle';
 
@@ -41,6 +42,21 @@ export class AuditWriter {
     }
 
     const payload = draft.payload ? sanitizeForTrail(draft.eventType, draft.payload) : null;
+
+    // The `reason` column is a typed column, not a payload field, so it does
+    // not pass through the sanitizer. It is checked here instead, because a
+    // password, hash, or token is **never** written to the trail or the log —
+    // the trail's Sensitive-Field exception covers catalog-named *fields*, not
+    // credentials, and a reason is administrator-supplied free text that
+    // could carry one by accident.
+    if (draft.reason && looksLikeSecret(draft.reason)) {
+      throw new AuditPayloadRejectedError(
+        draft.eventType,
+        'reason',
+        'The reason on this audit event appears to be a credential, and a credential is never written to the trail.',
+      );
+    }
+
     const fields = buildAuditEventFields({ ...draft, payload: payload?.fields ?? undefined });
 
     // The id and the creation timestamp are assigned here, not taken from the

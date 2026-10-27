@@ -100,6 +100,7 @@ describe('LostSideEventFactory — the single-event methods', () => {
       {
         lostReportId: 'report-1',
         recoveryResponseId: 'rr-1',
+        threadMessageId: 'msg-1',
         actorId: 'maya-1',
         actorRole: 'member',
         messageText: 'I will check the east entrance tomorrow.',
@@ -111,6 +112,8 @@ describe('LostSideEventFactory — the single-event methods', () => {
 
     expect(appended?.eventNumber).toBe(16);
     expect(appended?.parentType).toBe('recovery_response_thread_message');
+    // The parent is the thread message, not the response.
+    expect(appended?.parentId).toBe('msg-1');
     expect(appended?.metadata).toMatchObject({
       recoveryResponseId: 'rr-1',
       messageText: 'I will check the east entrance tomorrow.',

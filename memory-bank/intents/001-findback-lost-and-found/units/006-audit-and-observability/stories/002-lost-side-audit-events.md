@@ -2,11 +2,11 @@
 id: 002-lost-side-audit-events
 unit: 006-audit-and-observability
 intent: 001-findback-lost-and-found
-status: draft
+status: implemented
 priority: must
 created: 2026-10-23T12:51:00Z
 assigned_bolt: 003-audit-lost-side-events
-implemented: false
+implemented: true
 traces_to: [FR-31, FR-48]
 ---
 
