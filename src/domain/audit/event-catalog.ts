@@ -149,39 +149,45 @@ export const NUMBERED_EVENT_CATALOG: readonly CatalogEntry[] = [
     15,
     'recovery_response.submitted',
     'Recovery Response submitted',
-    ['whereFound', 'observedIdentifyingDetails', 'dateFound', 'imagePresence'],
+    [
+      'recoveryResponseId',
+      'whereFound',
+      'observedIdentifyingDetails',
+      'dateFound',
+      'imagePresence',
+    ],
     ['whereFound', 'observedIdentifyingDetails'],
   ),
   entry(
     16,
     'recovery_response.thread_message_posted',
     'Message posted in per-Recovery-Response thread',
-    ['messageText'],
+    ['recoveryResponseId', 'messageText'],
     ['messageText'],
   ),
   entry(
     17,
     'recovery_response.selected_for_verification',
     'Recovery Response selected for verification',
-    [],
+    ['recoveryResponseId'],
   ),
   entry(
     18,
     'recovery_response.determined_match_confirmed',
     'Recovery Response determined Match Confirmed',
-    ['verificationTimestamp'],
+    ['recoveryResponseId', 'verificationTimestamp'],
   ),
   entry(
     19,
     'recovery_response.determined_not_a_match',
     'Recovery Response determined Not a Match',
-    ['verificationTimestamp'],
+    ['recoveryResponseId', 'verificationTimestamp'],
   ),
   entry(
     20,
     'recovery_response.withdrawn_by_responder',
     'Recovery Response withdrawn by responder',
-    [],
+    ['recoveryResponseId'],
   ),
   entry(
     21,
@@ -189,6 +195,9 @@ export const NUMBERED_EVENT_CATALOG: readonly CatalogEntry[] = [
     'Returned confirmed (Lost report, default receiver)',
     ['receiver'],
   ),
+  // The `lostReportId` every Lost-side event carries is the event's parent —
+  // `parentType = 'report'` and `parentId` — so it is not repeated here as a
+  // payload field.
   entry(
     22,
     'returned.confirmed_lost_substitute_receiver',
@@ -203,30 +212,25 @@ export const NUMBERED_EVENT_CATALOG: readonly CatalogEntry[] = [
     24,
     'report.lost_closed_by_administrator',
     'Lost report closed by Administrator (normal closure)',
-    ['reason', 'previousLostStatus'],
+    ['previousLostStatus'],
   ),
   entry(
     25,
     'report.lost_cancelled_after_match_confirmed',
     'Lost report cancellation after Match Confirmed by Administrator (exceptional)',
-    [
-      'exceptionalReason',
-      'previousLostStatus',
-      'priorSelectedResponseId',
-      'priorSelectedResponseStatus',
-    ],
+    ['previousLostStatus', 'priorSelectedResponseId', 'priorSelectedResponseStatus'],
   ),
   entry(
     26,
     'report.lost_returned_child_response_resolution',
     'Lost report Returned — automatic child response resolution (parent/batch event)',
-    ['childResponseIds', 'matchedSelectedResponseId'],
+    ['childResponses', 'matchedSelectedResponseId'],
   ),
   entry(
     27,
     'report.lost_closed_child_response_resolution',
     'Lost report Closed — automatic child response resolution',
-    ['childResponseIds'],
+    ['childResponses', 'triggeredByRole'],
   ),
   entry(
     28,
@@ -244,7 +248,7 @@ export const NUMBERED_EVENT_CATALOG: readonly CatalogEntry[] = [
     30,
     'recovery_response.completed_report_returned',
     'Recovery Response transition to Completed — Report Returned',
-    ['newCanonicalStatus'],
+    ['recoveryResponseId', 'newCanonicalStatus'],
   ),
 ];
 

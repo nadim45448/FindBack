@@ -32,7 +32,7 @@ Technical Notes
 
 - Audit is written **inside** the caller's transaction, never after it. An audit entry for a transition that did not happen is a defect, and an audit entry missing for one that did is worse.
 - The softened-copy rule (OQ-5) cuts one way: user-facing language may be gentler, the audit reason may not.
-- FR-48 spans events 15–30. Some of those events fire from Unit 005 (the return closeout at events 24–26 and 30), so this story's coverage must be verifiable end to end across both units.
+- FR-48 spans events 15–30. Some of those events fire from Unit 005 (the return closeout at events 21, 22, 26, and 30), so this story's coverage must be verifiable end to end across both units.
 
 Dependencies
 

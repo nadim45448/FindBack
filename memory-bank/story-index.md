@@ -125,7 +125,7 @@
 - [x] **001-append-only-audit-writes** (must) GENERATED - the trail is complete by construction rather than by diligence
   <br>`intents/001-findback-lost-and-found/units/006-audit-and-observability/stories/001-append-only-audit-writes.md` | traces: FR-31
 - [x] **002-lost-side-audit-events** (must) GENERATED - every Lost-side recovery action recorded with its numbers intact
-  <br>`intents/001-findback-lost-and-found/units/006-audit-and-observability/stories/002-lost-side-audit-events.md` | traces: FR-31
+  <br>`intents/001-findback-lost-and-found/units/006-audit-and-observability/stories/002-lost-side-audit-events.md` | traces: FR-31, FR-48
 - [x] **003-non-numbered-audit-records** (must) GENERATED - the frozen event catalog stays intact while the record stays complete
   <br>`intents/001-findback-lost-and-found/units/006-audit-and-observability/stories/003-non-numbered-audit-records.md` | traces: FR-31
 - [x] **004-append-only-enforcement** (must) GENERATED - the trail remains trustworthy for as long as it exists

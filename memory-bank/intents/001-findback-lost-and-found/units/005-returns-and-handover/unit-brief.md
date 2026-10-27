@@ -113,7 +113,7 @@ the default receiver, authorization and relationship do not apply.
 | 001 | ActorContext — the confirming administrator |
 | 003 | Approved Claims define the Found-side default receiver |
 | 004 | Verification outcomes define the Lost-side return path |
-| 006 | Audit writes — FR-31 event 10, FR-48 events 24–26 and 30 |
+| 006 | Audit writes — FR-31 event 10, FR-48 events 21, 22, 24, 25, 26, 27, and 30 |
 
 ### Depended By
 | Unit | Reason |

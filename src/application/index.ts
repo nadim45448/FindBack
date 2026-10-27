@@ -10,6 +10,7 @@ export * from './audit-trail-reader';
 export * from './audit-trail-service';
 export * from './audit-writer';
 export * from './classify-write-failure';
+export * from './lost-side-event-factory';
 export * from './quota-monitor';
 
 export type { AuditEventRecord, TrailCursor, TrailPage } from './ports/audit-event-repository';

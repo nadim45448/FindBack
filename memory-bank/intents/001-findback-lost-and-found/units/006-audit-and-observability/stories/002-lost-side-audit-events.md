@@ -5,9 +5,9 @@ intent: 001-findback-lost-and-found
 status: draft
 priority: must
 created: 2026-10-23T12:51:00Z
-assigned_bolt: null
+assigned_bolt: 003-audit-lost-side-events
 implemented: false
-traces_to: [FR-31]
+traces_to: [FR-31, FR-48]
 ---
 
 # Story: 002-lost-side-audit-events
@@ -22,7 +22,8 @@ Acceptance Criteria
 
 - [ ] **Given** any Recovery Response transition, **When** it commits, **Then** the corresponding FR-48 event from the range 15 to 30 is recorded
 - [ ] **Given** events 18 or 19 are recorded, **When** they are stored, **Then** `determined_by` and `recorded_by` are present as two distinct values
-- [ ] **Given** the Lost Returned closeout in Unit 005, **When** it commits, **Then** events 24 through 26 and 30 are recorded in the same transaction
+- [ ] **Given** the Lost Returned closeout in Unit 005, **When** it commits, **Then** events 21 or 22, 26, and 30 are recorded in the same transaction
+  - *Corrected 2026-10-27 on owner confirmation.* The criterion previously read "events 24 through 26 and 30". Events 24 and 25 are **Closed-path** events, and FR-21 makes `Returned → Closed` unavailable ("Returned is terminal"), so neither can occur in the Returned closeout's transaction or in any transaction after it. The PRD's own climax beat names the Returned path's events as "15, 17, 18, 21, 26, and 30". The corrected set is the four events the PRD names: **21 or 22, 26, and 30**. See the conflict section in `memory-bank/bolts/003-audit-lost-side-events/ddd-02-technical-design.md` for the full argument.
 - [ ] **Given** a Lost report's trail, **When** it is assembled, **Then** it covers response submission, provisional selection, determination, closeout or closure, and the reason for each terminal resolution
 - [ ] **Given** an event that fires in Unit 004 and an event that fires in Unit 005, **When** the trail is queried, **Then** both appear under the same parent report with no gap between them
 - [ ] **Given** an audit reason string, **When** it is stored, **Then** it is verbatim even where the user-facing copy for the same event was softened

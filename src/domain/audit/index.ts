@@ -9,6 +9,7 @@
 export * from './audit-event';
 export * from './errors';
 export * from './event-catalog';
+export * from './lost-side-events';
 export * from './payload-sanitizer';
 export * from './quota-thresholds';
 export * from './request-context';

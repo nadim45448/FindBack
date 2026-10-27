@@ -2,7 +2,7 @@
 unit: 006-audit-and-observability
 intent: 001-findback-lost-and-found
 created: 2026-10-26T08:23:50Z
-last_updated: 2026-10-26T13:15:34Z
+last_updated: 2026-10-26T13:20:00Z
 ---
 
 # Construction Log: audit-and-observability
@@ -31,7 +31,7 @@ last_updated: 2026-10-26T13:15:34Z
 |---|---|---|---|
 | `001-audit-core` | 4 | ✅ complete | 2026-10-26 |
 | `002-audit-reads` | 1 | ✅ complete | 2026-10-26 |
-| `003-audit-lost-side-events` | 1 | [ ] planned | - |
+| `003-audit-lost-side-events` | 1 | ⏳ in-progress | 2026-10-26 |
 | `004-identity-core` | — | [ ] planned | - |
 
 ## Execution History
@@ -52,6 +52,12 @@ last_updated: 2026-10-26T13:15:34Z
 | 2026-10-26 | `002-audit-reads` | stage-complete | implement → test |
 | 2026-10-26 | `002-audit-reads` | stage-complete | test → complete (pending owner review) |
 | 2026-10-26 | `002-audit-reads` | completed | Owner approved the Stage 5 test report. Bolt closed with 254/254 tests passing, 94.51% coverage, and one harness defect found and fixed by the smoke run (the read-log count used a fixed request id, so it grew on every run) |
+| 2026-10-26 | `003-audit-lost-side-events` | started | Stage 1: Domain Model. Stage list corrected from 4 to 5 stages to match the authoritative DDD bolt type, as with bolts 001 and 002 |
+| 2026-10-26 | `003-audit-lost-side-events` | stage-complete | model → design (pending owner review) |
+| 2026-10-26 | `003-audit-lost-side-events` | stage-complete | design → adr (pending owner review). One conflict raised for owner confirmation: the story's criterion 3 names events 24/25 in the Returned closeout, which the frozen PRD forbids |
+| 2026-10-27 | `003-audit-lost-side-events` | stage-complete | adr → implement (pending owner review). Owner selected "all" — three ADRs created, all `status: proposed` pending approval. Decision index now at 11 |
+| 2026-10-27 | `003-audit-lost-side-events` | stage-complete | implement → test. The Lost-side domain module, the thirteen-method factory, and the reconciled catalog are in place. 311/311 tests pass, typecheck, lint, build, and Prettier green |
+| 2026-10-27 | `003-audit-lost-side-events` | decision | Owner accepted ADR-9, ADR-10, and ADR-11, and confirmed the PRD's reading of criterion 3. The three ADRs are now `status: accepted` and the decision index records them as such. The story's acceptance criterion 3 and the bolt's success criterion were corrected to "21 or 22, 26, and 30", each annotated in place. No source code changed |
 
 ## Execution Summary
 
@@ -60,8 +66,8 @@ last_updated: 2026-10-26T13:15:34Z
 | Original bolts planned | 4 |
 | Current bolt count | 4 |
 | Bolts completed | 2 |
-| Bolts in progress | 0 |
-| Bolts remaining | 2 |
+| Bolts in progress | 1 |
+| Bolts remaining | 1 |
 | Replanning events | 1 |
 
 ## Notes
@@ -712,3 +718,395 @@ not touched by this bolt and remain covered by automated test only, per
 **Carried forward.** `AuditTrailService` is now the only place that knows the
 read's failure rules. Unit 007's audit page routes must call the service
 rather than the reader, or a read would go unrecorded.
+
+## Stage 1 — Domain Model (`003-audit-lost-side-events`)
+
+Artifact: `memory-bank/bolts/003-audit-lost-side-events/ddd-01-domain-model.md`
+
+Documentation only — no source code was read, written, or modified, per the DDD
+bolt type's Stage 1 constraint.
+
+**What this bolt models.** The Lost-side half of the audit trail: FR-48 events
+15–30, transcribed from the frozen PRD. It **extends** bolt 001's model rather
+than replacing it — `AuditEvent`, the append-only guarantees, the write path,
+and the read path already exist and are tested. No new entity and no new
+repository is introduced. What is new is the Lost-side catalog: sixteen events,
+their field sets, their triggers, and the rules that keep them coherent across
+the unit boundary.
+
+**The three findings that shape the model.**
+
+1. **The firing unit for every event, including the cross-unit cases.** The
+   bolt's success criteria explicitly span the boundary — "the trail shows no gap
+   between events emitted by Unit 004 and Unit 005". The model now states, for
+   each of the sixteen events, which unit and which bolt fires it. Most map
+   cleanly; two do not.
+
+2. **FR-11 (withdraw own report) is owned by unit 002, not unit 004.** Unit
+   002's brief lists `withdrawReport` as a key operation and FR-11 in its
+   assigned requirements; unit 004's brief lists FR-11 nowhere — it owns the
+   Recovery Response lifecycle, not the report lifecycle. So the reporter's
+   Lost-side withdrawal is fired from unit 002, and it must emit **event 23**
+   (not FR-31 event 9, which is Found-side only). Unit 002's withdrawal also
+   resolves the child Recovery Responses, so it also fires **event 27** — and
+   unit 005 fires event 27 too, from the close path. **Two units can fire the
+   same event**, which is why the catalog's single home is Open item 1 for
+   Stage 2.
+
+3. **Not every response transition gets an event of its own.** The batch events
+   (26, 27) name the child responses they resolve; a non-matched response
+   reaching `Resolved — Report Returned` produces no event of its own, only an
+   entry in event 26's list. Event 30 is the sole exception. Conversely, the
+   report's own lifecycle moves get their own events (28, 29) *alongside* the
+   response transitions (17, 19) — two events for one action. The model states
+   this pairing explicitly, because getting it wrong produces a trail that
+   looks complete but cannot be reconstructed.
+
+**The no-gap trace.** The PRD's climax names events 15, 17, 18, 21, 26, 30 for
+the successful path. The complete trace is seven — event 29 (the report's own
+move to `Verification Pending`) is required by FR-42 and is not mentioned in
+that sentence. The model records the full seven-event trace against the
+story's no-gap criterion.
+
+**The system-actor pattern.** Events 26–30 are performed by the system but
+always name the human who caused them. The model tabulates which human each
+one names and in which column, because the schema's `actor_id` is
+`uuid not null` — a system event that cannot name a human has no valid row.
+Event 29 is the one whose human is an owner rather than an administrator,
+which is why it would be lost if modelled with an administrator-only field.
+
+**Five open items carried to Stage 2**, the load-bearing one being the
+catalog's single home given that units 002 and 005 both fire event 27. Open
+items 2 and 3 are the same question from two sides — how the batch event's
+child list is assembled so it is provably the exact set the transaction
+resolved.
+
+**Not tested at this stage.** Stage 1 produces documentation only. No source
+code changed, so there is nothing to run, and no check is claimed.
+
+## Stage 2 — Technical Design (`003-audit-lost-side-events`)
+
+Artifact: `memory-bank/bolts/003-audit-lost-side-events/ddd-02-technical-design.md`
+
+Documentation only — no source code was read, written, or modified, per the DDD
+bolt type's Stage 2 constraint.
+
+**Pattern.** Hexagonal (ports and adapters) inside the layered modular monolith,
+inherited from bolts 001 and 002 and `system-architecture.md`. No new pattern.
+What this bolt adds is a **second writer for the same table**, which is the
+subject of the bolt: events 15–30 are fired from three different modules.
+
+**Decision 1 — the catalog lives in `audit/`, the firing modules call it.**
+`system-architecture.md` assigns FR-48 to two modules (`recovery/` and
+`audit/`). The design resolves the overlap: the *catalog* belongs to `audit/`;
+the *transitions* belong to the firing modules. One definition, so it cannot
+drift — which matters because units 002 and 005 both fire event 27. The
+alternative (unit 002 owning the events it fires) would put the catalog in two
+places and the enforcement machinery in two places, the weaker of which would
+be the second copy.
+
+**Decision 2 — a typed factory in `domain/audit/`.** The factory builds and
+validates; the firing module supplies the business values. The audit module
+validates the *shape* of a record and never decides whether a transition is
+legal. A firing module cannot invent an event number or omit a required field,
+so the no-gap criterion is enforced by the shape of the API rather than by each
+firing module remembering the rules.
+
+**Decision 3 — the batch's child list comes from the update's `RETURNING`
+clause, inside the transaction.** This settles Stage 1's Open items 2 and 3.
+The list is a *product of the write*, so it cannot diverge from the write. A
+re-query after the transaction could see a different set; a caller-supplied
+list moves the error to every firing module. `RETURNING` also captures each
+response's prior status in the same statement, which events 26/27 require.
+
+**Decision 4 — events 26 and 30 are written by one method.** There is no
+method that writes 26 without 30, so the PRD's same-transaction requirement is
+structural rather than a convention. The factory validates the cross-reference
+before it writes either.
+
+**Decision 5 — the response-level and report-level events of one business
+action are separate methods.** Deliberately not merged: event 17's actor is the
+owner while event 29's is the system identifying the owner, and merging them
+would force one actor model onto two different facts — and would break the
+event-type filter, since a filter on "entered Verification Pending" would also
+match "a response was selected".
+
+**No new table, no new column, no migration.** `event_number`'s existing 1–30
+CHECK already admits 15–30, and `metadata` (jsonb) already exists for
+event-specific detail — bolt 001's own design names "event 26's list of child
+response IDs" as its example. No new index either; `idx_audit_events_trail`
+serves the Lost-side parent filter, and the worst case is a bounded
+50-Recovery-Response shape. **Stage 5 measures it rather than assuming it.**
+
+**The conflict raised for owner confirmation.** Story `002`'s acceptance
+criterion 3 — repeated in the bolt's own success criteria — reads "events **24
+through 26 and 30**" are recorded in the Lost Returned closeout. Events 24 and
+25 are **Closed-path** events, and FR-21 makes `Returned → Closed` unavailable
+("Returned is terminal"), so neither can occur in a Returned transaction. The
+PRD's own climax names the Returned path's events as "15, 17, 18, 21, 26, and
+30" — no 24, no 25. The likely origin is the phrase "24 through 26", read as a
+range sweeping in two Closed-path events; the intended set was almost certainly
+**21, 22, 26, and 30**.
+
+The design is built so that **the PRD's reading is mechanically enforced
+whichever way the owner confirms**: `recordReturnedCloseout` writes 26 and 30
+and has no path to 24 or 25, so a closure event cannot enter a Returned
+transaction even by mistake. Confirming the PRD's reading needs no code change;
+confirming the story's literal text would be a change to a frozen state
+machine. The story's criterion and the bolt's success criteria are **not**
+corrected by this design — they are owner-owned, and the correction is
+requested rather than performed.
+
+**The ADR candidate.** The batch event's correctness depends on a set that only
+the module performing the update can know. Decisions 3 and the cross-module
+contract state how the set is obtained and what each side owes, but the
+guarantee cannot be made enforceable from inside `audit/` — a caller that
+passed a set it did not resolve would produce a well-formed event with a wrong
+list. The Stage 3 question: **should the batch resolution move into a shared
+application-layer use case that owns the update, the `RETURNING`, and the event
+together?** That would make the guarantee enforceable rather than contractual,
+at the cost of the audit module's application layer writing a table that
+belongs to unit 004. Raised rather than decided.
+
+**Six open items carried to Stage 3/4**, including the two `event_type`
+naming and catalog-exhaustiveness items that Stage 4 must reconcile against
+bolt 001's existing catalog rather than inventing a second vocabulary.
+
+**Not tested at this stage.** Stage 2 produces documentation only. No source
+code changed, so there is nothing to run, and no check is claimed.
+
+## Stage 3 — ADR Analysis (`003-audit-lost-side-events`)
+
+Artifacts:
+
+- `memory-bank/bolts/003-audit-lost-side-events/adr-9-fr48-catalog-ownership.md`
+- `memory-bank/bolts/003-audit-lost-side-events/adr-10-batch-resolution-contract.md`
+- `memory-bank/bolts/003-audit-lost-side-events/adr-11-determination-owner-check.md`
+
+Three ADR opportunities were presented and the owner selected **"all"**. All
+three ADRs were created `status: proposed`, pending owner approval.
+`decision-index.md` updated to `total_decisions: 11`.
+
+**All three ADRs were accepted by the owner on 2026-10-27**, together with the
+correction of the criterion 3 artifacts. ADR-9, ADR-10, and ADR-11 now carry
+`status: accepted` in their frontmatter, and the decision index records them
+as accepted. The criterion 3 correction is recorded in the Stage 4 entry
+below.
+
+**ADR-9 — the FR-48 catalog's home.** `system-architecture.md` assigns FR-48 to
+two modules (`recovery/` and `audit/`). The overlap is load-bearing: three
+modules fire into the catalog, and **event 27 has two firing units** — unit 002
+(withdrawal, because FR-11 is assigned there, not to unit 004) and unit 005
+(administrator close). The decision: the catalog lives in `audit/`, the firing
+modules own the transitions and call it through a typed factory, and the
+dependency stays one-way. The decisive argument is against the natural
+alternative — each firing module owning its own events — because that would
+produce **two definitions of event 27** that drift invisibly, and would
+duplicate the enforcement machinery with the second copy being the weaker one.
+The factory (rather than exposing the catalog as data) is what makes the
+per-event rules structural rather than conventional: a caller cannot write an
+event 18 without both halves of the determination pair.
+
+**ADR-10 — the batch resolution contract.** This is the trade-off the Stage 2
+design named as its candidate, and it is recorded with the rejected alternative
+rather than quietly dropped. The set of resolved responses is knowable only by
+the module performing the update, so it crosses a module boundary. It is
+obtained from the update's own `UPDATE … RETURNING` clause, inside the
+transaction, so the list is a product of the write and the source status is
+captured atomically with the after-state. **The guarantee is stated as a
+contract, not claimed as an invariant** — the `audit` module validates the
+set's shape and records it verbatim, but cannot verify correspondence, because
+the `recovery_responses` table belongs to unit 004. The alternative that
+*would* make it enforceable — a shared application-layer use case owning the
+update, the `RETURNING`, and the event together — is rejected because it puts a
+Recovery Response write in the audit module's application layer, making it a
+second implementation of FR-41's state machine, which the standard names as
+the single largest correctness risk in the system.
+
+**ADR-11 — the determination-pair owner check.** Two populated fields are not
+a mechanism on their own: a determination attributed to someone other than the
+report's owner is well-formed and would pass any presence or distinctness
+check, and it would be **permanently** wrong, because ADR-6's append-only trail
+has no correction path. The decision: validate against the report's actual
+owner at event-build time, refuse with a fatal error that rolls back, and take
+the owner id from server-side state rather than the request. The check is
+about **roles, not identity** — `administrator` is a flag on an Account, so the
+same person may legitimately fill both halves in two capacities. A check that
+merely required different ids would forbid a legitimate determination on an
+administrator-owned report and would push operators toward fabricating a second
+identity.
+
+**The rejected alternatives are recorded, not dropped.** Each ADR's
+alternatives table names what was rejected and why — including the shared
+use case (ADR-10), the distinctness check (ADR-11), and the per-module
+catalog (ADR-9). The forces behind each rejection are stated so a future
+reader can revisit them if the constraints change.
+
+**Not tested at this stage.** Stage 3 produces documentation only. No source
+code changed, so there is nothing to run, and no check is claimed.
+
+**Still open for the owner.** The criterion 3 conflict remains unconfirmed:
+story `002`'s acceptance criterion 3 and the bolt's success criteria name
+events 24/25 in the Returned closeout, which the frozen PRD forbids. The
+design already enforces the PRD's reading structurally, so no code change
+follows from confirming it — but the two artifacts stay unedited until the
+owner confirms.
+
+---
+
+### Stage 4 — Implement (`003-audit-lost-side-events`)
+
+**Objective.** Build the FR-48 Lost-side catalog's write path: the sixteen
+events 15–30, the per-event rules the PRD attaches to them, and the single
+factory through which the three firing modules will emit them.
+
+**Artifacts.**
+
+- `src/domain/audit/lost-side-events.ts` — the value objects and the guards.
+- `src/application/lost-side-event-factory.ts` — the thirteen factory methods.
+- `src/domain/audit/event-catalog.ts` — the catalog reconciled with the PRD's
+  named fields.
+- `src/domain/audit/lost-side-events.test.ts` — 18 domain tests.
+- `src/application/lost-side-event-factory.test.ts` — 28 application tests.
+- `src/infrastructure/audit/lost-side-events.test.ts` — 11 tests against the
+  live database.
+
+**The domain layer — the rules as code, not as prose.** ADR-9's decision is
+that the guarantee must be *structural* rather than conventional: a firing
+module that forgot the determination pair would otherwise produce an event
+that is well-formed as a row and wrong as a record, and nothing would fail.
+So each of the PRD's per-event rules became a named guard that refuses the
+write before the insert:
+
+- `assertDeterminationPair` — both halves mandatory, and the maker checked
+  against the report's owner (ADR-11). The check is about **roles, not
+  identity**: the same person may fill both halves in two capacities, because
+  `administrator` is a flag on an Account and refusing that determination
+  would push operators toward fabricating a second identity.
+- `resolveSystemActor` — a system-actor event (26–30) must name its causing
+  human. Event 29's human is a plain member, the owner who selected, so the
+  cause carries a member id and `acting_administrator_id` is null.
+- `assertBatchShape` — the resolved set is non-empty, and every entry carries
+  a response id and a prior status from FR-41's canonical eight (ADR-10).
+- `assertReturnedPairing` — event 26 and event 30 must name the same matched
+  response.
+
+The errors are typed and fatal — `DeterminationActorError`,
+`SystemActorCauseError`, `BatchResolutionError`, `EventPairingError`,
+`LostSideFieldError` — and the caller's transaction rolls back. They are
+defects, not business outcomes: an unaudited or wrongly-audited transition
+must never commit.
+
+**The application layer — one factory, thirteen methods, sixteen events.**
+`LostSideEventFactory` holds the `AuditWriter`, so a firing module never
+writes an FR-48 event directly. Three methods write more than one event,
+because one business action produces more than one record:
+`recordDetermination` writes 18 or 19, `recordReturnedConfirmed` writes 21 or
+22, and `recordReturnedCloseout` writes 26 and 30 **together, or neither**.
+
+That last one is the structural half of the PRD's pairing rule. There is no
+method that writes event 26 alone, so a Returned closeout cannot record the
+parent batch without the individual terminal record. The design's Decision 4
+asked for exactly this, and the API now has it.
+
+**The batch set is recorded verbatim, and that is stated honestly.** ADR-10
+settled that the set comes from the batch update's own `RETURNING` clause,
+inside the transaction, and that the audit module cannot verify it — the
+`recovery_responses` table belongs to unit 004. The factory therefore
+validates the set's *shape* and records it as it was given, with each
+response's prior status, and refuses an empty or malformed set. The
+obligation on the firing module — *the set passed is the set the update
+returned, unmodified* — is written into the draft's documentation, where the
+caller will read it, and Stage 5 asserts both halves of it.
+
+**The catalog was reconciled with the PRD's field names.** The catalog bolt
+001 transcribed already held all thirty numbers, but several Lost-side entries
+named fewer fields than the PRD does. The reconciled entries are:
+
+| Event | Added |
+|---|---|
+| 15 | `recoveryResponseId` — the PRD names the response ID |
+| 16 | `recoveryResponseId` — the PRD names the response ID |
+| 17, 20 | `recoveryResponseId` — the PRD names the response ID |
+| 18, 19 | `recoveryResponseId` — the PRD names the response ID |
+| 24 | `reason` removed from the payload set — it lives in the dedicated `reason` column, verbatim |
+| 25 | `exceptionalReason` removed from the payload set, for the same reason |
+| 26 | `childResponseIds` → `childResponses`, because the entries carry a prior status each, not an id alone |
+| 27 | `childResponseIds` → `childResponses`, and `triggeredByRole` added — the trigger's role is what distinguishes an administrator closure from a reporter's withdrawal, and the nullable `acting_administrator_id` cannot hold it |
+| 30 | `recoveryResponseId` — the PRD names the response ID |
+
+**Two decisions worth recording, because they were not free.**
+
+*Event 15's where-found is a compound field.* The PRD names it as "where-found"
+and the sensitive-value table calls it "Recovery Response exact-place
+details", while FR-40 splits it into a campus area and an optional exact
+place. The catalog names one field, `whereFound`, holding the whole
+where-found text, and the draft carries it as one string. Splitting it into
+two fields would have meant a second catalog name the PRD does not use.
+
+*The event 16 parent is the thread message, not the response.* The trail's
+retention follows the parent entity's rule, and a per-Recovery-Response
+thread message is its own parent type — the same way FR-31 event 14 hangs
+from the per-Claim thread message. The response id is still carried in the
+payload, so the event is still queryable by response.
+
+**No schema change, no migration, no new dependency.** The design's Decision
+6 held: `event_number`'s existing 1–30 CHECK already admits 15–30, the
+`metadata` jsonb column already exists for event-specific detail, and
+`determined_by_user_id` / `recorded_by_administrator_id` already hold the
+determination pair. The `PrismaAuditEventRepository` was not touched.
+
+**One thing the design did not anticipate, found by a test.** The database
+enforces the event-number *range* but not the type↔number *correspondence* —
+a row can be written with `event_number = 16` and the type of event 30. That
+is not a defect: Stage 2's open item 5 settled that the mapping is asserted
+in the domain layer, and the write path derives the number from the catalog
+rather than taking it on trust, so a caller cannot reach the mismatch. The
+test now asserts it at the layer where the guarantee lives, and says so.
+
+**Verification.** Typecheck, lint, `npm test` (311 tests across 27 files, 11
+of them against the live database), `npm run build`, and Prettier all pass.
+
+**The criterion 3 conflict is resolved, and no code changed.** The owner
+confirmed the PRD's reading on 2026-10-27, and the two owner-owned artifacts
+were corrected in place:
+
+| Artifact | Was | Now |
+|---|---|---|
+| Story `002`, acceptance criterion 3 | "events 24 through 26 and 30 are recorded in the same transaction" | "events **21 or 22, 26, and 30** are recorded in the same transaction" |
+| Bolt `003`, success criterion | "Events 24–26 and 30 fire from Unit 005's closeout in the same transaction" | "Events **21 or 22, 26, and 30** fire from Unit 005's closeout in the same transaction" |
+
+Both corrections carry an annotation in place stating the reason — events 24
+and 25 are Closed-path events, and FR-21 makes `Returned → Closed`
+unavailable, so neither can occur in a Returned closeout — and pointing at
+the design's conflict section. The Stage 1 domain model's conflict section,
+the Stage 1 story-coverage row, and the Stage 2 conflict section and
+traceability row were updated to record the resolution rather than leave it
+open.
+
+**No source code changed as a result**, and the design's prediction held. The
+implementation already enforced the PRD's reading structurally:
+`recordReturnedCloseout` writes events 26 and 30 and has no path to event 24
+or 25; `recordClosedCloseout` is the only method that reaches event 27;
+`recordAdministratorClosed` writes 24 and `recordExceptionalCancellation`
+writes 25. There is still no method that can put a closure event into a
+Returned transaction.
+
+**The three ADRs are accepted.** ADR-9 (the catalog's home), ADR-10 (the
+batch set as a contract), and ADR-11 (the determination owner check) now
+carry `status: accepted`, and `decision-index.md` records all three as
+accepted. The Stage 4 implementation is the code those three decisions
+describe: the catalog lives in `audit/` and the firing modules call it
+through `LostSideEventFactory`; the batch set is validated for shape and
+recorded verbatim, with the contract stated on the draft; and the
+determination pair is checked against the report's owner, refusing a maker
+who is not the owner.
+
+**Not verified at this stage, and stated plainly.** The no-gap criterion's
+cross-unit half is only partly discharged. The factory writes every event in
+the trace — 15, 17, 18, 21, 26, 29, 30 — under one parent, and the
+infrastructure test proves that trace as it will be written. But units 004
+and 005 do not exist yet, so the *firing* modules' half of the contract is
+exercised by the factory's API rather than by the callers that will use it.
+That is the shape Stage 2 predicted, and it is Stage 5's job to assert it
+against the real calling patterns.
