@@ -2,11 +2,11 @@
 id: 004-deactivate-an-account
 unit: 001-identity-and-access
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:42:00Z
 assigned_bolt: 005-identity-security
-implemented: false
+implemented: true
 traces_to: [FR-5]
 ---
 

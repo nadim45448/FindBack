@@ -263,3 +263,24 @@ unit brief's Integration Points row (per ADR-15).
 | intents/001-findback-lost-and-found/requirements.md | inception-complete | construction | Intent has 7 units (1/7 complete) |
 
 ---
+## 2026-10-28T17:35:00Z - Status Sync
+
+**Triggered by**: analyze-context integrity check
+
+| Artifact | Old Status | New Status | Reason |
+|----------|------------|------------|--------|
+| intents/001-findback-lost-and-found/units/001-identity-and-access/stories/004-deactivate-an-account.md | draft | complete, implemented: true | Bolt 005-identity-security is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/001-identity-and-access/stories/008-reset-request-never-discloses-account.md | draft | complete, implemented: true | Bolt 005-identity-security is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/001-identity-and-access/stories/009-reset-password.md | draft | complete, implemented: true | Bolt 005-identity-security is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/001-identity-and-access/stories/010-update-member-profile.md | draft | complete, implemented: true | Bolt 005-identity-security is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/001-identity-and-access/unit-brief.md | in-progress | complete | Unit has 2 bolts (2/2 complete) |
+
+**Not changed, deliberately.** `intents/001-findback-lost-and-found/requirements.md`
+remains `construction`: the intent has 7 units and 2 are complete, so the
+cascade is unchanged. The unit briefs' **Story Summary checklists** were also
+left as they are — they are inception-era artifacts that still read `- [ ] …
+Planned` for unit `006-audit-and-observability`, which has been complete since
+2026-10-27. The checklists are unmaintained across every completed unit, and
+updating only unit `001`'s would establish an inconsistency of its own.
+
+---
