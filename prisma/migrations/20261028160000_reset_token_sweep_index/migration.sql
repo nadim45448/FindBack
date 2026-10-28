@@ -1,0 +1,39 @@
+-- Bolt 005 — the reset token's sweep index.
+--
+-- Implements `memory-bank/bolts/005-identity-security/ddd-02-technical-design.md`
+-- § Data Persistence, under ADR-17 (the token's lifetime is enforced on
+-- read, not by a sweeper).
+--
+-- **The schema delta for the entire bolt is this one index.** Everything
+-- else the bolt needs already exists:
+--
+--   - `PasswordResetToken` and its unique index on `tokenHash` — added by
+--     bolt 004, which created the table expressly to leave this bolt a
+--     seam;
+--   - `accounts.deactivated_at` and `accounts.is_administrator` — added by
+--     bolt 004, and given their meaning by this bolt;
+--   - `sessions.revocation_reason` — added by bolt 004. The new literal
+--     `'account_deactivated'` is a **value**, not a schema change.
+--
+-- The index below exists for the **daily sweep**, which filters on **both**
+-- `expiresAt` and `usedAt`:
+--
+--   DELETE FROM "PasswordResetToken"
+--    WHERE "expiresAt" < now() - INTERVAL '30 days'
+--       OR "usedAt"    < now() - INTERVAL '30 days'
+--
+-- The existing `idx_password_reset_tokens_expires_at` covers `expiresAt`
+-- alone. A composite index lets the sweep satisfy both branches from one
+-- index scan. The table is small, so this is a tidiness gain rather than a
+-- performance necessity — but the sweep runs daily forever, and the index
+-- makes it a single index scan.
+--
+-- **Correctness does not depend on the sweep.** Expiry is enforced on read:
+-- a token is refused the moment its window elapses, whether or not any
+-- cleanup job has run (ADR-17). The 30-day grace period is therefore
+-- harmless — it exists so a recently-expired token is still available for
+-- an incident to be investigated.
+
+-- CreateIndex
+CREATE INDEX "idx_password_reset_tokens_expires_at_used_at"
+    ON "PasswordResetToken" ("expiresAt", "usedAt");

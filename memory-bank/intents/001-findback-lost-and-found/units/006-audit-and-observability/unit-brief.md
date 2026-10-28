@@ -2,9 +2,9 @@
 unit: 006-audit-and-observability
 intent: 001-findback-lost-and-found
 phase: inception
-status: ready
+status: complete
 created: 2026-10-23T12:30:00Z
-updated: 2026-10-23T12:30:00Z
+updated: 2026-10-28T14:45:00Z
 unit_type: backend
 default_bolt_type: ddd-construction-bolt
 ---

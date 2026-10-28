@@ -2,12 +2,13 @@
 id: 005-audit-visibility-and-read-logging
 unit: 006-audit-and-observability
 intent: 001-findback-lost-and-found
-status: implemented
+status: complete
 priority: must
-created: 2026-10-23T12:52:30Z
+created: 2026-10-23T12:52:30.000Z
 assigned_bolt: 002-audit-reads
 implemented: true
-traces_to: [FR-32]
+traces_to:
+  - FR-32
 ---
 
 # Story: 005-audit-visibility-and-read-logging

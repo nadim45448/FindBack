@@ -258,6 +258,10 @@ export const NUMBERED_EVENT_CATALOG: readonly CatalogEntry[] = [
  * FR-31 names these as part of the append-only administrator-visible history
  * but gives them no workflow-event identifier. Numbering them would change a
  * frozen catalog; omitting them would leave real actions unrecorded.
+ *
+ * FR-31's own rule for the set is "additional audit records **explicitly
+ * required by other requirements**" — so the set grows only when a
+ * requirement explicitly asks for a record.
  */
 export const NON_NUMBERED_EVENT_CATALOG: readonly CatalogEntry[] = [
   nonNumberedEntry('member_profile.edited', 'Member profile edited', [
@@ -267,6 +271,18 @@ export const NON_NUMBERED_EVENT_CATALOG: readonly CatalogEntry[] = [
   nonNumberedEntry('report.edited_by_administrator', 'Administrator report edit', [
     'changedFields',
     'previousValues',
+  ]),
+  // FR-2: "The audit trail records the registration event with the user's
+  // name, email, and self-declared role and timestamp." FR-31's numbered
+  // catalog has no registration-submitted event, and FR-31 forbids adding
+  // one — so this is a non-numbered record, the third of the kind.
+  //
+  // The fields are the three FR-2 names, and no more. The sanitizer denies
+  // by default, so naming exactly those three permits exactly those three.
+  nonNumberedEntry('registration.submitted', 'Registration submitted', [
+    'displayName',
+    'email',
+    'selfDeclaredRole',
   ]),
 ];
 

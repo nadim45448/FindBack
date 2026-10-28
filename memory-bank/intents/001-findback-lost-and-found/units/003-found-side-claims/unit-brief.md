@@ -2,9 +2,9 @@
 unit: 003-found-side-claims
 intent: 001-findback-lost-and-found
 phase: inception
-status: ready
-created: 2026-10-23T12:30:00Z
-updated: 2026-10-23T12:30:00Z
+status: stories-defined
+created: 2026-10-23T12:30:00.000Z
+updated: 2026-10-23T12:30:00.000Z
 unit_type: backend
 default_bolt_type: ddd-construction-bolt
 ---

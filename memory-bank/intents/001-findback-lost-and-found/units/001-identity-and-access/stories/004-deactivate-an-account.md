@@ -5,7 +5,7 @@ intent: 001-findback-lost-and-found
 status: draft
 priority: must
 created: 2026-10-23T12:42:00Z
-assigned_bolt: null
+assigned_bolt: 005-identity-security
 implemented: false
 traces_to: [FR-5]
 ---
@@ -45,7 +45,7 @@ Edge Cases
 
 | Scenario | Expected Behavior |
 |----------|-------------------|
-| Administrator deactivates another administrator | Refused by policy; escalation path is out of scope |
+| Administrator deactivates another administrator | Permitted — the target's administrator flag confers no protection. The deactivated account's stored flag is cleared, so no stale privilege remains. *Amended 2026-10-28 on owner confirmation to match PRD FR-5, which says only "An administrator can deactivate an Active account" and states no self-preservation rule. The previous "refused by policy" reading created a trap — the last remaining administrator could never be deactivated by anyone — and the PRD nowhere carries an escalation path.* |
 | Account with an in-flight request during deactivation | Request completes under the prior actor context; next request is unauthenticated |
 | Deactivating an already `Deactivated` account | Idempotent no-op, no duplicate audit entry |
 

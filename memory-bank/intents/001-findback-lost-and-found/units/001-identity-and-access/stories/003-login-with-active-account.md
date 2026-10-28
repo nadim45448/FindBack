@@ -2,12 +2,14 @@
 id: 003-login-with-active-account
 unit: 001-identity-and-access
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
-created: 2026-10-23T12:41:30Z
-assigned_bolt: null
-implemented: false
-traces_to: [FR-2, FR-4]
+created: 2026-10-23T12:41:30.000Z
+assigned_bolt: 004-identity-core
+implemented: true
+traces_to:
+  - FR-2
+  - FR-4
 ---
 
 # Story: 003-login-with-active-account

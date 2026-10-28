@@ -66,11 +66,11 @@ last_updated: 2026-10-26T13:20:00Z
 
 | Metric | Value |
 |---|---|
-| Original bolts planned | 4 |
-| Current bolt count | 4 |
-| Bolts completed | 2 |
-| Bolts in progress | 1 |
-| Bolts remaining | 1 |
+| Original bolts planned | 3 |
+| Current bolt count | 3 |
+| Bolts completed | 3 |
+| Bolts in progress | 0 |
+| Bolts remaining | 0 |
 | Replanning events | 1 |
 
 ## Notes

@@ -2,12 +2,14 @@
 id: 002-administrator-review-of-registrations
 unit: 001-identity-and-access
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
-created: 2026-10-23T12:41:00Z
-assigned_bolt: null
-implemented: false
-traces_to: [FR-3, FR-27]
+created: 2026-10-23T12:41:00.000Z
+assigned_bolt: 004-identity-core
+implemented: true
+traces_to:
+  - FR-3
+  - FR-27
 ---
 
 # Story: 002-administrator-review-of-registrations

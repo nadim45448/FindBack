@@ -1,9 +1,9 @@
 ---
 intent: 001-findback-lost-and-found
 phase: inception
-status: inception-complete
-created: 2026-10-23T11:28:55Z
-updated: 2026-10-23T13:25:00Z
+status: construction
+created: 2026-10-23T11:28:55.000Z
+updated: 2026-10-23T13:25:00.000Z
 ---
 
 # Requirements: FindBack — Lost & Found Management System

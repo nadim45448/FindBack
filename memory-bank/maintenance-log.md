@@ -209,3 +209,57 @@ Unit 5 and Unit 7 summaries, and dependency lines referencing non-existent units
    change in the system was built without it.
 
 ---
+
+## 2026-10-28T14:45:00Z — Bolt `004-identity-core` closed
+
+**Triggered by**: `/specsmd-master-agent` — owner approval of the Stage 5 checkpoint
+
+| Artifact | Old Status | New Status | Reason |
+|----------|------------|------------|--------|
+| `memory-bank/bolts/004-identity-core/bolt.md` | `in-progress` | `complete` | All 5 stages complete, all 7 success criteria ticked, all 6 stories `implemented` |
+| `.../units/001-identity-and-access/unit-brief.md` | `ready` | `in-progress` | Unit has a bolt in progress (`005-identity-security`) |
+| `.../units/006-audit-and-observability/unit-brief.md` | `ready` | `complete` | All 3 of its bolts (001, 002, 003) are complete and all 6 of its stories are `implemented` — a pre-existing inconsistency surfaced by this close |
+
+**Verification re-run at close time** against the working tree, not read from the
+test report: typecheck exit 0 · lint exit 0 · **605/605 tests across 47 files** ·
+production build exit 0 with all six identity routes registered.
+
+**The suite is 605 rather than the report's 604** because of the `rejectAccount()`
+defect fixed during bolt `005`'s Stage 1 (`deactivatedAt` was set on a
+*rejected* account). The fix landed before this bolt closed, so the closed bolt
+contains no known defect.
+
+**Items carried forward** (none blocks the close): the story 003 criterion 2 /
+PRD FR-4 conflict remains the owner's to amend; ADR-16's deferred-failure refresh
+branch is untested and belongs to bolt `005`; the Vercel runtime must be set to
+Node 24 (ADR-12) and cannot be set from the repository. Two owner follow-ups
+remain owed in `system-architecture.md` (FR-27 module map, per ADR-14) and the
+unit brief's Integration Points row (per ADR-15).
+
+---
+## 2026-10-28T08:49:36.396Z - Status Sync
+
+**Triggered by**: status-integrity script
+
+| Artifact | Old Status | New Status | Reason |
+|----------|------------|------------|--------|
+| intents/001-findback-lost-and-found/units/006-audit-and-observability/stories/001-append-only-audit-writes.md | implemented | complete, implemented: true | Bolt 001-audit-core is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/006-audit-and-observability/stories/003-non-numbered-audit-records.md | implemented | complete, implemented: true | Bolt 001-audit-core is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/006-audit-and-observability/stories/004-append-only-enforcement.md | implemented | complete, implemented: true | Bolt 001-audit-core is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/006-audit-and-observability/stories/006-operational-logging-and-quota.md | implemented | complete, implemented: true | Bolt 001-audit-core is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/006-audit-and-observability/stories/005-audit-visibility-and-read-logging.md | implemented | complete, implemented: true | Bolt 002-audit-reads is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/006-audit-and-observability/stories/002-lost-side-audit-events.md | implemented | complete, implemented: true | Bolt 003-audit-lost-side-events is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/001-identity-and-access/stories/001-self-registration.md | implemented | complete, implemented: true | Bolt 004-identity-core is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/001-identity-and-access/stories/002-administrator-review-of-registrations.md | implemented | complete, implemented: true | Bolt 004-identity-core is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/001-identity-and-access/stories/003-login-with-active-account.md | implemented | complete, implemented: true | Bolt 004-identity-core is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/001-identity-and-access/stories/005-logout-revokes-session.md | implemented | complete, implemented: true | Bolt 004-identity-core is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/001-identity-and-access/stories/006-pending-member-restricted-access.md | implemented | complete, implemented: true | Bolt 004-identity-core is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/001-identity-and-access/stories/007-owner-rejects-registration.md | implemented | complete, implemented: true | Bolt 004-identity-core is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/002-reporting-and-listings/unit-brief.md | ready | stories-defined | Unit has 5 bolts (0/5 complete) |
+| intents/001-findback-lost-and-found/units/003-found-side-claims/unit-brief.md | ready | stories-defined | Unit has 3 bolts (0/3 complete) |
+| intents/001-findback-lost-and-found/units/004-lost-side-recovery/unit-brief.md | ready | stories-defined | Unit has 4 bolts (0/4 complete) |
+| intents/001-findback-lost-and-found/units/005-returns-and-handover/unit-brief.md | ready | stories-defined | Unit has 2 bolts (0/2 complete) |
+| intents/001-findback-lost-and-found/units/007-web-surfaces/unit-brief.md | ready | stories-defined | Unit has 4 bolts (0/4 complete) |
+| intents/001-findback-lost-and-found/requirements.md | inception-complete | construction | Intent has 7 units (1/7 complete) |
+
+---

@@ -97,3 +97,141 @@ model QuotaSnapshot {
 
   @@index([resource, observedAt(sort: Desc)], map: "idx_quota_snapshots_resource_observed")
 }
+
+/// A registered account.
+///
+/// **Accounts are never deleted** (FR-5, PRD §10 Retention). There is no
+/// `deletedAt` column and no cascade from any child: a deactivated account
+/// keeps its row, its trail, and its history forever.
+///
+/// `status` is a text column with a CHECK constraint rather than a database
+/// enum, so adding a status is not a migration. The four values are the PRD's,
+/// verbatim: Pending, Active, Rejected, Deactivated.
+///
+/// `isAdministrator` is a **flag on an Active account**, not a role type
+/// (PRD §3). The flag alone grants nothing on a non-Active account.
+///
+/// `rejectionReason` is the account's own copy of the reason, so the account
+/// row is self-describing. The audit trail holds the historical copy. Both
+/// are written in the same transaction, so they cannot disagree. The reason
+/// is **never** returned to the member.
+model Account {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  /// Stored normalized — trimmed and lower-cased — by the application.
+  /// The unique index below is on `lower(btrim(email))`, so the database is
+  /// the final arbiter even if a caller skips normalization.
+  email String
+
+  /// The Argon2id encoded hash, including its own parameters and salt.
+  /// The plaintext password never reaches this column.
+  passwordHash String
+
+  displayName String
+  selfDeclaredRole        String
+  /// The free text for the `Other` self-declared role. Null for the other three.
+  selfDeclaredRoleOther String?
+
+  status         String @default("Pending")
+  isAdministrator Boolean @default(false)
+
+  /// The rejection reason. Null unless the account was rejected.
+  rejectionReason String?
+
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+  activatedAt  DateTime? @db.Timestamptz(6)
+  deactivatedAt DateTime? @db.Timestamptz(6)
+
+  /// The functional unique index. `lower(btrim(email))` rather than the
+  /// stored value, so a row written by any path is deduplicated the same way.
+  @@unique([email], map: "idx_accounts_email_unique")
+  @@index([status, createdAt], map: "idx_accounts_status_created")
+  @@index([isAdministrator], map: "idx_accounts_administrator")
+}
+
+/// A revocable session.
+///
+/// **A database row, not a JWT** (PRD A2). Logout, deactivation, and
+/// password reset must all be able to revoke server-side, and only a row can
+/// be revoked. There is no `updatedAt`: a session's columns change only via
+/// the explicit revocation path and the hourly activity refresh.
+///
+/// `tokenHash` is the SHA-256 of the session token. The plaintext token lives
+/// only in the `__Host-` cookie and is never persisted.
+///
+/// `lastActivityAt` is refreshed **at most once per hour** (ADR-16), so the
+/// effective idle window is 13–14 days rather than exactly 14. Expiry is
+/// enforced on read against `expiresAt`, so correctness does not depend on a
+/// cron job.
+model Session {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  /// `ON DELETE RESTRICT`: accounts are never deleted, and the constraint
+  /// states the real rule rather than implementing a cascade that never fires.
+  accountId String @db.Uuid
+
+  tokenHash String
+
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  lastActivityAt DateTime @default(now()) @db.Timestamptz(6)
+  expiresAt      DateTime @db.Timestamptz(6)
+
+  revokedAt        DateTime? @db.Timestamptz(6)
+  revocationReason String?
+
+  @@unique([tokenHash], map: "idx_sessions_token_hash")
+  @@index([accountId], map: "idx_sessions_account")
+  @@index([expiresAt], map: "idx_sessions_expires_at")
+}
+
+/// A single-use password-reset token.
+///
+/// **Created by bolt `005-identity-security`, not by bolt `004`.** The table
+/// is added now so the schema is coherent and the FR-51 work has a seam; it
+/// stays empty until bolt `005` writes to it.
+///
+/// The token is stored only as a hash. `usedAt` makes it single-use, and
+/// `expiresAt` makes it time-limited.
+model PasswordResetToken {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  accountId String @db.Uuid
+
+  tokenHash String
+
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  expiresAt DateTime  @db.Timestamptz(6)
+  usedAt    DateTime? @db.Timestamptz(6)
+
+  @@unique([tokenHash], map: "idx_password_reset_tokens_token_hash")
+  @@index([accountId], map: "idx_password_reset_tokens_account")
+  @@index([expiresAt], map: "idx_password_reset_tokens_expires_at")
+  /// For the daily sweep, which filters on both `expiresAt` and `usedAt`.
+  /// Correctness never depends on the sweep — expiry is enforced on read.
+  @@index([expiresAt, usedAt], map: "idx_password_reset_tokens_expires_at_used_at")
+}
+
+/// A rate-limit counter.
+///
+/// **A counter is a fact about a key, not about an account**, so it has no
+/// foreign key and no cascade: a counter must outlive any particular account.
+///
+/// The unique constraint on `(bucketKey, windowStart)` is what makes the
+/// increment atomic — `INSERT … ON CONFLICT DO UPDATE` is one statement, so
+/// concurrent requests for the same bucket cannot lose a count.
+///
+/// Rows are removed by the daily sweep. A stale row never affects a decision,
+/// because each window's counter is keyed by its own `windowStart`.
+model RateLimitCounter {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  /// The bucket, e.g. `login:ip:203.0.113.7` or `login:email:jane@example.org`.
+  bucketKey String
+
+  /// The start of the fixed window this counter covers.
+  windowStart DateTime @db.Timestamptz(6)
+  count       Int      @default(1)
+
+  @@unique([bucketKey, windowStart], map: "idx_rate_limit_counters_bucket_window")
+  @@index([windowStart], map: "idx_rate_limit_counters_window_start")
+}

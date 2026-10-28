@@ -1435,11 +1435,11 @@ The administrator lands back on the originating queue (Awaiting Return for Found
 
 ## 17. Audit Trail UX (Administrator-Only)
 
-> Authority: PRD FR-31, FR-32, FR-48, FR-52, FR-53.
+> Authority: PRD FR-31, FR-32, FR-48, FR-2, FR-52, FR-53.
 >
 > - FR-31 events 1–14 = numbered core/Found/account workflow-lifecycle catalog.
 > - FR-48 events 15–30 = numbered Lost-side catalog.
-> - FR-52 and FR-53 add **non-numbered** audit record types (`Member profile edited`, `Report edited by Administrator`) that share the append-only, Administrator-only-visible audit model. They do **not** introduce event 31 or any later event number; events 1–30 are unchanged.
+> - FR-2, FR-52 and FR-53 add **non-numbered** audit record types (`Registration submitted`, `Member profile edited`, `Report edited by Administrator`) that share the append-only, Administrator-only-visible audit model. They do **not** introduce event 31 or any later event number; events 1–30 are unchanged.
 > - All audit records are append-only; previous entries are never edited or deleted.
 > - Full audit visibility remains Administrator-only.
 
@@ -1512,14 +1512,15 @@ Per PRD FR-32, members see a *member-facing* status history on their own items: 
 - Each row: timestamp, status label, "by {actor}" (no audit verb, no additional fields).
 - Members see only the short member-facing status history. No control or disclosure exposes the full Administrator audit trail.
 
-### 17.5a Non-numbered audit record types (PRD FR-52, FR-53)
+### 17.5a Non-numbered audit record types (PRD FR-2, FR-52, FR-53)
 
-The numbered workflow-lifecycle audit-event catalog is **events 1–14 (FR-31) + events 15–30 (FR-48)**. PRD FR-52 and FR-53 add **non-numbered** audit record types. They do not introduce event 31 or any later event number; events 1–30 are unchanged. All audit records below are append-only and Administrator-only.
+The numbered workflow-lifecycle audit-event catalog is **events 1–14 (FR-31) + events 15–30 (FR-48)**. PRD FR-2, FR-52 and FR-53 add **non-numbered** audit record types. They do not introduce event 31 or any later event number; events 1–30 are unchanged. All audit records below are append-only and Administrator-only.
 
+- **`Registration submitted` (FR-2).** Required by FR-2, which states that "the audit trail records the registration event with the user's name, email, and self-declared role and timestamp". Recorded once, when a visitor's registration creates the `Pending` account. Does **not** receive a numbered workflow-event ID. No email fires — registration sends none (FR-1). The actor is the registering member, who is the account being created. Expanded fields visible to Administrators: `actor` (the registering member), `account target`, `timestamp`, `display name`, `registered email`, and `self-declared role`. Administrators see it in the contextual account audit history (§17.7).
 - **`Member profile edited` (FR-52).** Required by FR-52. Recorded every time an Active member saves a change to their own Member Profile (`/my/profile`). Does **not** receive a numbered workflow-event ID. No FR-46 email fires. Members do not see this record; Administrators see it in the contextual account/profile audit history (§17.7). Expanded fields visible to Administrators: `actor` (the member making the edit), `member/account target`, `timestamp`, `changed fields` (e.g., `displayName`, `role`), and `previous values`.
 - **`Report edited by Administrator` (FR-53).** Recorded every time an Administrator saves a change via the FR-53 Edit Report surface (`/admin/items/:id/edit`, `/admin/lost/:id/edit`). Does **not** receive a numbered workflow-event ID. No FR-46 email fires. Expanded fields visible to Administrators: `acting Administrator` (actor), `report ID`, `timestamp`, `changed fields`, `previous values`. The reporter-facing generic reporter edit remains the existing **`Report edited by reporter`** entry — distinct label, distinct actor.
 
-The numbered `Report edited` (FR-31 reporter-edit event) is **not** relabeled; FR-31 Event 8 semantics are unchanged. The FR-52 and FR-53 audit records above are additional non-numbered record types.
+The numbered `Report edited` (FR-31 reporter-edit event) is **not** relabeled; FR-31 Event 8 semantics are unchanged. The FR-2, FR-52 and FR-53 audit records above are additional non-numbered record types.
 
 ### 17.6 Audit access log (PRD §10 Observability)
 
@@ -1535,6 +1536,7 @@ UX provides contextual account / profile audit access **inside the existing Admi
   - **FR-31 Event 12** — Registration rejected (actor, target account, timestamp, rejection reason).
   - **FR-31 Event 13** — Account deactivated (actor, target account, timestamp).
   - **FR-52 non-numbered `Member profile edited`** records (actor, member/account target, timestamp, changed fields, previous values).
+  - **FR-2 non-numbered `Registration submitted`** records (actor, target account, timestamp, display name, registered email, self-declared role).
   No new audit events are introduced. No event is renumbered.
 - **Out of scope here.** Report, Claim, Recovery Response, and thread audit history are **not** moved into `/admin/accounts`. They remain reachable from the contextual entity audit routes — `/admin/items/:id/audit` for Found reports and `/admin/lost/:id/audit` for Lost reports.
 - **No new route, no new queue.** This contextual disclosure lives inside `/admin/accounts`; it does not introduce a fifth dashboard tile, an `Account Audit` queue, a `Profile Audit` queue, a global `/admin/audit` route, or a new workflow audit numbering scheme.
@@ -1749,7 +1751,7 @@ This section is the **rubric walker Pass 1 reference** for downstream consumers 
 | FR | Coverage |
 |---|---|
 | FR-1 (Self-Registration) | §16.1 |
-| FR-2 (Pending State and Restricted Access) | §9.2, §4.5, §6.2 |
+| FR-2 (Pending State and Restricted Access) | §9.2, §4.5, §6.2; registration audit record `Registration submitted` — non-numbered, see §17.5a; contextual account audit history via `/admin/accounts` per §17.7 |
 | FR-3 (Administrator Review of Pending Registrations) | §15.2 |
 | FR-4 (Login and Logout) | §16.2, §16.5 |
 | FR-5 (Deactivation) | §15.6 |

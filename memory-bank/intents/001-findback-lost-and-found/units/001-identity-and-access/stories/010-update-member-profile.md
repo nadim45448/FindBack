@@ -5,7 +5,7 @@ intent: 001-findback-lost-and-found
 status: draft
 priority: must
 created: 2026-10-23T12:45:00Z
-assigned_bolt: null
+assigned_bolt: 005-identity-security
 implemented: false
 traces_to: [FR-52]
 ---

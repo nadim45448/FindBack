@@ -2,12 +2,13 @@
 id: 006-pending-member-restricted-access
 unit: 001-identity-and-access
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
-created: 2026-10-23T12:43:00Z
-assigned_bolt: null
-implemented: false
-traces_to: [FR-2]
+created: 2026-10-23T12:43:00.000Z
+assigned_bolt: 004-identity-core
+implemented: true
+traces_to:
+  - FR-2
 ---
 
 # Story: 006-pending-member-restricted-access

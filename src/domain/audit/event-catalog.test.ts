@@ -27,10 +27,15 @@ describe('audit event catalog', () => {
     expect(numbers).toEqual(Array.from({ length: 30 }, (_, index) => index + 1));
   });
 
-  it('holds the two non-numbered records FR-31 names', () => {
+  it('holds the three non-numbered records the PRD requires', () => {
+    // FR-31 names two (FR-52 profile edits, FR-53 administrator report
+    // edits). FR-2 explicitly requires a registration record, and FR-31's
+    // rule for this set is "additional audit records explicitly required by
+    // other requirements" — so FR-2's is the third.
     expect(NON_NUMBERED_EVENT_CATALOG.map((entry) => entry.type)).toEqual([
       'member_profile.edited',
       'report.edited_by_administrator',
+      'registration.submitted',
     ]);
   });
 

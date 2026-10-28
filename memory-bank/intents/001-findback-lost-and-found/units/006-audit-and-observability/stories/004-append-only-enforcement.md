@@ -2,12 +2,13 @@
 id: 004-append-only-enforcement
 unit: 006-audit-and-observability
 intent: 001-findback-lost-and-found
-status: implemented
+status: complete
 priority: must
-created: 2026-10-23T12:52:00Z
+created: 2026-10-23T12:52:00.000Z
 assigned_bolt: 001-audit-core
 implemented: true
-traces_to: [FR-31]
+traces_to:
+  - FR-31
 ---
 
 # Story: 004-append-only-enforcement
