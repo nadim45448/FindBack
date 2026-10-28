@@ -2,12 +2,14 @@
 id: 010-visibility-matrix-by-actor
 unit: 002-reporting-and-listings
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
-created: 2026-10-23T12:46:00Z
+created: 2026-10-23T12:46:00.000Z
 assigned_bolt: null
-implemented: false
-traces_to: [FR-39, FR-37]
+implemented: true
+traces_to:
+  - FR-39
+  - FR-37
 ---
 
 # Story: 010-visibility-matrix-by-actor

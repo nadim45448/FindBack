@@ -1,0 +1,30 @@
+/**
+ * Reporting and Listings — domain layer.
+ *
+ * Pure domain logic: no I/O, no framework imports, no Prisma, no `node:crypto`.
+ * Every module here is importable and testable with no database, no network,
+ * and no React (coding-standards § File and folder organization).
+ *
+ * **This module is the single implementation point for FR-39.** The visibility
+ * matrix is a pure function of a viewer and a report, so it is expressed here
+ * as one — with no I/O, so it can be asserted against fixtures before a single
+ * report row exists. Every later read path inherits it rather than
+ * re-deciding visibility for itself.
+ *
+ * The module is named `listings/` because the standards' module map names
+ * `listings/` for "Report CRUD, search, visibility projection"
+ * (`system-architecture.md` § Module map) — the same reasoning ADR-13
+ * recorded for `accounts/`.
+ */
+
+export * from './audit-trail-projection';
+export * from './claim-projection';
+export * from './projection-column';
+export * from './report-field-set';
+export * from './report-projection';
+export * from './report-relationship';
+export * from './recovery-response-projection';
+export * from './thread-projection';
+export * from './viewer';
+export * from './visibility-projection';
+export * from './visibility-resolver';
