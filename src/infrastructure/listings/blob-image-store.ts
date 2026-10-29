@@ -36,12 +36,22 @@ import {
   type ImageUpload,
   type StoredImage,
 } from '@/application/listings/ports/image-store';
-
-/** The content types the PRD allows (FR-8). */
-const ALLOWED_CONTENT_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+import {
+  detectImageContentType,
+  SERVABLE_IMAGE_CONTENT_TYPES,
+} from '@/domain/listings';
 
 /** The declared byte ceiling (FR-8): 5 MB. */
 const MAX_BYTES = 5 * 1024 * 1024;
+
+/**
+ * The content types the PRD allows (FR-8).
+ *
+ * **The same allowlist the delivery path serves from** — one list, in the
+ * domain, read by both sides. The store writes only what the reader may
+ * serve, so the two can never disagree about what is acceptable.
+ */
+const ALLOWED_CONTENT_TYPES = new Set<string>(SERVABLE_IMAGE_CONTENT_TYPES);
 
 /** The extension each allowed content type is stored under. */
 const EXTENSION_BY_CONTENT_TYPE: Readonly<Record<string, string>> = {
@@ -49,72 +59,6 @@ const EXTENSION_BY_CONTENT_TYPE: Readonly<Record<string, string>> = {
   'image/png': 'png',
   'image/webp': 'webp',
 };
-
-/**
- * The image store's magic-byte signatures.
- *
- * **Sniffing the header is a control, not a nicety.** A `.jpg` that is
- * actually an HTML or SVG payload can execute in the origin of whatever
- * serves it. The declared content type is the member's claim; the magic
- * bytes are the fact. The two must agree.
- */
-const MAGIC_BYTES: ReadonlyArray<{ contentType: string; bytes: readonly number[] }> = [
-  // JPEG: FF D8 FF
-  { contentType: 'image/jpeg', bytes: [0xff, 0xd8, 0xff] },
-  // PNG: 89 50 4E 47 0D 0A 1A 0A
-  {
-    contentType: 'image/png',
-    bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
-  },
-  // WebP: "RIFF" .... "WEBP"
-  {
-    contentType: 'image/webp',
-    bytes: [0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50],
-  },
-];
-
-/**
- * Whether the bytes begin with the given signature.
- *
- * The WebP signature has a four-byte length field in the middle
- * (`RIFF` + size + `WEBP`), which is why the comparison allows any four
- * bytes at positions 4–7.
- */
-function matchesSignature(bytes: Buffer, signature: readonly number[]): boolean {
-  if (bytes.length < signature.length) {
-    return false;
-  }
-
-  if (signature[0] === 0x52) {
-    // WebP: "RIFF" then four arbitrary bytes then "WEBP".
-    const riff = signature.slice(0, 4);
-    const webp = signature.slice(8, 12);
-
-    return (
-      bytes.subarray(0, 4).equals(Buffer.from(riff)) &&
-      bytes.subarray(8, 12).equals(Buffer.from(webp))
-    );
-  }
-
-  return bytes.subarray(0, signature.length).equals(Buffer.from(signature));
-}
-
-/**
- * The detected content type, from the magic bytes.
- *
- * `null` when the bytes match no allowed signature — which is a rejection,
- * not a fallback to the declared type. The whole point of sniffing is that
- * an unmatched file does not get to keep its claimed type.
- */
-function detectContentType(bytes: Buffer): string | null {
-  for (const signature of MAGIC_BYTES) {
-    if (matchesSignature(bytes, signature.bytes)) {
-      return signature.contentType;
-    }
-  }
-
-  return null;
-}
 
 /** The Vercel Blob image store. */
 export class BlobImageStore implements ImageStore {
@@ -199,7 +143,7 @@ export class BlobImageStore implements ImageStore {
       throw new ImageRejectedError('That image is larger than 5 MB.');
     }
 
-    const detected = detectContentType(image.bytes);
+    const detected = detectImageContentType(image.bytes);
 
     if (detected === null) {
       throw new ImageRejectedError(

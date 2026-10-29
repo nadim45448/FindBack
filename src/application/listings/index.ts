@@ -11,4 +11,5 @@
 
 export * from './ports';
 export * from './report-creation-service';
+export * from './report-image-delivery-service';
 export * from './report-visibility-service';

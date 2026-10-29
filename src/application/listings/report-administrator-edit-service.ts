@@ -59,10 +59,12 @@ import type { TransactionFactory } from '@/application/ports/transaction-factory
 import {
   ADMINISTRATOR_EDITABLE_FIELDS,
   asTerminalStatus,
+  assertWithinQuota,
   buildEditOutcome,
   buildReportEditedByAdministratorEvent,
   isChangeKey,
   orderSnapshots,
+  quotaBytesFromEnv,
   REPORTER_EDITABLE_FIELDS,
   snapshotIfChanged,
   terminalEditMessage,
@@ -78,6 +80,7 @@ import {
 import { TerminalStateError, NotFoundError, ValidationError } from '@/lib/errors';
 
 import type { CampusAreaReader } from './ports/campus-area-reader';
+import type { ImageQuotaReader } from './ports/image-quota-reader';
 import type { ImageStore, ImageUpload } from './ports/image-store';
 import type { ReportFieldUpdate, ReportRepository } from './ports/report-repository';
 
@@ -130,6 +133,18 @@ export class ReportAdministratorEditService {
     private readonly audit: AuditWriter,
     private readonly transactions: TransactionFactory,
     private readonly clock: ReportAdministratorEditClock,
+    /**
+     * The storage quota reader.
+     *
+     * **Optional, and that is a deliberate choice.** The quota is enforced
+     * on every image write (image-handling §4), and a deployment with no
+     * quota reader has not configured a budget — so the check is skipped
+     * rather than refusing every edit. The deployment that has configured
+     * the budget supplies the reader.
+     */
+    private readonly quota?: ImageQuotaReader,
+    /** The quota's ceiling in bytes, when the deployment configures one. */
+    private readonly quotaBytes: number = quotaBytesFromEnv(process.env),
   ) {}
 
   async edit(
@@ -195,6 +210,22 @@ export class ReportAdministratorEditService {
     // join a PostgreSQL transaction, so the upload happens outside it and the
     // write is compensating: if the row write fails, the new blob is
     // deleted.
+    // ── The image replacement ──────────────────────────────────────────────
+    //
+    // **The blob is uploaded before the transaction.** A blob store cannot
+    // join a PostgreSQL transaction, so the upload happens outside it and the
+    // write is compensating: if the row write fails, the new blob is
+    // deleted.
+    //
+    // **The quota is checked before the write** (image-handling §4), and the
+    // check is against the *would-be* total. A replacement that would
+    // exceed the quota is refused before a byte is stored — and the old
+    // blob is untouched, so a refused replacement leaves the report exactly
+    // as it was.
+    if (request.image) {
+      await this.assertQuotaAllows(request.image);
+    }
+
     const imageReplacement = request.image
       ? await this.images.store(request.image, 'reports')
       : null;
@@ -436,6 +467,34 @@ export class ReportAdministratorEditService {
     } catch {
       // Recorded for retry by the image store's own retry mechanism.
     }
+  }
+
+  /**
+   * The quota check, before the blob is written.
+   *
+   * **The check is on the would-be total.** The bytes the replacement would
+   * add are counted against the bytes already stored, so an upload that
+   * exactly fills the remaining space is allowed and one byte more is
+   * refused.
+   *
+   * **A deployment with no quota reader has no configured budget**, so the
+   * check is skipped. The deployment that configured the budget supplies the
+   * reader, and the check runs there.
+   *
+   * @throws {ValidationError} when the replacement would exceed the quota.
+   * Nothing is stored, and the report's existing image is untouched.
+   */
+  private async assertQuotaAllows(image: ImageUpload): Promise<void> {
+    if (!this.quota) {
+      return;
+    }
+
+    const state = await this.quota.readUsage();
+
+    assertWithinQuota(
+      { usedBytes: state.usedBytes, quotaBytes: this.quotaBytes },
+      image.bytes.length,
+    );
   }
 }
 

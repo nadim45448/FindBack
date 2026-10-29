@@ -40,6 +40,10 @@ import {
   ReportAdministratorEditService,
   type ReportAdministratorEditClock,
 } from '@/application/listings/report-administrator-edit-service';
+import { ReportListingService } from '@/application/listings/report-listing-service';
+import { ReportDetailService } from '@/application/listings/report-detail-service';
+import { ReportVisibilityService } from '@/application/listings/report-visibility-service';
+import { ReportImageDeliveryService } from '@/application/listings/report-image-delivery-service';
 import { DefaultClaimRejectionEmailBuilder } from '@/application/listings/claim-rejection-email';
 
 import { PrismaAuditEventRepository } from '@/infrastructure/audit/prisma-audit-event-repository';
@@ -50,13 +54,23 @@ import { SmtpEmailSender, readSmtpConfig } from '@/infrastructure/accounts/smtp-
 import {
   BlobImageStore,
 } from './blob-image-store';
+import { BlobImageReader } from './blob-image-reader';
+import { BlobImageQuotaReader } from './blob-image-quota-reader';
 import { PrismaAuditTrailDeletion } from './prisma-audit-trail-deletion';
+import { PrismaAuditTrailVisibilityReader } from './prisma-audit-trail-visibility-reader';
 import { PrismaCampusAreaReader } from './prisma-campus-area-reader';
+import { PrismaClaimVisibilityReader } from './prisma-claim-visibility-reader';
+import { PrismaRecoveryResponseVisibilityReader } from './prisma-recovery-response-visibility-reader';
+import { PrismaReportImageReader } from './prisma-report-image-reader';
 import { PrismaReportInteractionReader } from './prisma-report-interaction-reader';
 import { PrismaReportInteractionResolver } from './prisma-report-interaction-resolver';
+import { PrismaReportListingReader } from './prisma-report-listing-reader';
 import { PrismaReportRepository } from './prisma-report-repository';
+import { PrismaReportVisibilityReader } from './prisma-report-visibility-reader';
+import { PrismaThreadVisibilityReader } from './prisma-thread-visibility-reader';
 
 import { ImageStorageError, type ImageStore } from '@/application/listings/ports/image-store';
+import type { ImageQuotaReader } from '@/application/listings/ports/image-quota-reader';
 import type { EmailSender } from '@/application/ports/email-sender';
 
 /** The listings stack, assembled. */
@@ -70,6 +84,12 @@ export interface ListingsStack {
   readonly reportWithdrawals: ReportWithdrawalService;
   /** FR-53 — the administrator's moderation edit. */
   readonly administratorEdits: ReportAdministratorEditService;
+  /** FR-14 and FR-49 — the search pool and the partitions. */
+  readonly listings: ReportListingService;
+  /** FR-13 — the authenticated detail view. */
+  readonly details: ReportDetailService;
+  /** FR-8 and FR-37 — the authorised image delivery. */
+  readonly imageDelivery: ReportImageDeliveryService;
 }
 
 /** The system clock, as the clock port. */
@@ -121,6 +141,28 @@ class UnconfiguredImageStore implements ImageStore {
 }
 
 /**
+ * The quota reader, or `null` when the deployment has no blob store.
+ *
+ * **A quota reader without a store has nothing to measure.** The usage is
+ * read from the blob store, so a deployment with no store has no usage to
+ * read — and the quota check is skipped rather than refusing every upload
+ * on a measurement that could never be taken.
+ *
+ * The counterpart is the **reader**, which always exists: a deployment with
+ * a store always has an image to deliver, and the delivery route must
+ * answer rather than fail to build.
+ */
+function buildQuotaReader(env: NodeJS.ProcessEnv): ImageQuotaReader | null {
+  const token = env.BLOB_READ_WRITE_TOKEN;
+
+  if (!token || token.length === 0) {
+    return null;
+  }
+
+  return new BlobImageQuotaReader();
+}
+
+/**
  * The email sender, or `null` when SMTP is not configured.
  *
  * **A null sender is not a refusal.** The email is a notification of a fact
@@ -165,6 +207,11 @@ export function buildListingsStack(env: NodeJS.ProcessEnv = process.env): Listin
   // rather than a `null` the service would have to check for.
   const images: ImageStore = buildImageStore(env) ?? new UnconfiguredImageStore();
 
+  // The quota reader is **optional**, and a deployment with a blob store
+  // always has one. The quota check runs on every image write
+  // (image-handling §4), and the reader measures the store's real usage.
+  const quota: ImageQuotaReader | null = buildQuotaReader(env);
+
   const reports = new PrismaReportRepository(prisma);
   const campusAreas = new PrismaCampusAreaReader(prisma);
   const interactions = new PrismaReportInteractionReader(prisma);
@@ -194,7 +241,15 @@ export function buildListingsStack(env: NodeJS.ProcessEnv = process.env): Listin
   };
 
   return {
-    reports: new ReportCreationService(reports, campusAreas, images, audit, transactions, systemClock),
+    reports: new ReportCreationService(
+      reports,
+      campusAreas,
+      images,
+      audit,
+      transactions,
+      systemClock,
+      quota ?? undefined,
+    ),
     reportEdits: new ReportEditService(
       reports,
       interactions,
@@ -228,6 +283,36 @@ export function buildListingsStack(env: NodeJS.ProcessEnv = process.env): Listin
       audit,
       transactions,
       systemClock,
+      quota ?? undefined,
     ),
+    listings: new ReportListingService({
+      listings: new PrismaReportListingReader(prisma),
+    }),
+    // **The detail service sits on top of the visibility service.** The
+    // visibility service owns the FR-39 projection — which fields this
+    // viewer may see of this report — and the detail service adds the
+    // FR-13 gate on top of it. The gate is the only thing the detail
+    // service decides, so there is one place where the projection is
+    // assembled and one place where it is gated.
+    details: new ReportDetailService({
+      visibility: new ReportVisibilityService({
+        reports: new PrismaReportVisibilityReader(prisma),
+        claims: new PrismaClaimVisibilityReader(prisma),
+        responses: new PrismaRecoveryResponseVisibilityReader(prisma),
+        threads: new PrismaThreadVisibilityReader(prisma),
+        trail: new PrismaAuditTrailVisibilityReader(prisma),
+      }),
+    }),
+    // **The delivery service owns the whole authorisation.** The route
+    // resolves the actor and hands it here; the service decides whether the
+    // bytes are delivered and reads the blob itself. The route never reads
+    // the blob — that is the whole point of `image-handling.md` §3's
+    // "auth is verified in the route handler immediately adjacent to the
+    // blob read", and a route that read the blob itself would put the two
+    // decisions in different places.
+    imageDelivery: new ReportImageDeliveryService({
+      reportImages: new PrismaReportImageReader(prisma),
+      images: new BlobImageReader(),
+    }),
   };
 }

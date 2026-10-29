@@ -365,6 +365,17 @@ model Report {
   @@index([date(sort: Desc)], map: "idx_reports_date")
   @@index([reporterId, createdAt(sort: Desc)], map: "idx_reports_reporter_created")
 
+  /// The FR-49 `mine` partition's access path: the member's own reports,
+  /// most recent by the report's **`date`** — not by `created_at`. A report
+  /// found yesterday may have been created today; the listing orders by the
+  /// report's own date, so the index must carry it.
+  @@index([reporterId, date(sort: Desc)], map: "idx_reports_reporter_date")
+
+  /// The FR-49 `browse` partition's access path: reports of a status,
+  /// most recent by `date`. The exclusion of the viewer's own reports is
+  /// applied to the rows this index yields.
+  @@index([status, date(sort: Desc)], map: "idx_reports_status_date")
+
   /// The physical table name.
   ///
   /// The twelve columns above — `id`, `type`, `status`, `name`, `category`,
@@ -464,6 +475,9 @@ model Claim {
   @@index([reportId], map: "idx_claims_report_pending")
   /// The visibility reader's ordering.
   @@index([reportId, submittedAt], map: "idx_claims_report_submitted_at")
+  /// The FR-49 `claims` partition's access path: the member's own Claims,
+  /// most recent by submission time.
+  @@index([claimantId, submittedAt(sort: Desc)], map: "idx_claims_claimant_submitted_at")
 
   @@map("claims")
 }
@@ -520,6 +534,9 @@ model RecoveryResponse {
   @@index([reportId, status], map: "idx_recovery_responses_report_status")
   /// The visibility reader's ordering.
   @@index([reportId, submittedAt], map: "idx_recovery_responses_report_submitted_at")
+  /// The FR-49 `recovery_responses` partition's access path: the
+  /// responder's own Recovery Responses, most recent by submission time.
+  @@index([responderId, submittedAt(sort: Desc)], map: "idx_recovery_responses_responder_submitted_at")
 
   @@map("recovery_responses")
 }

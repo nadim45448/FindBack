@@ -41,8 +41,10 @@ import { AuditWriter } from '@/application/audit-writer';
 import type { TransactionFactory } from '@/application/ports/transaction-factory';
 
 import {
+  assertWithinQuota,
   buildReportCreatedEvent,
   createImageRef,
+  quotaBytesFromEnv,
   validateReportDraft,
   type ImageRef,
   type PersistedReport,
@@ -52,6 +54,7 @@ import {
 } from '@/domain/listings';
 
 import type { CampusAreaReader } from './ports/campus-area-reader';
+import type { ImageQuotaReader } from './ports/image-quota-reader';
 import type { ImageStore, ImageUpload } from './ports/image-store';
 import type { ReportRepository } from './ports/report-repository';
 
@@ -104,6 +107,18 @@ export class ReportCreationService {
     private readonly audit: AuditWriter,
     private readonly transactions: TransactionFactory,
     private readonly clock: ReportCreationClock,
+    /**
+     * The storage quota reader.
+     *
+     * **Optional, and that is a deliberate choice.** The quota is a
+     * deployment's budget, and a deployment that has not configured the
+     * quota reader has not configured a budget — the check is skipped
+     * rather than guessed at. A deployment that *has* configured one gets
+     * the check, and the check is a refusal when the budget is spent.
+     */
+    private readonly quota?: ImageQuotaReader,
+    /** The quota's ceiling in bytes, when the deployment configures one. */
+    private readonly quotaBytes: number = quotaBytesFromEnv(process.env),
   ) {}
 
   /**
@@ -147,6 +162,17 @@ export class ReportCreationService {
     let imageRef: ImageRef | null = null;
 
     if (request.image) {
+      // **The quota is checked before writing** (image-handling §4). The
+      // check is on the *would-be* total — the bytes that would be stored
+      // plus the bytes already stored — so an upload that exactly fills the
+      // remaining space is allowed and one byte more is refused.
+      //
+      // **A refusal here is not a failure of the report.** The report's
+      // fields were valid; it is the deployment's storage budget that is
+      // spent. Nothing is stored, no existing image is deleted, and no
+      // upgrade is performed (ADR-4).
+      await this.assertQuotaAllows(request.image);
+
       const stored = await this.images.store(request.image, 'reports');
       imageRef = createImageRef(stored.path);
     }
@@ -222,6 +248,30 @@ export class ReportCreationService {
     );
 
     return created;
+  }
+
+  /**
+   * Assert the upload fits within the storage budget.
+   *
+   * **The check happens before the bytes are written** (image-handling §4),
+   * and the refusal touches nothing: no image is deleted, and no upgrade is
+   * performed (ADR-4).
+   *
+   * **A deployment with no quota reader has no configured budget**, so the
+   * check is skipped rather than guessed at. A deployment that *has* one
+   * gets the check, and the check is a refusal when the budget is spent.
+   */
+  private async assertQuotaAllows(image: ImageUpload): Promise<void> {
+    if (!this.quota) {
+      return;
+    }
+
+    const state = await this.quota.readUsage();
+
+    assertWithinQuota(
+      { usedBytes: state.usedBytes, quotaBytes: this.quotaBytes },
+      image.bytes.length,
+    );
   }
 
   /**
