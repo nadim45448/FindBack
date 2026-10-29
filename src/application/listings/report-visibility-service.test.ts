@@ -34,6 +34,7 @@ import type {
   RecoveryResponseVisibilityReader,
   ReportVisibilityReader,
   ThreadVisibilityReader,
+  TrailEvent,
 } from './ports';
 
 /** A member actor. */
@@ -254,9 +255,31 @@ class FakeThreadReader implements ThreadVisibilityReader {
 class FakeTrailReader implements AuditTrailVisibilityReader {
   called = false;
 
-  async loadTrailForViewer(): Promise<readonly unknown[] | null> {
+  async loadTrailForViewer(): Promise<readonly TrailEvent[] | null> {
     this.called = true;
-    return [{ id: 'event-1' }];
+
+    // **The whole event, not a fragment.** `TrailEvent` was `unknown`
+    // until this bolt's integration test read a real event out of the
+    // database. `unknown` constrained nothing, so it could not have
+    // caught a field the reader failed to populate — and the reader did
+    // fail, silently, until the aliasing fix.
+    return [
+      {
+        id: 'event-1',
+        eventNumber: 1,
+        eventType: 'report.created',
+        parentType: 'report',
+        parentId: 'report-1',
+        actorId: 'actor-1',
+        actorRole: 'member',
+        reason: null,
+        previousValues: null,
+        changedFields: null,
+        metadata: null,
+        occurredAt: '2026-10-28T12:00:00.000Z',
+        createdAt: '2026-10-28T12:00:00.000Z',
+      },
+    ];
   }
 }
 

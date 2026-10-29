@@ -34,7 +34,7 @@ import {
   reporterSelectColumns,
   reportSelectColumns,
 } from './select-builder';
-import { PHYSICAL, TABLES, physical } from './physical-columns';
+import { PHYSICAL, TABLES, physical, quoteName, rowAlias } from './physical-columns';
 
 /** The row shape the report query returns. */
 interface ReportQueryRow {
@@ -87,19 +87,19 @@ export class PrismaReportVisibilityReader implements ReportVisibilityReader {
     const rows = await this.client.$queryRaw<RelationshipQueryRow[]>(
       Prisma.sql`
         SELECT
-          r.${Prisma.raw(PHYSICAL.report.id)}        AS report_id,
-          r.${Prisma.raw(PHYSICAL.report.type)}        AS report_type,
-          r.${Prisma.raw(PHYSICAL.report.reporterId)}  AS reporter_id,
-          c.${Prisma.raw(PHYSICAL.claim.id)}            AS claim_id,
-          rr.${Prisma.raw(PHYSICAL.response.id)}        AS recovery_response_id
-        FROM ${Prisma.raw(TABLES.report)} r
-        LEFT JOIN ${Prisma.raw(TABLES.claim)} c
-          ON c.${Prisma.raw(PHYSICAL.claim.reportId)} = r.${Prisma.raw(PHYSICAL.report.id)}
-         AND c.${Prisma.raw(PHYSICAL.claim.claimantId)} = ${viewerId}
-        LEFT JOIN ${Prisma.raw(TABLES.response)} rr
-          ON rr.${Prisma.raw(PHYSICAL.response.reportId)} = r.${Prisma.raw(PHYSICAL.report.id)}
-         AND rr.${Prisma.raw(PHYSICAL.response.responderId)} = ${viewerId}
-        WHERE r.${Prisma.raw(PHYSICAL.report.id)} = ${reportId}
+          r.${Prisma.raw(quoteName(PHYSICAL.report.id))}        AS report_id,
+          r.${Prisma.raw(quoteName(PHYSICAL.report.type))}        AS report_type,
+          r.${Prisma.raw(quoteName(PHYSICAL.report.reporterId))}  AS reporter_id,
+          c.${Prisma.raw(quoteName(PHYSICAL.claim.id))}            AS claim_id,
+          rr.${Prisma.raw(quoteName(PHYSICAL.response.id))}        AS recovery_response_id
+        FROM ${Prisma.raw(quoteName(TABLES.report))} r
+        LEFT JOIN ${Prisma.raw(quoteName(TABLES.claim))} c
+          ON c.${Prisma.raw(quoteName(PHYSICAL.claim.reportId))} = r.${Prisma.raw(quoteName(PHYSICAL.report.id))}
+         AND c.${Prisma.raw(quoteName(PHYSICAL.claim.claimantId))} = ${viewerId}
+        LEFT JOIN ${Prisma.raw(quoteName(TABLES.response))} rr
+          ON rr.${Prisma.raw(quoteName(PHYSICAL.response.reportId))} = r.${Prisma.raw(quoteName(PHYSICAL.report.id))}
+         AND rr.${Prisma.raw(quoteName(PHYSICAL.response.responderId))} = ${viewerId}
+        WHERE r.${Prisma.raw(quoteName(PHYSICAL.report.id))} = ${reportId}
         LIMIT 1
       `,
     );
@@ -135,21 +135,25 @@ export class PrismaReportVisibilityReader implements ReportVisibilityReader {
     const reporterColumns = reporterSelectColumns(columns);
 
     const selectList = reportColumns
-      .map((column) => `r.${physical(column, PHYSICAL.report)}`)
+      .map((column) => `r.${physical(column, PHYSICAL.report)} AS ${quoteName(rowAlias(column))}`)
       .join(', ');
 
+    // The reporter's columns are aliased with a `reporter_` prefix, because
+    // the mapper reads them under names of their own — `reporter_display_name`
+    // and `reporter_email` — and the `accounts` table's columns are
+    // camelCase (`displayName`, `email`), which the raw driver would return
+    // under their own names. The alias is what makes the mapper's contract
+    // explicit; without it the field is silently `undefined`.
     const reporterSelectList = reporterColumns
-      .map((column) => `a.${physical(column, PHYSICAL.account)}`)
+      .map(
+        (column) =>
+          `a.${physical(column, PHYSICAL.account)} AS ${quoteName(`reporter_${rowAlias(column)}`)}`,
+      )
       .join(', ');
 
     const joins =
       reporterSelectList.length > 0
-        ? Prisma.sql`LEFT JOIN ${Prisma.raw(TABLES.account)} a ON a.${Prisma.raw(PHYSICAL.account.id)} = r.${Prisma.raw(PHYSICAL.report.reporterId)}`
-        : Prisma.empty;
-
-    const reporterSelection =
-      reporterSelectList.length > 0
-        ? Prisma.sql`, ${Prisma.raw(reporterSelectList)}`
+        ? Prisma.sql`LEFT JOIN ${Prisma.raw(quoteName(TABLES.account))} a ON a.${Prisma.raw(quoteName(PHYSICAL.account.id))} = r.${Prisma.raw(quoteName(PHYSICAL.report.reporterId))}`
         : Prisma.empty;
 
     // The member-facing status history is the timestamp of the report's most
@@ -158,23 +162,38 @@ export class PrismaReportVisibilityReader implements ReportVisibilityReader {
     // event type, which is trail content (FR-32).
     const lastActionSelect = Prisma.sql`
       (
-        SELECT a2.${Prisma.raw(PHYSICAL.audit.occurredAt)}
-        FROM ${Prisma.raw(TABLES.audit)} a2
-        WHERE a2.${Prisma.raw(PHYSICAL.audit.parentId)} = r.${Prisma.raw(PHYSICAL.report.id)}
-        ORDER BY a2.${Prisma.raw(PHYSICAL.audit.occurredAt)} DESC
+        SELECT a2.${Prisma.raw(quoteName(PHYSICAL.audit.occurredAt))}
+        FROM ${Prisma.raw(quoteName(TABLES.audit))} a2
+        WHERE a2.${Prisma.raw(quoteName(PHYSICAL.audit.parentId))} = r.${Prisma.raw(quoteName(PHYSICAL.report.id))}
+        ORDER BY a2.${Prisma.raw(quoteName(PHYSICAL.audit.occurredAt))} DESC
         LIMIT 1
       ) AS last_action_at
     `;
+
+    // **The comma belongs to the subquery, not to whatever precedes it.**
+    //
+    // The report columns are always present, but the reporter's columns
+    // are not — an anonymous viewer's column set grants neither the
+    // reporter's name nor their contact details, so the `accounts` join is
+    // not issued and the reporter's columns are absent from the list. A
+    // comma attached to the *preceding* fragment would therefore be
+    // missing exactly when the fragment is, which is the anonymous case.
+    //
+    // Putting the comma on the subquery makes the list correct for every
+    // column set: the report columns, then the reporter's columns if
+    // granted, then the timestamp — each separated, none trailing.
+    const reporterSelection =
+      reporterSelectList.length > 0 ? Prisma.raw(`, ${reporterSelectList}`) : Prisma.empty;
 
     const rows = await this.client.$queryRaw<ReportQueryRow[]>(
       Prisma.sql`
         SELECT
           ${Prisma.raw(selectList)}
           ${reporterSelection}
-          ${lastActionSelect}
-        FROM ${Prisma.raw(TABLES.report)} r
+          , ${lastActionSelect}
+        FROM ${Prisma.raw(quoteName(TABLES.report))} r
         ${joins}
-        WHERE r.${Prisma.raw(PHYSICAL.report.id)} = ${reportId}
+        WHERE r.${Prisma.raw(quoteName(PHYSICAL.report.id))} = ${reportId}
         LIMIT 1
       `,
     );

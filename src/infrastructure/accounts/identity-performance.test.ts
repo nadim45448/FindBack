@@ -251,7 +251,7 @@ describeWithDatabase('bolt 004 — the identity performance budgets', () => {
     const stack = buildIdentityStack();
 
     const rows = await prisma.$queryRaw<Array<{ id: string }>>`
-      SELECT "id" FROM "Account" WHERE lower(btrim("email")) = lower(btrim(${email}))
+      SELECT "id" FROM "accounts" WHERE lower(btrim("email")) = lower(btrim(${email}))
     `;
 
     const accountId = rows[0]?.id ?? '';
@@ -326,7 +326,7 @@ describeWithDatabase('bolt 004 — the identity performance budgets', () => {
     );
 
     const rows = await prisma.$queryRaw<Array<{ id: string }>>`
-      SELECT "id" FROM "Account" WHERE lower(btrim("email")) = lower(btrim(${administratorEmail}))
+      SELECT "id" FROM "accounts" WHERE lower(btrim("email")) = lower(btrim(${administratorEmail}))
     `;
 
     await prisma.account.update({
@@ -378,12 +378,12 @@ describeWithDatabase('bolt 004 — the identity performance budgets', () => {
     // scan as cheaper, which is a plan the production database would not
     // use once autovacuum had run. `ANALYZE` is the same fix the audit
     // performance suites apply after their bulk insert.
-    await prisma.$executeRawUnsafe('ANALYZE "Account"');
+    await prisma.$executeRawUnsafe('ANALYZE "accounts"');
 
     const plan = await prisma.$queryRaw<Array<{ 'QUERY PLAN': string }>>`
       EXPLAIN (FORMAT JSON)
       SELECT "id", "email", "displayName", "selfDeclaredRole", "selfDeclaredRoleOther", "createdAt"
-      FROM "Account"
+      FROM "accounts"
       WHERE "status" = 'Pending'
       ORDER BY "createdAt" ASC
       LIMIT 25

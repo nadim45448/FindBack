@@ -323,7 +323,7 @@ describeWithDatabase('Lost-side audit security', () => {
   // ── Control 4 — injection and storage safety ──────────────────────────────
 
   it('stores a hostile where-found as data, and the table it names is still there', async () => {
-    const hostile = '\'; DROP TABLE "AuditEvent"; --';
+    const hostile = '\'; DROP TABLE "audit_events"; --';
 
     await prisma.$transaction(async (tx) => {
       await factory.recordResponseSubmitted(
@@ -349,7 +349,7 @@ describeWithDatabase('Lost-side audit security', () => {
   });
 
   it('stores a hostile reason as data, and the table it names is still there', async () => {
-    const hostile = '\'; DROP TABLE "AuditEvent"; --';
+    const hostile = '\'; DROP TABLE "audit_events"; --';
 
     await prisma.$transaction(async (tx) => {
       await factory.recordAdministratorClosed(

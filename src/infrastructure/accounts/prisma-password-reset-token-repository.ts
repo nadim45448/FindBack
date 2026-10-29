@@ -113,7 +113,7 @@ export class PrismaPasswordResetTokenRepository implements PasswordResetTokenRep
     const client = transactionClient(transaction);
 
     const updated = await client.$queryRaw<{ id: string }[]>(Prisma.sql`
-      UPDATE "PasswordResetToken"
+      UPDATE "password_reset_tokens"
          SET "usedAt" = ${now}
        WHERE "id" = ${tokenId}::uuid
          AND "usedAt" IS NULL

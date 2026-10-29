@@ -1,6 +1,6 @@
 ---
-last_updated: 2026-10-28T15:45:00Z
-total_decisions: 19
+last_updated: 2026-10-28T21:20:00Z
+total_decisions: 20
 ---
 
 # Decision Index
@@ -163,6 +163,14 @@ ADR-18: Equalise the reset request's timing with a dummy Argon2id verification a
 - **Path**: `memory-bank/bolts/005-identity-security/adr-18-reset-timing-equalisation.md`
 - **Summary**: FR-51 requires the reset response not to disclose account existence in the **body**, the **timing**, and the **screen state** — and the timing half is the hard one, because the hit path additionally creates a token row and sends an email while the miss path does neither, so the miss path is measurably faster. The decision applies **two** mechanisms on every path: an **unconditional dummy Argon2id verification** (the same `DUMMY_HASH` pattern bolt `004`'s login already uses for an unknown email, which equalises the ~81 ms dominant cost by reusing the codebase's existing answer rather than inventing a second one) and a **constant response floor** of 250 ms (`AUTH_RESET_MIN_RESPONSE_MS`), which is a floor rather than a tax because the hit path usually clears it already. The acceptance test asserts the two paths differ by no more than a **measured tolerance** of 100 ms (`AUTH_RESET_TIMING_TOLERANCE_MS`) — wide enough not to be flaky, narrow enough that a real existence oracle fails it by orders of magnitude. **The floor also applies to the rate-limited path**, a deliberate departure from ADR-15's login precedent: there, every refusal returns the identical `GenericInactiveMessage` so an early return leaks nothing, whereas the reset path's accepted (202) and refused (429) bodies differ and so must their timing. The branch decides only whether an email is sent and may shape no part of the response, which is built once after it from a single `NeutralResetConfirmation`. Rejected: constant-time comparison against a stored hash (equalises a comparison, not the surrounding work), a fixed delay alone (strictly worse at the same latency), a queue (Hobby cron drifts ±59 min, so the email arrives a day late), and a delay derived from account existence (self-defeating).
 - **Read when**: implementing or reviewing the reset request path, its timing behaviour, its rate limiting, the dummy-hash pattern, or the tolerance any timing assertion uses; reviewing why the reset request pays ~81 ms of Argon2id on every call, or why the rate-limited path also pays the response floor.
+
+ADR-20: Configure the campus-area list as a seeded database table, and store the report's campus area without a foreign key
+- **Status**: accepted
+- **Date**: 2026-10-28
+- **Bolt**: 007-reporting-core (reporting-and-listings)
+- **Path**: `memory-bank/bolts/007-reporting-core/adr-20-campus-area-configuration-mechanism.md`
+- **Summary**: FR-8 makes the campus area a fixed per-deployment enum whose configuration mechanism OQ-1 assigns to Architecture, and `system-context.md` had already narrowed it to "deploy-time config or seed". The decision is the **seed** half: a `campus_areas` table with `value`, `label`, `active`, and `created_at`, seeded per deployment with **no** rows in the migration, because the areas are the deployment's content and a migration that invented them would be inventing product content. `reports.campus_area` is plain `text` with **no foreign key**, because the membership rule is a *validation* rule and story 003's edge case requires that a deactivated area not rewrite existing reports — a FK cannot express that, would make a label rename a data migration touching every report that used the area, and would force a wrong `ON DELETE` decision when the requirement is that the report keeps its value regardless. The domain stays deployment-agnostic because `CampusAreaReader` is a port, so the set's origin remains reversible at the infrastructure layer. **Ratified by the owner on 2026-10-28; OQ-1 is closed.**
+- **Read when**: implementing or reviewing the campus-area list, its seeding, its reader, or any change to `reports.campus_area`; changing the `campus_areas` table or its `active` semantics; considering a foreign key from a report to a lookup table; changing how a per-deployment configuration list is stored; or reviewing why a report's campus area has no referential constraint.
 
 ADR-19: Key the reset rate-limit bucket's email address with an HMAC, while the login bucket keeps the plaintext address
 - **Status**: accepted

@@ -70,7 +70,7 @@ async function main(): Promise<void> {
   // 2. The trail reads back newest first.
   const rows = await prisma.$queryRaw<Array<{ eventType: string; reason: string | null }>>`
     SELECT "eventType", "reason"
-    FROM "AuditEvent"
+    FROM "audit_events"
     WHERE "parentType" = 'claim' AND "parentId" = ${parentId}::uuid
     ORDER BY "occurredAt" DESC, "id" DESC
     LIMIT 25

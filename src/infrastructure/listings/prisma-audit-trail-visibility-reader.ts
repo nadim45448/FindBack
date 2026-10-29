@@ -24,7 +24,7 @@ import type {
 } from '@/application/listings/ports';
 import type { ProjectionColumn } from '@/domain/listings';
 import { auditSelectColumns, renderSelectList } from './select-builder';
-import { PHYSICAL, TABLES, physical } from './physical-columns';
+import { PHYSICAL, TABLES, physical, quoteName, rowAlias } from './physical-columns';
 
 /** The row shape the trail query returns. */
 interface AuditTrailQueryRow {
@@ -63,16 +63,16 @@ export class PrismaAuditTrailVisibilityReader implements AuditTrailVisibilityRea
 
     const selectColumns = auditSelectColumns(columns);
     const selectList = selectColumns
-      .map((column) => `a.${physical(column, PHYSICAL.audit)}`)
+      .map((column) => `a.${physical(column, PHYSICAL.audit)} AS ${quoteName(rowAlias(column))}`)
       .join(', ');
 
     const rows = await this.client.$queryRaw<AuditTrailQueryRow[]>(
       Prisma.sql`
         SELECT
           ${Prisma.raw(selectList)}
-        FROM ${Prisma.raw(TABLES.audit)} a
-        WHERE a.${Prisma.raw(PHYSICAL.audit.parentId)} = ${reportId}
-        ORDER BY a.${Prisma.raw(PHYSICAL.audit.occurredAt)} ASC
+        FROM ${Prisma.raw(quoteName(TABLES.audit))} a
+        WHERE a.${Prisma.raw(quoteName(PHYSICAL.audit.parentId))} = ${reportId}
+        ORDER BY a.${Prisma.raw(quoteName(PHYSICAL.audit.occurredAt))} ASC
       `,
     );
 

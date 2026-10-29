@@ -230,7 +230,7 @@ describeWithDatabase('injection and storage safety (database)', () => {
   it('stores a hostile query string as data, not as SQL', async () => {
     const recorder = new AuditReadRecorder(reads);
 
-    const hostile = '\'; DROP TABLE "AuditEvent"; --';
+    const hostile = '\'; DROP TABLE "audit_events"; --';
 
     await prisma.$transaction(async (tx) => {
       await recorder.record(

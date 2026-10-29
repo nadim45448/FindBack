@@ -290,9 +290,22 @@ describe('the FR-39 matrix', () => {
       expect(reporter.includes('email')).toBe(
         row.sensitiveFields.includes('reporterEmail'),
       );
-      expect(reporter.includes('phone')).toBe(
-        row.sensitiveFields.includes('reporterPhone'),
-      );
+
+      // **The reporter's phone is never selected — for any column set.**
+      //
+      // FR-37 names it a Sensitive Field *"if collected — FindBack does
+      // not require phone"*, and the matrix grants it to the owner and
+      // the administrator. The **matrix** keeps the grant; the **select
+      // builder** cannot honour it, because there is no column to select:
+      // the `accounts` table has never had one, and no requirement
+      // collects one.
+      //
+      // Selecting it anyway would be a query error at runtime — the
+      // column does not exist — so the field is absent from the SQL for
+      // every viewer, and the projection yields nothing for it. That is
+      // the correct outcome, not a leak: a field that is never collected
+      // cannot be disclosed.
+      expect(reporter.includes('phone')).toBe(false);
     });
 
     it('selects exactly the claim evidence the matrix grants', () => {

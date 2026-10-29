@@ -25,7 +25,7 @@ import { Prisma, type PrismaClient } from '@prisma/client';
 import type { ClaimVisibilityReader } from '@/application/listings/ports';
 import type { ClaimRow, ProjectionColumn } from '@/domain/listings';
 import { claimSelectColumns, renderSelectList } from './select-builder';
-import { PHYSICAL, TABLES, physical } from './physical-columns';
+import { PHYSICAL, TABLES, physical, quoteName } from './physical-columns';
 
 /**
  * The per-Claim member-facing history.
@@ -36,8 +36,8 @@ import { PHYSICAL, TABLES, physical } from './physical-columns';
  * would put trail content in a non-administrator's hands.
  */
 const AUDIT_LIGHT = {
-  eventType: PHYSICAL.audit.eventType,
-  occurredAt: PHYSICAL.audit.occurredAt,
+  eventType: quoteName(PHYSICAL.audit.eventType),
+  occurredAt: quoteName(PHYSICAL.audit.occurredAt),
 } as const;
 
 /** The row shape the Claim query returns. */
@@ -93,17 +93,17 @@ export class PrismaClaimVisibilityReader implements ClaimVisibilityReader {
 
     const auditLightSelect = withAuditLight
       ? Prisma.sql`
-          COALESCE(
+          , COALESCE(
             (
               SELECT json_agg(
                 json_build_object(
-                  'status', a2.${Prisma.raw(AUDIT_LIGHT.eventType)},
-                  'at', a2.${Prisma.raw(AUDIT_LIGHT.occurredAt)}
+                  'event_type', a2.${Prisma.raw(AUDIT_LIGHT.eventType)},
+                  'occurred_at', a2.${Prisma.raw(AUDIT_LIGHT.occurredAt)}
                 )
                 ORDER BY a2.${Prisma.raw(AUDIT_LIGHT.occurredAt)} ASC
               )
-              FROM ${Prisma.raw(TABLES.audit)} a2
-              WHERE a2.${Prisma.raw(PHYSICAL.audit.parentId)} = c.${Prisma.raw(PHYSICAL.claim.id)}
+              FROM ${Prisma.raw(quoteName(TABLES.audit))} a2
+              WHERE a2.${Prisma.raw(quoteName(PHYSICAL.audit.parentId))} = c.${Prisma.raw(quoteName(PHYSICAL.claim.id))}
             ),
             '[]'::json
           ) AS audit_light_history
@@ -113,17 +113,17 @@ export class PrismaClaimVisibilityReader implements ClaimVisibilityReader {
     const scopeFilter =
       visibleClaimIds === null
         ? Prisma.empty
-        : Prisma.sql`AND c.${Prisma.raw(PHYSICAL.claim.id)} IN (${Prisma.join(visibleClaimIds)})`;
+        : Prisma.sql`AND c.${Prisma.raw(quoteName(PHYSICAL.claim.id))} IN (${Prisma.join(visibleClaimIds)})`;
 
     const rows = await this.client.$queryRaw<ClaimQueryRow[]>(
       Prisma.sql`
         SELECT
           ${Prisma.raw(selectList)}
           ${auditLightSelect}
-        FROM ${Prisma.raw(TABLES.claim)} c
-        WHERE c.${Prisma.raw(PHYSICAL.claim.reportId)} = ${reportId}
+        FROM ${Prisma.raw(quoteName(TABLES.claim))} c
+        WHERE c.${Prisma.raw(quoteName(PHYSICAL.claim.reportId))} = ${reportId}
         ${scopeFilter}
-        ORDER BY c.${Prisma.raw(PHYSICAL.claim.submittedAt)} ASC
+        ORDER BY c.${Prisma.raw(quoteName(PHYSICAL.claim.submittedAt))} ASC
       `,
     );
 

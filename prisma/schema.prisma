@@ -63,6 +63,19 @@ model AuditEvent {
   @@index([parentType, parentId], map: "idx_audit_events_parent_type")
   @@index([eventNumber], map: "idx_audit_events_event_number")
   @@index([occurredAt(sort: Desc)], map: "idx_audit_events_occurred")
+
+  /// The physical table name.
+  ///
+  /// Added by bolt `007`. The table predated the naming convention
+  /// (`coding-standards.md` § Naming conventions: tables snake_case,
+  /// plural), and bolt `006`'s readers issue raw `SELECT`s against
+  /// `audit_events` — so the physical name had to become the conventional
+  /// one before those readers could be integration-tested.
+  ///
+  /// **The rename does not rename any index.** Every index above already
+  /// carries an explicit `map:`, and Prisma index names are global per
+  /// schema, so the table name and the index names are independent.
+  @@map("audit_events")
 }
 
 /// PRD §10: audit-trail reads are themselves logged.
@@ -82,6 +95,9 @@ model AuditReadLog {
   createdAt DateTime @default(now()) @db.Timestamptz(6)
 
   @@index([administratorId, readAt(sort: Desc)], map: "idx_audit_read_logs_admin_read_at")
+
+  /// The physical table name. See `AuditEvent`'s `@@map` for the reason.
+  @@map("audit_read_logs")
 }
 
 /// A recorded usage reading against a verified free-tier limit.
@@ -96,6 +112,9 @@ model QuotaSnapshot {
   observedAt  DateTime @default(now()) @db.Timestamptz(6)
 
   @@index([resource, observedAt(sort: Desc)], map: "idx_quota_snapshots_resource_observed")
+
+  /// The physical table name. See `AuditEvent`'s `@@map` for the reason.
+  @@map("quota_snapshots")
 }
 
 /// A registered account.
@@ -147,6 +166,21 @@ model Account {
   @@unique([email], map: "idx_accounts_email_unique")
   @@index([status, createdAt], map: "idx_accounts_status_created")
   @@index([isAdministrator], map: "idx_accounts_administrator")
+
+  /// The physical table name. See `AuditEvent`'s `@@map` for the reason.
+  ///
+  /// Bolt `006`'s readers issue raw `SELECT`s against `accounts`, so this
+  /// rename is what makes them runnable against the schema.
+  @@map("accounts")
+
+  /// The reports this account submitted.
+  ///
+  /// **A one-to-many relation with `ON DELETE RESTRICT`.** Accounts are never
+  /// deleted (FR-5, PRD §10), so the constraint never fires — but stating it
+  /// means the rule is in the schema rather than in a comment, and a future
+  /// path that tried to delete an account would be refused by the database
+  /// rather than orphaning its reports.
+  reports Report[]
 }
 
 /// A revocable session.
@@ -182,6 +216,9 @@ model Session {
   @@unique([tokenHash], map: "idx_sessions_token_hash")
   @@index([accountId], map: "idx_sessions_account")
   @@index([expiresAt], map: "idx_sessions_expires_at")
+
+  /// The physical table name. See `AuditEvent`'s `@@map` for the reason.
+  @@map("sessions")
 }
 
 /// A single-use password-reset token.
@@ -209,6 +246,9 @@ model PasswordResetToken {
   /// For the daily sweep, which filters on both `expiresAt` and `usedAt`.
   /// Correctness never depends on the sweep — expiry is enforced on read.
   @@index([expiresAt, usedAt], map: "idx_password_reset_tokens_expires_at_used_at")
+
+  /// The physical table name. See `AuditEvent`'s `@@map` for the reason.
+  @@map("password_reset_tokens")
 }
 
 /// A rate-limit counter.
@@ -234,4 +274,121 @@ model RateLimitCounter {
 
   @@unique([bucketKey, windowStart], map: "idx_rate_limit_counters_bucket_window")
   @@index([windowStart], map: "idx_rate_limit_counters_window_start")
+
+  /// The physical table name. See `AuditEvent`'s `@@map` for the reason.
+  @@map("rate_limit_counters")
+}
+
+/// A Lost or Found item report.
+///
+/// **The aggregate root of the listings module** (FR-6, FR-7). Bolt `007`
+/// creates it; bolts `008`–`010` extend its lifecycle.
+///
+/// **The FR-8 field set is closed.** Every column below is a field the PRD
+/// names, and no column may be added without the PRD naming it. The
+/// Sensitive Fields — `exactPlace`, `identifyingDetails`, `imageRef` — are
+/// FR-37-governed: they are never logged, never returned by a list endpoint,
+/// and never in the keyword search index.
+///
+/// **`date` is a `date`, not a `timestamptz`.** The domain compares by
+/// **calendar day** (FR-6's 365-day bound, FR-7's 30-day bound), and the
+/// PRD's dates are calendar dates. A timestamp column would make "exactly
+/// 365 days ago" depend on the time of day.
+///
+/// **`campusArea` stores the value, not the label.** A deployment may
+/// rename "Library" to "Main Library" without rewriting a single report.
+/// The label lives with the `CampusArea` row.
+///
+/// **`campusArea` has NO foreign key** (ADR-20). The membership rule is a
+/// **validation** rule, not a referential one: a deactivated area must not
+/// rewrite existing reports, and a foreign key cannot express that. The
+/// validator enforces membership against the **active** set.
+///
+/// **`updatedAt` is set on creation** and is deliberately **not** Prisma's
+/// `@updatedAt`. `@updatedAt` is a client-side mechanism that fires on
+/// update; a non-null `updated_at` on a row that has never been updated must
+/// still be set at insert. Bolt `008` (reporter edit) sets it on update.
+model Report {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  /// `Lost` or `Found`. **Set at creation and never changes.**
+  type String
+
+  /// The report's lifecycle status. `Open` on creation.
+  status String @default("Open")
+
+  name        String
+  category    String
+  description String
+
+  /// The calendar day — date-lost or date-found, by `type`.
+  date DateTime @db.Date
+
+  campusArea String @map("campus_area")
+
+  /// An FR-37 Sensitive Field.
+  exactPlace String? @map("exact_place")
+
+  /// An FR-37 Sensitive Field.
+  identifyingDetails String? @map("identifying_details")
+
+  /// An FR-37 Sensitive Field. The blob **path**, never a URL (ADR-2).
+  imageRef String? @map("image_ref")
+
+  /// The acting member. Server-derived, never client-asserted.
+  reporterId String @map("reporter_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  reporter Account @relation(fields: [reporterId], references: [id], onDelete: Restrict)
+
+  @@index([status, createdAt(sort: Desc)], map: "idx_reports_status_created")
+  @@index([type, status, createdAt(sort: Desc)], map: "idx_reports_type_status_created")
+  @@index([category, createdAt(sort: Desc)], map: "idx_reports_category_created")
+  @@index([campusArea, createdAt(sort: Desc)], map: "idx_reports_campus_area_created")
+  @@index([date(sort: Desc)], map: "idx_reports_date")
+  @@index([reporterId, createdAt(sort: Desc)], map: "idx_reports_reporter_created")
+
+  /// The physical table name.
+  ///
+  /// The twelve columns above — `id`, `type`, `status`, `name`, `category`,
+  /// `date`, `campus_area`, `description`, `image_ref`, `reporter_id`,
+  /// `exact_place`, `identifying_details` — are exactly bolt `006`'s
+  /// `PHYSICAL.report`. The two timestamps are **additive** and are not in
+  /// that file's `SELECT` list, so the visibility readers' queries are
+  /// unaffected by them.
+  @@map("reports")
+}
+
+/// A campus area a report may name.
+///
+/// **A lookup table, not a foreign-key target** (ADR-20). `value` is the
+/// stored enum value; `label` is the display name. The two are separate so a
+/// deployment may rename a label without rewriting a single report.
+///
+/// **`active` affects new submissions only.** A deactivated area keeps its
+/// row and every report that names it — the stored report keeps its value.
+/// That is why `reports.campus_area` carries no foreign key: a foreign key
+/// would make `active = false` semantically impossible.
+///
+/// **Seeded per deployment, not by the application.** The migration creates
+/// the table **empty**; which areas exist is the deployment's decision.
+model CampusArea {
+  /// The stored enum value. The primary key, because it is what a report
+  /// stores.
+  value String @id
+
+  /// The display label.
+  label String
+
+  /// Whether new submissions may name this area.
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([active], map: "idx_campus_areas_active")
+
+  /// The physical table name.
+  @@map("campus_areas")
 }

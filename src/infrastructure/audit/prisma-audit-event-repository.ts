@@ -218,7 +218,7 @@ export class PrismaAuditEventRepository implements AuditEventRepository {
     // One extra row tells us whether another page exists without a second count.
     const rows = await this.client.$queryRaw<AuditEventRow[]>(Prisma.sql`
       SELECT ${TRAIL_COLUMNS}
-      FROM "AuditEvent"
+      FROM "audit_events"
       WHERE ${where} ${filterClause} ${cursorClause}
       ORDER BY "occurredAt" DESC, "id" DESC
       LIMIT ${limit + 1}

@@ -85,7 +85,7 @@ describeWithDatabase('read path security (database)', () => {
     it('treats a hostile event-type filter as data, not as SQL', async () => {
       await seed();
 
-      const hostile = '\'; DROP TABLE "AuditEvent"; --';
+      const hostile = '\'; DROP TABLE "audit_events"; --';
 
       const page = await events.listByParent('claim', parentId, null, 25, {
         eventTypes: [hostile],
@@ -331,7 +331,7 @@ describeWithDatabase('read path security (database)', () => {
 
       // The read log's trigger permits no mutation at all.
       await expect(
-        prisma.$executeRaw`UPDATE "AuditReadLog" SET "resultCount" = 0 WHERE "id" = ${log.id}::uuid`,
+        prisma.$executeRaw`UPDATE "audit_read_logs" SET "resultCount" = 0 WHERE "id" = ${log.id}::uuid`,
       ).rejects.toThrow(/append-only/);
     });
   });

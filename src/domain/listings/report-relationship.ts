@@ -15,16 +15,18 @@
  * Pure — no I/O, no framework imports.
  */
 
-/** The two report types. Decides which owner column applies. */
-export type ReportType = 'Lost' | 'Found';
+/**
+ * The two report types. Decides which owner column applies.
+ *
+ * **Re-exported from `report-type.ts`, not redeclared here.** Bolt `006`
+ * introduced the type in this file; bolt `007` gives it its own home
+ * alongside the rest of the report's vocabulary. A second declaration would
+ * be two definitions of the same concept that could drift — and the whole
+ * point of a value object is that there is exactly one of it.
+ */
+export type { ReportType, REPORT_TYPES, isReportType } from './report-type';
 
-/** The report types, as a runtime list. */
-export const REPORT_TYPES: readonly ReportType[] = ['Lost', 'Found'];
-
-/** True when the value is a report type. */
-export function isReportType(value: string): value is ReportType {
-  return (REPORT_TYPES as readonly string[]).includes(value);
-}
+import type { ReportType } from './report-type';
 
 /**
  * The facts connecting a viewer to a report.

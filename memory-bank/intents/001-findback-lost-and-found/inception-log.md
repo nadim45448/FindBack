@@ -169,7 +169,7 @@ them, and `007` built last.
 
 | Item | Owner | Note |
 |---|---|---|
-| OQ-1 campus-area enum configuration | Architecture | Blocks the deployment-configuration story only |
+| OQ-1 campus-area enum configuration | Architecture | **Resolved 2026-10-28** — ADR-20: seeded `campus_areas` table; `reports.campus_area` carries no FK. Ratified by the owner |
 | OQ-2 image budget + cleanup on hard delete | **Partly resolved** | Cleanup-on-hard-delete is now specified in `image-handling.md` §4; the per-deployment byte quota remains an Operations config value |
 | UX-OQ-B claim-state freshness under concurrent review | Architecture | |
 | UX-OQ-C audit pagination shape | Architecture | `EXPERIENCE.md` §23 uses "load 25 + Load older" |

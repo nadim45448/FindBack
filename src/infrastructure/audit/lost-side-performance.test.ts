@@ -64,7 +64,7 @@ describeWithDatabase('Lost-side audit performance', () => {
     // cycle through the Lost-side range, so the rows carry a realistic
     // spread of types.
     const inserted = await prisma.$queryRaw<Array<{ id: string }>>`
-      INSERT INTO "AuditEvent" (
+      INSERT INTO "audit_events" (
         "id", "eventNumber", "eventType", "parentType", "parentId",
         "actorId", "actorRole", "occurredAt"
       )
@@ -94,7 +94,7 @@ describeWithDatabase('Lost-side audit performance', () => {
     // The verification-screen shape: one report with 50 Recovery Responses,
     // each carrying its own submission event and a thread message.
     await prisma.$queryRaw`
-      INSERT INTO "AuditEvent" (
+      INSERT INTO "audit_events" (
         "id", "eventNumber", "eventType", "parentType", "parentId",
         "actorId", "actorRole", "occurredAt"
       )
@@ -110,10 +110,10 @@ describeWithDatabase('Lost-side audit performance', () => {
       FROM generate_series(1, ${MAX_RECOVERY_RESPONSES}) AS n
     `;
 
-    await prisma.$executeRawUnsafe('ANALYZE "AuditEvent"');
+    await prisma.$executeRawUnsafe('ANALYZE "audit_events"');
 
     const indexes = await prisma.$queryRaw<Array<{ indexname: string }>>`
-      SELECT indexname FROM pg_indexes WHERE tablename = 'AuditEvent'
+      SELECT indexname FROM pg_indexes WHERE tablename = 'audit_events'
     `;
 
     expect(indexes.map((index) => index.indexname)).toContain('idx_audit_events_trail');
@@ -226,7 +226,7 @@ describeWithDatabase('Lost-side audit performance', () => {
              "actorId", "actorRole", "actingAdministratorId", "determinedByUserId",
              "recordedByAdministratorId", "reason", "previousValues", "changedFields",
              "metadata", "occurredAt", "createdAt"
-      FROM "AuditEvent"
+      FROM "audit_events"
       WHERE "parentType" = 'report' AND "parentId" = ${reportId}::uuid
       ORDER BY "occurredAt" DESC, "id" DESC
       LIMIT ${PAGE_SIZE}

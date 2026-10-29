@@ -205,7 +205,7 @@ describeWithDatabase('append-only enforcement (database)', () => {
 
     const rows = await prisma.$queryRaw<Array<{ eventType: string; occurredAt: Date }>>`
       SELECT "eventType", "occurredAt"
-      FROM "AuditEvent"
+      FROM "audit_events"
       WHERE "parentType" = 'claim' AND "parentId" = ${parentId}::uuid
       ORDER BY "occurredAt" DESC, "id" DESC
       LIMIT 25

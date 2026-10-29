@@ -165,7 +165,7 @@ describeWithDatabase('the audit read path (database)', () => {
       await seed('claim.approved', adminId, new Date('2026-10-01T00:00:00Z'));
 
       const page = await events.listByParent('claim', parentId, null, 25, {
-        eventTypes: ['\'; DROP TABLE "AuditEvent"; --'],
+        eventTypes: ['\'; DROP TABLE "audit_events"; --'],
       });
 
       expect(page.events).toHaveLength(0);

@@ -17,7 +17,7 @@ import { Prisma, type PrismaClient } from '@prisma/client';
 import type { RecoveryResponseVisibilityReader } from '@/application/listings/ports';
 import type { ProjectionColumn, RecoveryResponseRow } from '@/domain/listings';
 import { renderSelectList, responseSelectColumns } from './select-builder';
-import { PHYSICAL, TABLES, physical } from './physical-columns';
+import { PHYSICAL, TABLES, physical, quoteName } from './physical-columns';
 
 /** The row shape the Recovery Response query returns. */
 interface RecoveryResponseQueryRow {
@@ -60,16 +60,16 @@ export class PrismaRecoveryResponseVisibilityReader implements RecoveryResponseV
     const scopeFilter =
       visibleResponseIds === null
         ? Prisma.empty
-        : Prisma.sql`AND rr.${Prisma.raw(PHYSICAL.response.id)} IN (${Prisma.join(visibleResponseIds)})`;
+        : Prisma.sql`AND rr.${Prisma.raw(quoteName(PHYSICAL.response.id))} IN (${Prisma.join(visibleResponseIds)})`;
 
     const rows = await this.client.$queryRaw<RecoveryResponseQueryRow[]>(
       Prisma.sql`
         SELECT
           ${Prisma.raw(selectList)}
-        FROM ${Prisma.raw(TABLES.response)} rr
-        WHERE rr.${Prisma.raw(PHYSICAL.response.reportId)} = ${reportId}
+        FROM ${Prisma.raw(quoteName(TABLES.response))} rr
+        WHERE rr.${Prisma.raw(quoteName(PHYSICAL.response.reportId))} = ${reportId}
         ${scopeFilter}
-        ORDER BY rr.${Prisma.raw(PHYSICAL.response.submittedAt)} ASC
+        ORDER BY rr.${Prisma.raw(quoteName(PHYSICAL.response.submittedAt))} ASC
       `,
     );
 

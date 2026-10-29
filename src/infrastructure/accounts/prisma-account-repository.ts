@@ -112,7 +112,7 @@ export class PrismaAccountRepository implements AccountRepository {
    */
   async findByEmail(email: string): Promise<Account | null> {
     const rows = await this.client.$queryRaw<AccountRow[]>(Prisma.sql`
-      SELECT * FROM "Account"
+      SELECT * FROM "accounts"
       WHERE lower(btrim("email")) = lower(btrim(${email}))
       LIMIT 1
     `);
@@ -124,7 +124,7 @@ export class PrismaAccountRepository implements AccountRepository {
 
   async existsByEmail(email: string): Promise<boolean> {
     const rows = await this.client.$queryRaw<{ count: bigint }[]>(Prisma.sql`
-      SELECT count(*)::bigint AS count FROM "Account"
+      SELECT count(*)::bigint AS count FROM "accounts"
       WHERE lower(btrim("email")) = lower(btrim(${email}))
     `);
 

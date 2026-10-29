@@ -231,7 +231,7 @@ describeWithDatabase('story 005 — audit visibility and read logging', () => {
     // The read-log trigger permits no deletion at all — not even through the
     // FR-10 flag, which is scoped to the trail.
     await expect(
-      prisma.$executeRaw`DELETE FROM "AuditReadLog" WHERE "id" = ${log.id}::uuid`,
+      prisma.$executeRaw`DELETE FROM "audit_read_logs" WHERE "id" = ${log.id}::uuid`,
     ).rejects.toThrow(/append-only/);
   });
 

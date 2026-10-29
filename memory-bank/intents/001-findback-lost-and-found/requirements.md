@@ -158,7 +158,7 @@ Architecture · A6 email is the only out-of-platform channel, provider = Archite
 
 | ID | Question | Owner | Status |
 |---|---|---|---|
-| OQ-1 | How is the campus-area enum configured per deployment? | Architecture | **Open — blocks the deployment-configuration story** |
+| OQ-1 | How is the campus-area enum configured per deployment? | Architecture | **Resolved 2026-10-28** — seeded `campus_areas` table; `reports.campus_area` carries no FK. [ADR-20](bolts/007-reporting-core/adr-20-campus-area-configuration-mechanism.md) |
 | OQ-2 | Image storage budget per item; cleanup when a report is hard-deleted (FR-10) | Architecture | **Open** |
 | OQ-3 | Date-lost bound is **365 days** today and is not relaxable in current product | PM | Settled at 365; revisit after first semester |
 | OQ-5 | Auto-rejection message wording in email body | UX | Resolved in `EXPERIENCE.md` §4.4 (softened copy; audit reason stays verbatim) |

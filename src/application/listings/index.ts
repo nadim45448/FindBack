@@ -10,4 +10,5 @@
  */
 
 export * from './ports';
+export * from './report-creation-service';
 export * from './report-visibility-service';

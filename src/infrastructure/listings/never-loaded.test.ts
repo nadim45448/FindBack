@@ -26,6 +26,7 @@ import { PrismaClaimVisibilityReader } from './prisma-claim-visibility-reader';
 import { PrismaRecoveryResponseVisibilityReader } from './prisma-recovery-response-visibility-reader';
 import { PrismaReportVisibilityReader } from './prisma-report-visibility-reader';
 import { PrismaThreadVisibilityReader } from './prisma-thread-visibility-reader';
+import { PHYSICAL, quoteName } from './physical-columns';
 import type { ProjectionColumn } from '@/domain/listings';
 
 /**
@@ -68,19 +69,34 @@ function asClient(client: RecordingClient): PrismaClient {
 }
 
 /**
- * The physical names of the FR-37 Sensitive Fields.
+ * The names under which the FR-37 Sensitive Fields would appear in the SQL.
  *
- * These are the names that must **not** appear in the SQL for a viewer who
- * may not see them.
+ * **Both forms, because the readers use both.** A column reaches the SQL
+ * either as its **physical name** (`r."exact_place"`) or under the **row
+ * alias** the mapper reads (`a."email" AS "reporter_email"`). A viewer who
+ * may not see a Sensitive Field must find **neither** form in the query —
+ * so both are checked, and neither is left to a substring accident.
+ *
+ * The names are taken from `PHYSICAL`, which is the one artefact that knows
+ * the truth about the two naming histories: `reports` is snake_case, while
+ * `accounts` and `audit_events` have always been camelCase. A hard-coded
+ * list would have been wrong for two of the six tables — which is exactly
+ * the defect this bolt's integration test found.
  */
-const SENSITIVE_PHYSICAL_NAMES = [
-  'exact_place',
-  'identifying_details',
-  'reporter_email',
-  'reporter_phone',
-  'where_found_exact_place',
-  'observed_identifying_details',
-  'candidate_image_ref',
+const SENSITIVE_NAMES = [
+  // The report's own Sensitive Fields — physical form.
+  quoteName(PHYSICAL.report.exactPlace),
+  quoteName(PHYSICAL.report.identifyingDetails),
+  // The reporter's contact details — physical form and alias form.
+  quoteName(PHYSICAL.account.email),
+  '"reporter_email"',
+  // The responder's fields — physical form.
+  quoteName(PHYSICAL.response.whereFoundExactPlace),
+  quoteName(PHYSICAL.response.observedIdentifyingDetails),
+  quoteName(PHYSICAL.response.candidateImageRef),
+  // The reporter's phone is a Sensitive Field "if collected". It is **not**
+  // collected — there is no column — so it must never appear either.
+  '"phone"',
 ] as const;
 
 describe('the report query never selects a Sensitive Field the viewer may not see', () => {
@@ -106,7 +122,7 @@ describe('the report query never selects a Sensitive Field the viewer may not se
 
     const sql = client.lastSql;
 
-    for (const name of SENSITIVE_PHYSICAL_NAMES) {
+    for (const name of SENSITIVE_NAMES) {
       expect(sql).not.toContain(name);
     }
   });
@@ -119,8 +135,8 @@ describe('the report query never selects a Sensitive Field the viewer may not se
       ['foundReportOwner'],
     );
 
-    expect(client.lastSql).toContain('exact_place');
-    expect(client.lastSql).toContain('identifying_details');
+    expect(client.lastSql).toContain(quoteName(PHYSICAL.report.exactPlace));
+    expect(client.lastSql).toContain(quoteName(PHYSICAL.report.identifyingDetails));
   });
 
   it('joins the accounts table only when the reporter fields are granted', async () => {
@@ -143,9 +159,9 @@ describe('the report query never selects a Sensitive Field the viewer may not se
     );
 
     expect(withName.lastSql).toContain('accounts');
-    expect(withName.lastSql).toContain('a.display_name');
-    expect(withName.lastSql).not.toContain('a.email');
-    expect(withName.lastSql).not.toContain('a.phone');
+    expect(withName.lastSql).toContain(`a.${quoteName(PHYSICAL.account.displayName)}`);
+    expect(withName.lastSql).not.toContain(`a.${quoteName(PHYSICAL.account.email)}`);
+    expect(withName.lastSql).not.toContain('"phone"');
 
     // The owner column grants the contact details as well.
     const withContact = new RecordingClient();
@@ -154,8 +170,14 @@ describe('the report query never selects a Sensitive Field the viewer may not se
       ['foundReportOwner'],
     );
 
-    expect(withContact.lastSql).toContain('a.email');
-    expect(withContact.lastSql).toContain('a.phone');
+    expect(withContact.lastSql).toContain(`a.${quoteName(PHYSICAL.account.email)}`);
+
+    // The reporter's phone is **not collected** — FR-37 names it a
+    // Sensitive Field *"if collected — FindBack does not require phone"*,
+    // and the `accounts` table has no such column. So it is not selected
+    // for the owner either: there is nothing to select, and selecting it
+    // would be a query error at runtime.
+    expect(withContact.lastSql).not.toContain('"phone"');
   });
 
   it('selects only the timestamp of the last action, never the event row', async () => {
@@ -168,12 +190,12 @@ describe('the report query never selects a Sensitive Field the viewer may not se
 
     const sql = client.lastSql;
 
-    expect(sql).toContain('occurred_at');
+    expect(sql).toContain(quoteName(PHYSICAL.audit.occurredAt));
     // The trail's content — the actor, the event type, the reason, the
     // metadata — must never reach a non-administrator's query.
-    expect(sql).not.toContain('actor_id');
-    expect(sql).not.toContain('event_type');
-    expect(sql).not.toContain('metadata');
+    expect(sql).not.toContain(quoteName(PHYSICAL.audit.actorId));
+    expect(sql).not.toContain(quoteName(PHYSICAL.audit.eventType));
+    expect(sql).not.toContain(quoteName(PHYSICAL.audit.metadata));
   });
 });
 
@@ -189,11 +211,11 @@ describe('the Claim query never selects the private evidence', () => {
 
     const sql = client.lastSql;
 
-    expect(sql).toContain('c.id');
-    expect(sql).toContain('c.status');
-    expect(sql).not.toContain('c.reason');
-    expect(sql).not.toContain('c.identifying_details');
-    expect(sql).not.toContain('c.date_lost');
+    expect(sql).toContain(`c.${quoteName(PHYSICAL.claim.id)}`);
+    expect(sql).toContain(`c.${quoteName(PHYSICAL.claim.status)}`);
+    expect(sql).not.toContain(`c.${quoteName(PHYSICAL.claim.reason)}`);
+    expect(sql).not.toContain(`c.${quoteName(PHYSICAL.claim.identifyingDetails)}`);
+    expect(sql).not.toContain(`c.${quoteName(PHYSICAL.claim.dateLost)}`);
   });
 
   it('omits the evidence for a claimant', async () => {
@@ -225,8 +247,8 @@ describe('the Claim query never selects the private evidence', () => {
 
     const sql = client.lastSql;
 
-    expect(sql).toContain('c.reason');
-    expect(sql).toContain('c.identifying_details');
+    expect(sql).toContain(`c.${quoteName(PHYSICAL.claim.reason)}`);
+    expect(sql).toContain(`c.${quoteName(PHYSICAL.claim.identifyingDetails)}`);
   });
 
   it('issues no query at all for an empty scope', async () => {
@@ -276,9 +298,9 @@ describe('the Recovery Response query never selects the responder fields', () =>
 
     const sql = client.lastSql;
 
-    expect(sql).toContain('rr.where_found_exact_place');
-    expect(sql).toContain('rr.observed_identifying_details');
-    expect(sql).toContain('rr.candidate_image_ref');
+    expect(sql).toContain(`rr.${quoteName(PHYSICAL.response.whereFoundExactPlace)}`);
+    expect(sql).toContain(`rr.${quoteName(PHYSICAL.response.observedIdentifyingDetails)}`);
+    expect(sql).toContain(`rr.${quoteName(PHYSICAL.response.candidateImageRef)}`);
   });
 
   it('issues no query at all for an empty scope', async () => {
@@ -317,8 +339,8 @@ describe('the thread query is scoped to its parents', () => {
     );
 
     // The shape of the query: a disjunction over the two parent kinds.
-    expect(client.lastSql).toContain('t.parent_type');
-    expect(client.lastSql).toContain('t.parent_id');
+    expect(client.lastSql).toContain(`t.${quoteName(PHYSICAL.thread.parentType)}`);
+    expect(client.lastSql).toContain(`t.${quoteName(PHYSICAL.thread.parentId)}`);
 
     // The scope of the query: exactly the parent ids it was handed. The
     // values are parameterised, so they are read from the query's bindings.
@@ -352,9 +374,9 @@ describe('the thread query is scoped to its parents', () => {
 
     // "Participation grants no private evidence" — a thread message carries
     // no evidence from its parent record.
-    expect(sql).not.toContain('reason');
-    expect(sql).not.toContain('identifying_details');
-    expect(sql).not.toContain('where_found_exact_place');
+    expect(sql).not.toContain(quoteName(PHYSICAL.claim.reason));
+    expect(sql).not.toContain(quoteName(PHYSICAL.report.identifyingDetails));
+    expect(sql).not.toContain(quoteName(PHYSICAL.response.whereFoundExactPlace));
   });
 });
 
@@ -393,9 +415,9 @@ describe('the audit trail query is refused before it is issued', () => {
 
     const sql = client.lastSql;
 
-    expect(sql).toContain('actor_id');
-    expect(sql).toContain('event_type');
-    expect(sql).toContain('metadata');
+    expect(sql).toContain(quoteName(PHYSICAL.audit.actorId));
+    expect(sql).toContain(quoteName(PHYSICAL.audit.eventType));
+    expect(sql).toContain(quoteName(PHYSICAL.audit.metadata));
   });
 });
 
@@ -412,8 +434,8 @@ describe('the relationship query uses LEFT JOINs', () => {
 
     // An inner join would return zero rows for an unrelated member, making
     // "not related" indistinguishable from "does not exist".
-    expect(sql).toContain('LEFT JOIN claims');
-    expect(sql).toContain('LEFT JOIN recovery_responses');
+    expect(sql).toContain(`LEFT JOIN ${quoteName('claims')}`);
+    expect(sql).toContain(`LEFT JOIN ${quoteName('recovery_responses')}`);
     expect(sql).not.toMatch(/INNER JOIN/i);
   });
 
@@ -428,9 +450,9 @@ describe('the relationship query uses LEFT JOINs', () => {
     const sql = client.lastSql;
 
     // The relationship query carries only ids and two equality facts.
-    expect(sql).not.toContain('description');
-    expect(sql).not.toContain('exact_place');
-    expect(sql).not.toContain('identifying_details');
-    expect(sql).not.toContain('email');
+    expect(sql).not.toContain(quoteName(PHYSICAL.report.description));
+    expect(sql).not.toContain(quoteName(PHYSICAL.report.exactPlace));
+    expect(sql).not.toContain(quoteName(PHYSICAL.report.identifyingDetails));
+    expect(sql).not.toContain(quoteName(PHYSICAL.account.email));
   });
 });

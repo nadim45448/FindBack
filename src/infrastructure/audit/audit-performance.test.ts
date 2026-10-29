@@ -51,7 +51,7 @@ describeWithDatabase('audit trail query performance', () => {
     // `generate_series` produces the ids; the rows are inserted in batches
     // so the transaction does not grow unbounded.
     const inserted = await prisma.$queryRaw<Array<{ id: string }>>`
-      INSERT INTO "AuditEvent" (
+      INSERT INTO "audit_events" (
         "id", "eventNumber", "eventType", "parentType", "parentId",
         "actorId", "actorRole", "occurredAt"
       )
@@ -82,11 +82,11 @@ describeWithDatabase('audit trail query performance', () => {
     // Without this the table's row estimate is stale and the plan is
     // mis-costed — the test would then measure a plan the production
     // database would not use.
-    await prisma.$executeRawUnsafe('ANALYZE "AuditEvent"');
+    await prisma.$executeRawUnsafe('ANALYZE "audit_events"');
 
     // The index must exist for the measurement to mean anything.
     const indexes = await prisma.$queryRaw<Array<{ indexname: string }>>`
-      SELECT indexname FROM pg_indexes WHERE tablename = 'AuditEvent'
+      SELECT indexname FROM pg_indexes WHERE tablename = 'audit_events'
     `;
 
     expect(indexes.map((index) => index.indexname)).toContain('idx_audit_events_trail');
@@ -154,7 +154,7 @@ describeWithDatabase('audit trail query performance', () => {
              "actorId", "actorRole", "actingAdministratorId", "determinedByUserId",
              "recordedByAdministratorId", "reason", "previousValues", "changedFields",
              "metadata", "occurredAt", "createdAt"
-      FROM "AuditEvent"
+      FROM "audit_events"
       WHERE "parentType" = 'claim' AND "parentId" = ${reportId}::uuid
       ORDER BY "occurredAt" DESC, "id" DESC
       LIMIT ${PAGE_SIZE}
@@ -258,7 +258,7 @@ describeWithDatabase('audit trail query performance', () => {
              "actorId", "actorRole", "actingAdministratorId", "determinedByUserId",
              "recordedByAdministratorId", "reason", "previousValues", "changedFields",
              "metadata", "occurredAt", "createdAt"
-      FROM "AuditEvent"
+      FROM "audit_events"
       WHERE TRUE
       ORDER BY "occurredAt" DESC, "id" DESC
       LIMIT ${PAGE_SIZE}
@@ -282,7 +282,7 @@ describeWithDatabase('audit trail query performance', () => {
              "actorId", "actorRole", "actingAdministratorId", "determinedByUserId",
              "recordedByAdministratorId", "reason", "previousValues", "changedFields",
              "metadata", "occurredAt", "createdAt"
-      FROM "AuditEvent"
+      FROM "audit_events"
       WHERE "parentType" = 'claim'
         AND "parentId" = ${reportId}::uuid
         AND "eventType" = ANY(ARRAY['claim.approved']::text[])

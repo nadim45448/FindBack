@@ -18,11 +18,25 @@
  */
 
 export * from './audit-trail-projection';
+export * from './bounded-text';
+export * from './campus-area-value';
 export * from './claim-projection';
+export * from './exact-place';
+export * from './identifying-details';
+export * from './image-ref';
 export * from './projection-column';
+export * from './report-category';
+export * from './report-created-event';
+export * from './report-date';
+export * from './report-description';
 export * from './report-field-set';
+export * from './report-field-validator';
+export * from './report-name';
 export * from './report-projection';
 export * from './report-relationship';
+export * from './report-status';
+export * from './report-type';
+export * from './report';
 export * from './recovery-response-projection';
 export * from './thread-projection';
 export * from './viewer';

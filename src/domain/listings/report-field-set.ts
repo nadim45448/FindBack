@@ -92,6 +92,19 @@ export function fieldSetOf(fields: readonly ReportField[]): ReportFieldSet {
  *    are present **only** when the columns include an owner column or the
  *    administrator column.
  *
+ * **`reporterPhone` is granted but never supplied.** FR-37 names the
+ * reporter's phone a Sensitive Field *"if collected — FindBack does not
+ * require phone"*, and it is not collected: the `accounts` table has no
+ * such column, and no requirement collects one. The **grant stays** — a
+ * field can be sensitive and never present, and the rule must still be
+ * enforced the day a column is added — while the **query never selects
+ * it**, because there is nothing to select. The projection therefore
+ * leaves the key off entirely.
+ *
+ * So the field set and the `SELECT` list deliberately disagree here, and
+ * that disagreement is the finding rather than a defect. Do not "fix" it
+ * by deleting the grant.
+ *
  * The anonymous column gets `summary` alone — and in practice never reaches
  * a detail projector at all, because FR-38 provides no anonymous detail page.
  */

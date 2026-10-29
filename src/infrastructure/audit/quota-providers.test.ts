@@ -121,7 +121,7 @@ describe('describeDatabaseError', () => {
           name: 'DriverAdapterError',
           cause: {
             originalCode: '23001',
-            originalMessage: 'audit table "AuditEvent" is append-only',
+            originalMessage: 'audit table "audit_events" is append-only',
             kind: 'RestrictViolation',
           },
         },
@@ -129,7 +129,7 @@ describe('describeDatabaseError', () => {
     };
 
     expect(describeDatabaseError(error)).toBe(
-      'audit table "AuditEvent" is append-only (SQLSTATE 23001)',
+      'audit table "audit_events" is append-only (SQLSTATE 23001)',
     );
   });
 

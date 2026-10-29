@@ -47,12 +47,30 @@ const REPORT_SELECT = {
  * The `accounts` columns, joined for the reporter.
  *
  * `displayName` is the reporter's display name, which every authenticated
- * viewer may see. `email` and `phone` are FR-37 Sensitive Fields.
+ * viewer may see. `email` is an FR-37 Sensitive Field.
+ *
+ * **There is no `phone` column.** FR-37 names the reporter's phone a
+ * Sensitive Field *"if collected — FindBack does not require phone"*, and
+ * it is not collected: no requirement collects one, no story collects one,
+ * and the identity bolt's `accounts` table has never had the column.
+ * Selecting it would be a query error at runtime, so it is not selected —
+ * for **any** column set, including the owner's and the administrator's.
+ *
+ * **The matrix keeps the grant; the query cannot honour it.** The domain's
+ * `reporterPhone` stays in the FR-37 Sensitive Field set, because a field
+ * can be sensitive and never present, and the rule must still be there
+ * the day a column is added. What changes is the *projection*: the reader
+ * never supplies a value, so the projector leaves the key off entirely.
+ *
+ * So the two layers deliberately disagree — the matrix says "the owner may
+ * see the reporter's phone" and the query says "there is nothing to
+ * select". **The disagreement is the finding, not a defect**, and a test
+ * asserts the query's side of it.
  */
 const REPORTER_SELECT = {
   name: ['displayName'] as const,
-  contact: ['email', 'phone'] as const,
-} as const;
+  contact: ['email'] as const,
+};
 
 /** The `claims` columns. */
 const CLAIM_SELECT = {

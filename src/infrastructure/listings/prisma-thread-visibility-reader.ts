@@ -16,7 +16,7 @@ import { Prisma, type PrismaClient } from '@prisma/client';
 import type { ThreadVisibilityReader } from '@/application/listings/ports';
 import type { ProjectionColumn, ThreadMessageRow } from '@/domain/listings';
 import { renderSelectList, threadSelectColumns } from './select-builder';
-import { PHYSICAL, TABLES, physical } from './physical-columns';
+import { PHYSICAL, TABLES, physical, quoteName } from './physical-columns';
 
 /** The row shape the thread query returns. */
 interface ThreadQueryRow {
@@ -64,11 +64,11 @@ export class PrismaThreadVisibilityReader implements ThreadVisibilityReader {
     // never match a Recovery Response thread by accident.
     const parentFilter = Prisma.sql`
       (
-        (t.${Prisma.raw(PHYSICAL.thread.parentType)} = 'claim'
-         AND t.${Prisma.raw(PHYSICAL.thread.parentId)} IN (${Prisma.join(claimIds.length > 0 ? claimIds : ['__none__'])}))
+        (t.${Prisma.raw(quoteName(PHYSICAL.thread.parentType))} = 'claim'
+         AND t.${Prisma.raw(quoteName(PHYSICAL.thread.parentId))} IN (${Prisma.join(claimIds.length > 0 ? claimIds : ['__none__'])}))
         OR
-        (t.${Prisma.raw(PHYSICAL.thread.parentType)} = 'recovery_response'
-         AND t.${Prisma.raw(PHYSICAL.thread.parentId)} IN (${Prisma.join(responseIds.length > 0 ? responseIds : ['__none__'])}))
+        (t.${Prisma.raw(quoteName(PHYSICAL.thread.parentType))} = 'recovery_response'
+         AND t.${Prisma.raw(quoteName(PHYSICAL.thread.parentId))} IN (${Prisma.join(responseIds.length > 0 ? responseIds : ['__none__'])}))
       )
     `;
 
@@ -76,9 +76,9 @@ export class PrismaThreadVisibilityReader implements ThreadVisibilityReader {
       Prisma.sql`
         SELECT
           ${Prisma.raw(selectList)}
-        FROM ${Prisma.raw(TABLES.thread)} t
+        FROM ${Prisma.raw(quoteName(TABLES.thread))} t
         WHERE ${parentFilter}
-        ORDER BY t.${Prisma.raw(PHYSICAL.thread.postedAt)} ASC
+        ORDER BY t.${Prisma.raw(quoteName(PHYSICAL.thread.postedAt))} ASC
       `,
     );
 

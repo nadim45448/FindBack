@@ -18,8 +18,35 @@
 
 import type { ProjectionColumn } from '@/domain/listings';
 
-/** The audit event, as the trail reader returns it. */
-export type TrailEvent = unknown;
+/**
+ * The audit event, as the trail reader returns it.
+ *
+ * **This is the trail's projection shape, not the persisted event's.** The
+ * domain's `AuditEvent` carries a `ParentRef`, an `ActorRef`, an
+ * `AuditPayload`, and `Date` timestamps; the trail flattens those into
+ * plain fields with ISO-8601 strings, because the trail is read out of the
+ * database and rendered, not rehydrated into domain objects.
+ *
+ * It was `unknown` before this bolt's integration test read a real event
+ * out of the database. `unknown` compiles for every reader and constrains
+ * none of them, so it could not catch a field the reader failed to
+ * populate — and the reader *did* fail, silently, until the aliasing fix.
+ */
+export interface TrailEvent {
+  readonly id: string;
+  readonly eventNumber: number | null;
+  readonly eventType: string;
+  readonly parentType: string;
+  readonly parentId: string;
+  readonly actorId: string;
+  readonly actorRole: string;
+  readonly reason: string | null;
+  readonly previousValues: unknown;
+  readonly changedFields: unknown;
+  readonly metadata: unknown;
+  readonly occurredAt: string;
+  readonly createdAt: string;
+}
 
 /** Reads the audit trail for a column set. */
 export interface AuditTrailVisibilityReader {

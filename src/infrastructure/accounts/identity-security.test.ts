@@ -140,7 +140,7 @@ describeWithDatabase('bolt 004 — the identity security properties', () => {
 
   async function accountFor(email: string): Promise<string> {
     const rows = await prisma.$queryRaw<Array<{ id: string }>>`
-      SELECT "id" FROM "Account" WHERE lower(btrim("email")) = lower(btrim(${email}))
+      SELECT "id" FROM "accounts" WHERE lower(btrim("email")) = lower(btrim(${email}))
     `;
 
     const id = rows[0]?.id;

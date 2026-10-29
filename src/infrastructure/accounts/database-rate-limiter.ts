@@ -55,10 +55,10 @@ export class DatabaseRateLimiter implements RateLimiter {
     // One statement: increment and read the new value. No read-then-write
     // race is possible, because there is no read.
     const rows = await this.client.$queryRaw<CounterRow[]>(Prisma.sql`
-      INSERT INTO "RateLimitCounter" ("id", "bucketKey", "windowStart", "count")
+      INSERT INTO "rate_limit_counters" ("id", "bucketKey", "windowStart", "count")
       VALUES (gen_random_uuid(), ${bucketKey}, ${windowStart}, 1)
       ON CONFLICT ("bucketKey", "windowStart")
-      DO UPDATE SET "count" = "RateLimitCounter"."count" + 1
+      DO UPDATE SET "count" = "rate_limit_counters"."count" + 1
       RETURNING "count"
     `);
 
