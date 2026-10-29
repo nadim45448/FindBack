@@ -389,7 +389,7 @@ describeWithDatabase('the report interaction adapters (database)', () => {
       const selected = await writeResponse('Selected for Verification', RESPONDER_ID);
 
       const resolved = await prisma.$transaction(async (tx) =>
-        resolver.resolveNonTerminalRecoveryResponses(reportId, { transaction: tx }),
+        resolver.resolveWithdrawalResolvedRecoveryResponses(reportId, { transaction: tx }),
       );
 
       expect(resolved).toHaveLength(2);
@@ -402,7 +402,7 @@ describeWithDatabase('the report interaction adapters (database)', () => {
       const selected = await writeResponse('Selected for Verification', RESPONDER_ID);
 
       const resolved = await prisma.$transaction(async (tx) =>
-        resolver.resolveNonTerminalRecoveryResponses(reportId, { transaction: tx }),
+        resolver.resolveWithdrawalResolvedRecoveryResponses(reportId, { transaction: tx }),
       );
 
       const ids = resolved.map((response) => response.recoveryResponseId).sort();
@@ -414,7 +414,7 @@ describeWithDatabase('the report interaction adapters (database)', () => {
       const confirmed = await writeResponse('Match Confirmed');
 
       const resolved = await prisma.$transaction(async (tx) =>
-        resolver.resolveNonTerminalRecoveryResponses(reportId, { transaction: tx }),
+        resolver.resolveWithdrawalResolvedRecoveryResponses(reportId, { transaction: tx }),
       );
 
       expect(resolved).toEqual([]);
@@ -425,7 +425,7 @@ describeWithDatabase('the report interaction adapters (database)', () => {
       const resolvedId = await writeResponse('Resolved — Report Closed');
 
       const resolved = await prisma.$transaction(async (tx) =>
-        resolver.resolveNonTerminalRecoveryResponses(reportId, { transaction: tx }),
+        resolver.resolveWithdrawalResolvedRecoveryResponses(reportId, { transaction: tx }),
       );
 
       expect(resolved).toEqual([]);
@@ -434,7 +434,7 @@ describeWithDatabase('the report interaction adapters (database)', () => {
 
     it('refuses a handle that carries no usable transaction', async () => {
       await expect(
-        resolver.resolveNonTerminalRecoveryResponses(reportId, { transaction: {} }),
+        resolver.resolveWithdrawalResolvedRecoveryResponses(reportId, { transaction: {} }),
       ).rejects.toThrow(/transaction/);
     });
   });

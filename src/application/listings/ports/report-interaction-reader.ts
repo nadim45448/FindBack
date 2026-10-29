@@ -36,7 +36,7 @@
 
 import type {
   InteractionFacts,
-  NonTerminalRecoveryResponseToResolve,
+  WithdrawalResolvedRecoveryResponse,
   PendingClaimToReject,
 } from '@/domain/listings';
 
@@ -67,5 +67,5 @@ export interface ReportInteractionReader {
    */
   readNonTerminalRecoveryResponses(
     reportId: string,
-  ): Promise<readonly NonTerminalRecoveryResponseToResolve[]>;
+  ): Promise<readonly WithdrawalResolvedRecoveryResponse[]>;
 }

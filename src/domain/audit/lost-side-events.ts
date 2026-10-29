@@ -28,25 +28,25 @@
 
 import type { AuditActorRole, AuditParentType } from './event-catalog';
 
+import {
+  RECOVERY_RESPONSE_STATUSES,
+  isRecoveryResponseStatus as isCanonicalRecoveryResponseStatus,
+  type RecoveryResponseStatus,
+} from '@/domain/recovery/recovery-response-status';
+
 /**
  * The eight canonical Recovery Response statuses (FR-41), verbatim.
  *
- * The values are the PRD's own names. `Standby` is a derived display
- * condition and is deliberately absent — it is never a persisted status.
+ * **Re-exported from the `recovery` domain module,** which owns them. The
+ * audit catalog needs the vocabulary to validate an event's payload, and the
+ * Lost-side workflow needs it to decide transitions — and those two answers
+ * must be the same answer, so there is only one list.
+ *
+ * `Standby` is a derived display condition and is deliberately absent — it is
+ * never a persisted status.
  */
-export const RECOVERY_RESPONSE_STATUSES = [
-  'Submitted',
-  'Selected for Verification',
-  'Match Confirmed',
-  'Not a Match',
-  'Completed — Report Returned',
-  'Resolved — Report Returned',
-  'Resolved — Report Closed',
-  'Withdrawn',
-] as const;
-
-/** A Recovery Response's canonical status. */
-export type RecoveryResponseStatus = (typeof RECOVERY_RESPONSE_STATUSES)[number];
+export { RECOVERY_RESPONSE_STATUSES };
+export type { RecoveryResponseStatus };
 
 /**
  * The Lost report's own lifecycle statuses.
@@ -369,9 +369,13 @@ export function assertReturnedPairing(matchedResponseId: string, event30Response
 
 /**
  * Whether a status is one of FR-41's canonical Recovery Response statuses.
+ *
+ * **Delegates to the `recovery` module's predicate,** which owns the
+ * vocabulary. A second implementation of "is this a canonical status?" would
+ * be a second answer to the question, and the two could disagree.
  */
 export function isRecoveryResponseStatus(value: string): value is RecoveryResponseStatus {
-  return (RECOVERY_RESPONSE_STATUSES as readonly string[]).includes(value);
+  return isCanonicalRecoveryResponseStatus(value);
 }
 
 /**

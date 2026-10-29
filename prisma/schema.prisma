@@ -492,6 +492,20 @@ model Claim {
 ///
 /// **The status vocabulary is the PRD's, verbatim** (FR-41): eight statuses.
 ///
+/// **The status is constrained at the database layer, not only by code.**
+/// Prisma cannot express a `CHECK` constraint, so the constraint lives in the
+/// migration SQL — `recovery_responses_status_check`, added by migration
+/// `20261029120000_reporting_lifecycle_interactions`. It enumerates exactly
+/// the eight canonical statuses and **rejects `Standby`**, which is a display
+/// condition and never a persisted value (FR-41, D7).
+///
+/// The column is typed `String` here because the Prisma schema cannot narrow
+/// it to the domain's union — the **domain** owns the vocabulary
+/// (`src/domain/recovery/recovery-response-status.ts`) and the **database**
+/// enforces it. `recovery-response-status-constraint.test.ts` reads the
+/// constraint's own text from `pg_constraint` and compares it against the
+/// domain's list, so the two cannot drift apart unnoticed.
+///
 /// **`ON DELETE CASCADE` on the report**, for the same PRD §10 reason as the
 /// Claims.
 model RecoveryResponse {
@@ -503,6 +517,9 @@ model RecoveryResponse {
   responderId String @map("responder_id") @db.Uuid
 
   /// The PRD's eight Recovery Response statuses (FR-41).
+  ///
+  /// **Constrained by `recovery_responses_status_check`** — see the model's
+  /// own note. `Standby` is not among them and never will be.
   status String @default("Submitted")
 
   /// When the Response was submitted. The column bolt `006`'s visibility

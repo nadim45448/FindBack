@@ -24,9 +24,10 @@ import { Prisma, type PrismaClient } from '@prisma/client';
 import type { ReportInteractionReader } from '@/application/listings/ports/report-interaction-reader';
 import type {
   InteractionFacts,
-  NonTerminalRecoveryResponseToResolve,
+  WithdrawalResolvedRecoveryResponse,
   PendingClaimToReject,
 } from '@/domain/listings';
+import { WITHDRAWAL_RESOLVED_RECOVERY_RESPONSE_STATUSES } from '@/domain/listings';
 
 /** The Prisma report interaction reader. */
 export class PrismaReportInteractionReader implements ReportInteractionReader {
@@ -94,18 +95,23 @@ export class PrismaReportInteractionReader implements ReportInteractionReader {
   }
 
   /**
-   * Read the non-terminal Recovery Responses on a Lost report.
+   * Read the Recovery Responses a report withdrawal would resolve.
    *
-   * **Only the two non-terminal statuses are returned.** A `Match Confirmed`
-   * Response is terminal for this purpose — a withdrawal is blocked outright
-   * once one exists — and an already-resolved Response must not be resolved
-   * a second time.
+   * **Only the two statuses in the withdrawal's resolve set are returned.**
+   * An already-resolved Response must not be resolved a second time, and a
+   * `Match Confirmed` Response is never reached by this path — a withdrawal
+   * is blocked outright once one exists, and that block is decided from the
+   * interaction facts before the resolve step.
+   *
+   * **`Match Confirmed` is non-terminal** (FR-41), and it is excluded here
+   * because of *what a withdrawal does*, not because of terminality. The set
+   * is named for the withdrawal for exactly that reason.
    */
   async readNonTerminalRecoveryResponses(
     reportId: string,
-  ): Promise<readonly NonTerminalRecoveryResponseToResolve[]> {
+  ): Promise<readonly WithdrawalResolvedRecoveryResponse[]> {
     const responses = await this.client.recoveryResponse.findMany({
-      where: { reportId, status: { in: ['Submitted', 'Selected for Verification'] } },
+      where: { reportId, status: { in: [...WITHDRAWAL_RESOLVED_RECOVERY_RESPONSE_STATUSES] } },
       select: { id: true, status: true },
       orderBy: { createdAt: 'asc' },
     });
@@ -113,7 +119,7 @@ export class PrismaReportInteractionReader implements ReportInteractionReader {
     return responses.map((response) => ({
       recoveryResponseId: response.id,
       recoveryResponseStatus:
-        response.status as NonTerminalRecoveryResponseToResolve['recoveryResponseStatus'],
+        response.status as WithdrawalResolvedRecoveryResponse['recoveryResponseStatus'],
     }));
   }
 }

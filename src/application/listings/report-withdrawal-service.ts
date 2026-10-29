@@ -254,7 +254,7 @@ export class ReportWithdrawalService {
 
     const resolvedRecoveryResponses =
       report.type === 'Lost'
-        ? await this.resolver.resolveNonTerminalRecoveryResponses(report.id, transaction)
+        ? await this.resolver.resolveWithdrawalResolvedRecoveryResponses(report.id, transaction)
         : [];
 
     // ── The report's own status ────────────────────────────────────────────

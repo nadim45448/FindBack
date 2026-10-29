@@ -129,7 +129,7 @@ function aService(options: Options): {
         },
       ];
     },
-    resolveNonTerminalRecoveryResponses: async (
+    resolveWithdrawalResolvedRecoveryResponses: async (
       reportId: string,
       transaction: unknown,
     ): Promise<readonly ResolvedRecoveryResponse[]> => {
@@ -137,7 +137,7 @@ function aService(options: Options): {
         throw new Error('The Responses were resolved outside the transaction.');
       }
 
-      options.calls.push(`resolver.resolveNonTerminalRecoveryResponses:${reportId}`);
+      options.calls.push(`resolver.resolveWithdrawalResolvedRecoveryResponses:${reportId}`);
 
       return [
         {
@@ -362,7 +362,7 @@ describe('ReportWithdrawalService — the Lost side', () => {
 
     expect(result.status).toBe('Closed');
     expect(updates).toEqual([{ status: 'Closed' }]);
-    expect(calls).toContain('resolver.resolveNonTerminalRecoveryResponses:report-1');
+    expect(calls).toContain('resolver.resolveWithdrawalResolvedRecoveryResponses:report-1');
   });
 
   it('sends no email — FR-30 says no closure email to responders', async () => {

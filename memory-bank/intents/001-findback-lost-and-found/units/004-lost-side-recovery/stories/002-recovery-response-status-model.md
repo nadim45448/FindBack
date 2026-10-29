@@ -2,11 +2,11 @@
 id: 002-recovery-response-status-model
 unit: 004-lost-side-recovery
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:47:30Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 011-lost-status-model
+implemented: true
 traces_to: [FR-41]
 ---
 
@@ -15,7 +15,7 @@ traces_to: [FR-41]
 User Story
 
 **As the system**
-I want to persist exactly the seven real Recovery Response statuses and derive `Standby`
+I want to persist exactly the eight real Recovery Response statuses and derive `Standby`
 **So that** the Lost-side state machine is unambiguous and cannot drift
 
 Acceptance Criteria

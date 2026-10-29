@@ -34,7 +34,7 @@
 import type { TransactionHandle } from '@/application/ports/transaction-handle';
 
 import type {
-  NonTerminalRecoveryResponseToResolve,
+  WithdrawalResolvedRecoveryResponse,
   PendingClaimToReject,
 } from '@/domain/listings';
 
@@ -91,7 +91,7 @@ export interface ReportInteractionResolver {
    *
    * @returns the responses that were resolved.
    */
-  resolveNonTerminalRecoveryResponses(
+  resolveWithdrawalResolvedRecoveryResponses(
     reportId: string,
     transaction: TransactionHandle,
   ): Promise<readonly ResolvedRecoveryResponse[]>;
@@ -100,5 +100,5 @@ export interface ReportInteractionResolver {
 /** The records the withdrawal reads, before it resolves them. */
 export interface ReportInteractionRecords {
   readonly pendingClaims: readonly PendingClaimToReject[];
-  readonly nonTerminalRecoveryResponses: readonly NonTerminalRecoveryResponseToResolve[];
+  readonly withdrawalResolvedRecoveryResponses: readonly WithdrawalResolvedRecoveryResponse[];
 }

@@ -21,12 +21,14 @@ import {
   decideDeletion,
   decideWithdrawal,
   hasInteraction,
-  isNonTerminalRecoveryResponseStatus,
+  isResolvedByReportWithdrawal,
   NO_INTERACTIONS,
   terminalEditMessage,
   withdrawalBlockMessage,
   type InteractionFacts,
 } from '@/domain/listings';
+
+import { isNonTerminalRecoveryResponseStatus } from '@/domain/recovery';
 
 describe('asTerminalStatus', () => {
   it('names Returned and Closed, and only those two', () => {
@@ -234,22 +236,38 @@ describe('withdrawalBlockMessage', () => {
   });
 });
 
-describe('isNonTerminalRecoveryResponseStatus', () => {
+describe('isResolvedByReportWithdrawal', () => {
   it('is true for the two statuses a withdrawal resolves', () => {
-    expect(isNonTerminalRecoveryResponseStatus('Submitted')).toBe(true);
-    expect(isNonTerminalRecoveryResponseStatus('Selected for Verification')).toBe(true);
+    expect(isResolvedByReportWithdrawal('Submitted')).toBe(true);
+    expect(isResolvedByReportWithdrawal('Selected for Verification')).toBe(true);
   });
 
   it('is false for every terminal status', () => {
     for (const status of [
-      'Match Confirmed',
       'Not a Match',
       'Completed — Report Returned',
       'Resolved — Report Returned',
       'Resolved — Report Closed',
       'Withdrawn',
     ] as const) {
-      expect(isNonTerminalRecoveryResponseStatus(status)).toBe(false);
+      expect(isResolvedByReportWithdrawal(status)).toBe(false);
     }
+  });
+
+  it('is false for Match Confirmed, because a withdrawal is blocked before it', () => {
+    // **Not because `Match Confirmed` is terminal — it is not.** It is
+    // non-terminal (FR-41): it is one of the three statuses a response may
+    // still leave. But a report withdrawal is refused outright once a
+    // `Match Confirmed` response exists, and that block is decided from the
+    // interaction facts (`hasMatchConfirmed`), so the resolve step is never
+    // reached for a matched response.
+    //
+    // The two facts are different, and the test names which one it is
+    // asserting.
+    expect(isResolvedByReportWithdrawal('Match Confirmed')).toBe(false);
+
+    // The canonical non-terminal set does include it — which is exactly why
+    // this predicate is named for the withdrawal and not for terminality.
+    expect(isNonTerminalRecoveryResponseStatus('Match Confirmed')).toBe(true);
   });
 });

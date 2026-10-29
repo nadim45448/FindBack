@@ -2,11 +2,11 @@
 id: 007-responder-withdraws-response
 unit: 004-lost-side-recovery
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:50:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 011-lost-status-model
+implemented: true
 traces_to: [FR-40]
 ---
 

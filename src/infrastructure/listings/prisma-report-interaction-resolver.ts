@@ -32,6 +32,7 @@ import {
   CLAIM_REJECTED_STATUS,
   RECOVERY_RESPONSE_RESOLVED_CLOSED_STATUS,
   WITHDRAWAL_CLAIM_REJECTION_REASON,
+  WITHDRAWAL_RESOLVED_RECOVERY_RESPONSE_STATUSES,
 } from '@/domain/listings';
 
 /** The Prisma report interaction resolver. */
@@ -82,7 +83,7 @@ export class PrismaReportInteractionResolver implements ReportInteractionResolve
    * here — a withdrawal is blocked outright once one exists — and an
    * already-resolved Response is left alone.
    */
-  async resolveNonTerminalRecoveryResponses(
+  async resolveWithdrawalResolvedRecoveryResponses(
     reportId: string,
     transaction: TransactionHandle,
   ): Promise<readonly ResolvedRecoveryResponse[]> {
@@ -94,7 +95,7 @@ export class PrismaReportInteractionResolver implements ReportInteractionResolve
         SET "status" = ${RECOVERY_RESPONSE_RESOLVED_CLOSED_STATUS},
             "updated_at" = CURRENT_TIMESTAMP
         WHERE "report_id" = ${reportId}::uuid
-          AND "status" IN ('Submitted', 'Selected for Verification')
+          AND "status" IN (${Prisma.join(WITHDRAWAL_RESOLVED_RECOVERY_RESPONSE_STATUSES)})
         RETURNING "id", "status"
       `,
     );
