@@ -2,7 +2,7 @@
 unit: 002-reporting-and-listings
 intent: 001-findback-lost-and-found
 phase: inception
-status: in-progress
+status: stories-defined
 created: 2026-10-23T12:30:00.000Z
 updated: 2026-10-28T18:10:00.000Z
 unit_type: backend

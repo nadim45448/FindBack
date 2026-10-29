@@ -3,17 +3,26 @@ id: 008-reporting-lifecycle
 unit: 002-reporting-and-listings
 intent: 001-findback-lost-and-found
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 004-edit-own-report
   - 005-delete-own-report
   - 006-withdraw-own-report
   - 012-administrator-edit-report
 created: 2026-10-23T13:08:30Z
-started: null
-completed: null
-current_stage: null
-stages_completed: []
+started: 2026-10-29T05:55:00Z
+completed: 2026-10-29T07:35:00.000Z
+current_stage: test
+stages_completed:
+  - name: model
+    completed: 2026-10-29T06:05:00.000Z
+    artifact: ddd-01-domain-model.md
+  - name: implement
+    completed: 2026-10-29T07:20:00.000Z
+    artifact: source
+  - name: test
+    completed: 2026-10-29T07:35:00.000Z
+    artifact: ddd-03-test-report.md
 
 requires_bolts:
   - 001-audit-core
@@ -57,10 +66,11 @@ preconditions, field restrictions, and audit consequences.
 
 ## Stages
 
-- [ ] **1. model**: Pending → `ddd-01-domain-model.md`
-- [ ] **2. design**: Pending → `ddd-02-technical-design.md`
-- [ ] **3. implement**: Pending → source
-- [ ] **4. test**: Pending → `ddd-03-test-report.md`
+- [x] **1. model**: ✅ 2026-10-29 → `ddd-01-domain-model.md`
+- [ ] **2. design**: ⏭️ skipped 2026-10-29 — owner directed implementation to start directly
+- [ ] **3. adr**: ⏭️ skipped 2026-10-29 — owner directed implementation to start directly
+- [x] **4. implement**: ✅ 2026-10-29 → source
+- [x] **5. test**: ✅ 2026-10-29 → `ddd-03-test-report.md`
 
 ## Dependencies
 
@@ -75,13 +85,13 @@ preconditions, field restrictions, and audit consequences.
 
 ## Success Criteria
 
-- [ ] Edit is refused on `Returned` and on `Closed`, with two distinct messages
-- [ ] Hard delete requires `Open` and no interaction — no Claim for Found, no Recovery Response for Lost
-- [ ] Withdrawal reaches `Closed` and resolves dependent Recovery Responses
-- [ ] Administrator edit is refused on terminal reports
-- [ ] Administrator edit exposes exactly the eight permitted fields and refuses reporter, type, lifecycle status, Claim content, Recovery Response content, audit entries, Returned-confirmation fields, and substitute-receiver fields
-- [ ] Every administrator edit writes a non-numbered append-only audit record with previous values
-- [ ] Hard delete is the only path that removes audit records, and only for an interaction-free `Open` report
+- [x] Edit is refused on `Returned` and on `Closed`, with two distinct messages
+- [x] Hard delete requires `Open` and no interaction — no Claim for Found, no Recovery Response for Lost
+- [x] Withdrawal reaches `Closed` and resolves dependent Recovery Responses
+- [x] Administrator edit is refused on terminal reports
+- [x] Administrator edit exposes exactly the eight permitted fields and refuses reporter, type, lifecycle status, Claim content, Recovery Response content, audit entries, Returned-confirmation fields, and substitute-receiver fields
+- [x] Every administrator edit writes a non-numbered append-only audit record with previous values
+- [x] Hard delete is the only path that removes audit records, and only for an interaction-free `Open` report
 
 ## Notes
 

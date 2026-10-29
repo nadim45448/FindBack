@@ -26,6 +26,7 @@
     "smoke:audit": "tsx scripts/smoke-audit.ts",
     "smoke:lost-side": "tsx scripts/lost-side-smoke.ts",
     "smoke:identity": "tsx scripts/identity-smoke.ts",
+    "smoke:lifecycle": "tsx scripts/report-lifecycle-smoke.ts",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build"
   },
   "prisma": {

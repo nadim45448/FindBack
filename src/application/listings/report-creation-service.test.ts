@@ -102,6 +102,18 @@ class Harness {
 
       return { ...report, id: 'a-minted-id' };
     },
+    // The bolt-8 lifecycle methods. **This suite exercises the create path
+    // only**, so they are refusals — a test that reached one would be a test
+    // of the wrong thing, and a silent success would hide the mistake.
+    findById: async (): Promise<PersistedReport | null> => {
+      throw new Error('findById is not part of the create path.');
+    },
+    update: async (): Promise<PersistedReport> => {
+      throw new Error('update is not part of the create path.');
+    },
+    delete: async (): Promise<void> => {
+      throw new Error('delete is not part of the create path.');
+    },
   };
 
   readonly transactions: TransactionFactory = {

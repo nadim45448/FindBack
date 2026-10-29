@@ -284,3 +284,17 @@ Planned` for unit `006-audit-and-observability`, which has been complete since
 updating only unit `001`'s would establish an inconsistency of its own.
 
 ---
+
+## 2026-10-29T07:35:09.011Z - Status Sync
+
+**Triggered by**: status-integrity script
+
+| Artifact | Old Status | New Status | Reason |
+|----------|------------|------------|--------|
+| intents/001-findback-lost-and-found/units/002-reporting-and-listings/stories/004-edit-own-report.md | draft (not implemented) | complete, implemented: true | Bolt 008-reporting-lifecycle is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/002-reporting-and-listings/stories/005-delete-own-report.md | draft (not implemented) | complete, implemented: true | Bolt 008-reporting-lifecycle is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/002-reporting-and-listings/stories/006-withdraw-own-report.md | draft (not implemented) | complete, implemented: true | Bolt 008-reporting-lifecycle is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/002-reporting-and-listings/stories/012-administrator-edit-report.md | draft (not implemented) | complete, implemented: true | Bolt 008-reporting-lifecycle is complete but story is not marked complete |
+| intents/001-findback-lost-and-found/units/002-reporting-and-listings/unit-brief.md | in-progress | stories-defined | Unit has 5 bolts (3/5 complete) |
+
+---

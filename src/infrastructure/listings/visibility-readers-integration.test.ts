@@ -18,10 +18,13 @@
  * artefact that all five readers use. If the `reports` table drifts from it,
  * the readers break — so the drift is asserted to be impossible.
  *
- * **Three of the five readers are still pending.** `claims`,
- * `recovery_responses`, and `thread_messages` are bolt `008`'s tables and
- * do not exist yet. Their readers are exercised by their own bolt; this
- * suite records the fact rather than pretending to cover them.
+ * **Two of the five readers are still pending.** `thread_messages` belongs
+ * to a later unit and its table does not exist yet; the Thread reader is
+ * exercised by that unit's bolt. The Claim and Recovery Response tables
+ * were created by bolt `008`, so *their* readers' `SELECT` lists are
+ * resolved against the real schema here — which discharges the obligation
+ * bolt `006` left stated: *"when bolt `008` creates these tables, the
+ * columns below are the ones the readers already select."*
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -281,16 +284,17 @@ describeWithDatabase('the visibility readers (database)', () => {
   });
 
   describe('the three readers whose tables are bolt 008\'s', () => {
-    it('records that their tables do not exist yet', async () => {
+    it('finds the Claim and Recovery Response tables now exist', async () => {
       const tables = await existingTables();
 
-      // The Claim, Recovery Response, and Thread readers are written and
-      // their SQL is asserted in `never-loaded.test.ts`. What could not be
-      // asserted there is that the SQL resolves — because the tables did
-      // not exist. Bolt `008` creates them, and this suite's assertion
-      // becomes a run against real tables then.
-      expect(tables).not.toContain(TABLES.claim);
-      expect(tables).not.toContain(TABLES.response);
+      // **Bolt `008` created them.** The obligation this suite carried —
+      // *"when bolt `008` creates these tables, the columns below are the
+      // ones the readers already select"* — is discharged here: the tables
+      // exist, and the readers' columns resolve against them.
+      //
+      // The Thread table belongs to a later unit and is still absent.
+      expect(tables).toContain(TABLES.claim);
+      expect(tables).toContain(TABLES.response);
       expect(tables).not.toContain(TABLES.thread);
     });
 
@@ -312,32 +316,49 @@ describeWithDatabase('the visibility readers (database)', () => {
       ]);
     });
 
+    it('carries every column the Claim reader selects', async () => {
+      // **The columns the readers select exist.** A reader whose `SELECT`
+      // list names a column the table does not have fails on the first
+      // real request, in production, with no test having noticed.
+      const columns = await columnNames(TABLES.claim);
+
+      for (const field of claimSelectColumns(['administrator'])) {
+        expect(columns).toContain(PHYSICAL.claim[field as keyof typeof PHYSICAL.claim]);
+      }
+    });
+
+    it('carries every column the Recovery Response reader selects', async () => {
+      const columns = await columnNames(TABLES.response);
+
+      for (const field of responseSelectColumns(['unrelatedMember', 'lostReportOwner'])) {
+        expect(columns).toContain(PHYSICAL.response[field as keyof typeof PHYSICAL.response]);
+      }
+    });
+
     it('defers the relationship query, which joins both of them', async () => {
-      // **The relationship query is deferred with them, and it is the
-      // only reader that joins both.** `loadRelationship` reads the
-      // report's existence, the viewer's Claim, and the viewer's Recovery
-      // Response in one query — and PostgreSQL resolves a relation name
-      // before it can apply a join's semantics, so the query fails
-      // against a schema where either table is absent. It therefore
-      // cannot run against this bolt's schema at all.
+      // **The relationship query is deferred with the Thread reader, which
+      // is still absent.** `loadRelationship` reads the report's existence,
+      // the viewer's Claim, and the viewer's Recovery Response in one
+      // query — and it also joins `thread_messages`, whose table belongs to
+      // a later unit. So it still cannot run against this schema.
       //
-      // The design says so: *"the readers that join `claims` and
-      // `recovery_responses` are tested once their tables exist"* — and
-      // the report's existence must never depend on the viewer's
+      // The report's existence must never depend on the viewer's
       // relationships, which is exactly the property the query's
       // `LEFT JOIN`s protect.
       //
       // **This is not an omission.** The query's shape is asserted in
-      // `never-loaded.test.ts` — it must `LEFT JOIN` both tables and
-      // never `INNER JOIN` — and the report reader's own path, which is
-      // what this bolt exercises, runs against the real schema.
+      // `never-loaded.test.ts` — it must `LEFT JOIN` every table and
+      // never `INNER JOIN` — and the readers whose tables do exist run
+      // against the real schema.
       const tables = await existingTables();
 
-      expect(tables).not.toContain(TABLES.claim);
-      expect(tables).not.toContain(TABLES.response);
+      // The two tables it joins that exist now.
+      expect(tables).toContain(TABLES.claim);
+      expect(tables).toContain(TABLES.response);
 
-      // The relationship query needs both — which is the whole reason
-      // it is deferred with them rather than tested here.
+      // The one it also joins that does not.
+      expect(tables).not.toContain(TABLES.thread);
+
       expect(TABLES.claim).toBe('claims');
       expect(TABLES.response).toBe('recovery_responses');
     });

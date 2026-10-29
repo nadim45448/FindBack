@@ -41,3 +41,26 @@ export class ValidationError extends DomainError {
     this.field = field;
   }
 }
+
+/**
+ * The request is well-formed, but the current state of the world conflicts
+ * with it.
+ *
+ * **A 409, and it carries a message.** The PRD's FR-10 names the answer
+ * precisely: a hard delete of a report that has an interaction returns
+ * HTTP 409 with a message *pointing at the Withdraw action*. A 409 with no
+ * body would be correct as a status code and useless as an answer — the
+ * member would be told their request failed and nothing about what to do
+ * instead.
+ *
+ * This is the same error the shared route helper's `IllegalTransitionError`
+ * answers with a 409, but the message differs: an illegal transition is
+ * "someone else already decided this", while a conflict is "there is another
+ * way forward, here it is".
+ */
+export class ConflictError extends DomainError {
+  constructor(message: string) {
+    super(message);
+    this.name = new.target.name;
+  }
+}

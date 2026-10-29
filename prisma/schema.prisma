@@ -181,6 +181,12 @@ model Account {
   /// path that tried to delete an account would be refused by the database
   /// rather than orphaning its reports.
   reports Report[]
+
+  /// The Claims this account submitted.
+  claims Claim[]
+
+  /// The Recovery Responses this account submitted.
+  recoveryResponses RecoveryResponse[]
 }
 
 /// A revocable session.
@@ -343,6 +349,15 @@ model Report {
 
   reporter Account @relation(fields: [reporterId], references: [id], onDelete: Restrict)
 
+  /// The Claims submitted against this report. **Found-side only** — a Lost
+  /// report has no Claims. Created by bolt `008` because FR-10's delete gate
+  /// and FR-11's withdrawal gate read them.
+  claims Claim[]
+
+  /// The Recovery Responses submitted against this report. **Lost-side
+  /// only** — a Found report has no Recovery Responses.
+  recoveryResponses RecoveryResponse[]
+
   @@index([status, createdAt(sort: Desc)], map: "idx_reports_status_created")
   @@index([type, status, createdAt(sort: Desc)], map: "idx_reports_type_status_created")
   @@index([category, createdAt(sort: Desc)], map: "idx_reports_category_created")
@@ -391,4 +406,120 @@ model CampusArea {
 
   /// The physical table name.
   @@map("campus_areas")
+}
+
+/// A Claim against a Found report.
+///
+/// **Created by bolt `008` because bolt `008` reads it.** FR-10's hard-delete
+/// gate and FR-11's withdrawal gate both need to know whether a Claim exists
+/// on a report and what state it is in. The Claims workflow itself belongs
+/// to Unit 003, which extends this table with its own columns and its own
+/// transitions.
+///
+/// **The status vocabulary is the PRD's, verbatim** (FR-41): Pending,
+/// Approved, Rejected, Returned. It is a text column with a CHECK
+/// constraint rather than a database enum, so adding a status is not a
+/// migration.
+///
+/// **`ON DELETE CASCADE` on the report.** PRD §10 says the related Claims
+/// are removed with the report under FR-10's hard delete. Accounts are never
+/// deleted (FR-5), so the claimant constraint is RESTRICT.
+model Claim {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  reportId String @map("report_id") @db.Uuid
+
+  /// The member who submitted the Claim.
+  claimantId String @map("claimant_id") @db.Uuid
+
+  /// `Pending`, `Approved`, `Rejected`, or `Returned`.
+  status String @default("Pending")
+
+  /// The reason a rejected Claim was rejected. Null unless it was rejected.
+  rejectionReason String? @map("rejection_reason")
+
+  /// When the Claim was submitted. The column bolt `006`'s visibility reader
+  /// orders by — and it is nullable because bolt `008` created the table
+  /// before the Claim's submission flow was built.
+  submittedAt DateTime? @map("submitted_at") @db.Timestamptz(6)
+
+  /// The claimant's account of the item.
+  reason String?
+
+  /// The claimant's identifying details. **An FR-37 Sensitive Field.**
+  identifyingDetails String? @map("identifying_details")
+
+  /// When the claimant says the item was lost.
+  dateLost DateTime? @map("date_lost") @db.Date
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  claimant Account @relation(fields: [claimantId], references: [id], onDelete: Restrict)
+
+  /// The existence read the FR-10 gate performs.
+  @@index([reportId, status], map: "idx_claims_report_status")
+  /// The withdrawal's read: the Pending Claims on a report.
+  @@index([reportId], map: "idx_claims_report_pending")
+  /// The visibility reader's ordering.
+  @@index([reportId, submittedAt], map: "idx_claims_report_submitted_at")
+
+  @@map("claims")
+}
+
+/// A Recovery Response against a Lost report.
+///
+/// **Created by bolt `008` because bolt `008` reads it.** FR-10's
+/// hard-delete gate and FR-11's withdrawal gate both need to know whether a
+/// Recovery Response exists on a report and what state it is in — and
+/// `Match Confirmed` is a Recovery Response status, not a report status, so
+/// the withdrawal's block cannot even be expressed without this table.
+///
+/// **The status vocabulary is the PRD's, verbatim** (FR-41): eight statuses.
+///
+/// **`ON DELETE CASCADE` on the report**, for the same PRD §10 reason as the
+/// Claims.
+model RecoveryResponse {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  reportId String @map("report_id") @db.Uuid
+
+  /// The member who submitted the Response.
+  responderId String @map("responder_id") @db.Uuid
+
+  /// The PRD's eight Recovery Response statuses (FR-41).
+  status String @default("Submitted")
+
+  /// When the Response was submitted. The column bolt `006`'s visibility
+  /// reader orders by — and it is nullable because bolt `008` created the
+  /// table before the Response's submission flow was built.
+  submittedAt DateTime? @map("submitted_at") @db.Timestamptz(6)
+
+  /// Where the responder says the item was found.
+  whereFoundExactPlace String? @map("where_found_exact_place")
+
+  /// The identifying details the responder observed. **An FR-37 Sensitive
+  /// Field.**
+  observedIdentifyingDetails String? @map("observed_identifying_details")
+
+  /// The image the responder submitted as a candidate. **An FR-37 Sensitive
+  /// Field.**
+  candidateImageRef String? @map("candidate_image_ref")
+
+  /// When the responder says the item was found.
+  dateFound DateTime? @map("date_found") @db.Date
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  responder Account @relation(fields: [responderId], references: [id], onDelete: Restrict)
+
+  /// The existence read the FR-10 gate performs.
+  @@index([reportId, status], map: "idx_recovery_responses_report_status")
+  /// The visibility reader's ordering.
+  @@index([reportId, submittedAt], map: "idx_recovery_responses_report_submitted_at")
+
+  @@map("recovery_responses")
 }
