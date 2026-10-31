@@ -446,3 +446,99 @@ deployment configuration value, and the FR-10 blob-delete failure is logged
 but not yet retried, because the retry queue behind the port is not built.
 
 ---
+
+## Addendum — the criteria audit and the gaps it closed (2026-10-30)
+
+The bolt closed on 2026-10-29 with the verdict above. This addendum records
+what happened **after** that closure, because the report above was written
+before the story's criteria had been audited one by one.
+
+### Why the audit was worth running
+
+The Stage 5 report verified the bolt's **seven success criteria** against the
+**tests that existed at the time**. It did not verify that each of story
+`013`'s **25 acceptance criteria** had a named test behind it. Those are
+different questions: a bolt's success criteria are the bolt's own summary,
+while a story's criteria are the requirement's own wording, and a criterion
+can be satisfied by behaviour that exists but is **not asserted** anywhere.
+
+The distinction matters because an unasserted criterion is not protected. It
+reads as done, it ticks as done, and the next refactor can remove the
+behaviour with no test failing.
+
+### What the audit found
+
+**Three criteria were implemented but unbacked** — the behaviour existed and
+was correct, but no test would fail if it regressed:
+
+| Criterion | Closed by |
+|---|---|
+| The byte count comes from the stream, not from `Content-Length` | `parse-report-request.test.ts` → "counts the bytes it actually read, not the size the part claims" |
+| A non-`Active` member's upload is refused | `reports-route.test.ts` → "refuses a Pending actor's upload with a 403", "stores nothing when it refuses a Pending actor's upload" |
+| The check does not rely on the CDN or middleware | `image-route.test.ts` → "never reads the blob itself" |
+
+**Three requirements of the governing standard had no implementation at all:**
+
+1. **The 40 MP pixel cap** — `image-handling.md` §1 requires a *pixel* cap,
+   decoded from the header. The store validated the byte length and the magic
+   bytes but never decoded the header, so a decompression bomb passed
+   validation. The header is now decoded (JPEG's SOF marker, PNG's IHDR,
+   WebP's VP8X) and the count rejected before any full decode.
+
+2. **The administrator's image-replacement route** — FR-53's replacement was
+   implemented and tested in the service and **unreachable in production**,
+   because the route read JSON only. The multipart reader was extracted so
+   the edit path reuses the create path's ceiling and type rules, and the
+   edit path's one distinction — a missing image part is a valid text-only
+   edit — is stated in the parser itself.
+
+3. **The entity-scoped blob prefix** — `reports/{reportId}/` could not be
+   reached while the id was database-generated, because the upload precedes
+   the row write. The id is now minted in the application layer and threaded
+   through the repository port, so it stays server-derived.
+
+**And one requirement had no surface at all:** the 70% and 90% warnings and
+the administrator's view of the budget. `classifyQuota` was called by no
+service. The budget now has its own page at `/admin/storage` — a page and not
+a fifth dashboard tile, because §15.1 freezes the dashboard at four and the
+story's criteria name the absences as load-bearing.
+
+### The new tests
+
+| File | Tests | Covers |
+|---|---|---|
+| `src/domain/administration/storage-usage.test.ts` | 21 | The view, the headline, the thresholds, the byte formatting |
+| `src/application/administration/storage-usage-query.test.ts` | 6 | The authorisation, the failed read, the no-number rule |
+| `src/ui/admin-storage-surface.test.tsx` | 12 | The headline, the numbers, the named lines, the error state |
+| `src/app/api/reports/parse-report-request.test.ts` | 10 | The multipart parse and the counted bytes |
+| `src/app/api/admin/reports/[id]/edit/route.test.ts` | 24 | The replacement route end to end |
+
+Plus the three added cases in `reports-route.test.ts` and the one added in
+`image-route.test.ts`, and the two added to `blob-image-store.test.ts` and
+`report-creation-service.test.ts` ("never asks for public access, on any
+upload"; "sends no notification when the upload succeeds" / "…fails").
+
+### The threshold assertion is the one worth keeping
+
+`storage-usage.test.ts` asserts `STORAGE_WARNING_PERCENT` **against the
+domain's `QUOTA_WARNING_THRESHOLD`**, and separately asserts that the value
+is `70`. Both assertions are needed: the first is what stops the two places
+from drifting apart, and the second is what stops the constant from being
+moved without someone deciding to. A test that asserted only `70` would let
+the write path's threshold change silently; a test that asserted only the
+relationship would let the pair drift together.
+
+### Verification
+
+Typecheck clean. The bolt's own suites and the suites touched by the audit
+are green: **39 tests** across the three storage-usage suites, **54** across
+the three route and parser suites, and **43** across the re-run quota and
+notification suites. The full suite was not run, by owner direction.
+
+**Three pre-existing failures are unrelated to this bolt** and were confirmed
+so by stashing `src/` and re-running: the `description_withheld` and
+`image_withheld` column expectations, and the `report-listing-filter` "narrows
+nothing" test. Stashing produced **four** failures against **three** with
+these changes — the three are pre-existing.
+
+---

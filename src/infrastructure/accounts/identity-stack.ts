@@ -206,8 +206,8 @@ export function buildIdentityStack(
     rateLimiter: new DatabaseRateLimiter(prisma),
     rateLimits: readRateLimitConfig(env),
     csrf: new HmacCsrfTokenValidator(readSessionSecret(env)),
-    // The email sender is null when SMTP is not configured — which is the
-    // case in local development, where the provider is not available (CP-4).
+    // The email sender is null when SMTP is not configured. Local
+    // development points SMTP_HOST at Mailpit (`127.0.0.1:1025`).
     // An override takes precedence, so a test can capture the message.
     email:
       overrides.emailSender !== undefined

@@ -314,12 +314,13 @@ describe('the audit catalog agrees with the frozen PRD', () => {
   it('keeps the non-numbered records out of the numbered range', () => {
     const nonNumbered = AUDIT_EVENT_CATALOG.filter((entry) => !Number.isInteger(entry.number));
 
-    // The PRD names three records that carry no numbered identifier: FR-52
-    // profile edits, FR-53 administrator report edits, and — added by
-    // bolt 004 — the FR-2 registration record. FR-31's rule for the set is
-    // "additional audit records explicitly required by other requirements",
-    // and FR-2 explicitly requires a registration record.
+    // The PRD names four records that carry no numbered identifier: FR-52
+    // profile edits, FR-53 administrator report edits, the FR-2
+    // registration record, and the FR-36 removal record. FR-31's rule for
+    // the set is "additional audit records explicitly required by other
+    // requirements", and FR-2 and FR-36 each explicitly require one.
     expect(nonNumbered.map((entry) => entry.type).sort()).toEqual([
+      'content.removed_by_administrator',
       'member_profile.edited',
       'registration.submitted',
       'report.edited_by_administrator',

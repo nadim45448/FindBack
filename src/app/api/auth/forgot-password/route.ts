@@ -2,8 +2,8 @@
  * `POST /api/auth/forgot-password` — request a password reset (FR-51).
  *
  * **Every well-formed request returns 202 and the same body.** A registered
- * address, an unregistered address, and a registered address in any of the
- * four lifecycle states are indistinguishable to the caller.
+ * address receives the reset email. An unregistered address receives the
+ * same confirmation screen and no email.
  *
  * **The route is where the rate limit lives**, before the use case — ADR-8's
  * rule, so a request that will be refused does not pay the ~81 ms of
@@ -37,10 +37,10 @@ import {
   log,
   errorResponse,
   readClientIp,
+  readCsrfBindingToken,
   readCsrfToken,
   readJsonBody,
   readRequestId,
-  readSessionCookie,
   stringField,
 } from '@/app/api/_helpers';
 
@@ -59,14 +59,14 @@ export async function POST(request: Request): Promise<NextResponse> {
     // The reset request is unauthenticated but still cross-site-forgeable, so
     // it carries a CSRF token like every other state-changing request.
     //
-    // The token is derived from the session's token hash, so a **signed-out**
-    // visitor has no session and therefore no CSRF token. The `/forgot`
-    // screen (Unit 007) issues one against a short-lived anonymous session;
-    // until that screen exists, this route refuses a request without one.
-    const sessionToken = await readSessionCookie();
+    // **The binding token is the session cookie when there is one, and the
+    // anonymous cookie otherwise.** The CSRF token is an HMAC over a token's
+    // hash, not over a session row, so a signed-out visitor can hold one —
+    // the anonymous cookie issued by `POST /api/auth/anonymous-session`.
+    const bindingToken = await readCsrfBindingToken();
     const csrfToken = await readCsrfToken();
     const csrf = stack.csrf.validate(
-      sessionToken ? stack.tokens.hashToken(sessionToken) : null,
+      bindingToken ? stack.tokens.hashToken(bindingToken) : null,
       csrfToken,
     );
 
@@ -145,14 +145,20 @@ export async function POST(request: Request): Promise<NextResponse> {
       stack.resetRequest.execute(email, transaction),
     );
 
-    // ── The email, after the commit ───────────────────────────────────────
+    // ── Unknown address ───────────────────────────────────────────────────
     //
-    // The transaction has committed, so a failed send cannot roll back the
-    // token issue (PRD §10). A send failure is **logged and swallowed** — a
-    // member must not be able to learn that an account exists *because the
-    // email failed*.
+    // No token is issued and no email is sent. The confirmation is the
+    // same as a hit, so the screen does not disclose whether the account
+    // exists.
     if (outcome.emailRecipient && outcome.tokenPlaintext) {
-      await sendResetEmail(stack, outcome.emailRecipient, outcome.displayName ?? '', outcome.tokenPlaintext);
+      // The transaction has committed, so a failed send cannot roll back
+      // the token issue (PRD §10). A send failure is logged and swallowed.
+      await sendResetEmail(
+        stack,
+        outcome.emailRecipient,
+        outcome.displayName ?? '',
+        outcome.tokenPlaintext,
+      );
     }
 
     log(requestId, 'password_reset.requested', 'success', {
@@ -161,9 +167,6 @@ export async function POST(request: Request): Promise<NextResponse> {
       targetId: emailBucketKey,
     });
 
-    // **The one response, for every case.** The status code is 202 in all
-    // cases — a 404 for an unknown address would be the disclosure FR-51
-    // forbids.
     return NextResponse.json({ message: outcome.confirmation.value }, { status: 202 });
   } catch (error) {
     return errorResponse(error, requestId);
@@ -183,13 +186,17 @@ async function sendResetEmail(
   displayName: string,
   tokenPlaintext: string,
 ): Promise<void> {
+  const resetUrl = buildResetLink(stack.appBaseUrl, tokenPlaintext);
+
   if (!stack.email) {
-    // No SMTP configured — the local-development case (CP-4). The token was
-    // still issued, so the member can complete the reset with it.
+    // No SMTP configured. In local development the link is printed so
+    // the reset can still be completed without a mailbox.
+    if (process.env.NODE_ENV !== 'production') {
+      console.info(`[findback] SMTP is not configured. Password reset link: ${resetUrl}`);
+    }
+
     return;
   }
-
-  const resetUrl = buildResetLink(stack.appBaseUrl, tokenPlaintext);
 
   const message = buildPasswordResetEmail(to, {
     displayName,
@@ -199,8 +206,15 @@ async function sendResetEmail(
 
   try {
     await stack.email.send(message);
-  } catch {
-    // Logged by the operational logger's own error path; the action stands.
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('[findback] Password reset email sent. Open Mailpit at http://localhost:8025');
+    }
+  } catch (error) {
+    console.error(
+      '[findback] Password reset email failed',
+      error instanceof Error ? error.message : 'unknown error',
+    );
   }
 }
 

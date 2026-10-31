@@ -24,6 +24,7 @@ import {
   ImageStorageError,
   type ImageUpload,
 } from '@/application/listings/ports/image-store';
+import { aJpeg, aPng, aWebp } from '@/test/image-bytes';
 
 /** The call the adapter made to the blob client. */
 interface PutCall {
@@ -48,16 +49,21 @@ vi.mock('@vercel/blob', () => ({
 
 const { BlobImageStore, toPath } = await import('./blob-image-store');
 
-/** The bytes of a real JPEG header. */
-const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
+/**
+ * The bytes of a JPEG header carrying real dimensions.
+ *
+ * **The headers carry dimensions because the store validates the pixel
+ * count** (image-handling §1). A signature-only stub is no longer a valid
+ * fixture — it is an image whose decode cost cannot be bounded, and the
+ * store must refuse it.
+ */
+const JPEG = aJpeg(800, 600);
 
-/** The bytes of a real PNG header. */
-const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+/** The bytes of a PNG header carrying real dimensions. */
+const PNG = aPng(800, 600);
 
-/** The bytes of a real WebP header. */
-const WEBP = Buffer.from([
-  0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50,
-]);
+/** The bytes of a WebP header carrying real dimensions. */
+const WEBP = aWebp(800, 600);
 
 /** The fake's URL for a pathname. */
 function urlFor(pathname: string): string {
@@ -86,6 +92,28 @@ describe('the blob image store', () => {
       // this one-way decision is made on every single upload.
       expect(put).toHaveBeenCalledTimes(1);
       expect(put.mock.calls[0]?.[2]).toMatchObject({ access: 'private' });
+    });
+
+    it('never asks for public access, on any upload', async () => {
+      const store = new BlobImageStore();
+
+      await store.store(anUpload(JPEG, 'image/jpeg'), 'reports');
+      await store.store(anUpload(PNG, 'image/png'), 'reports');
+      await store.store(anUpload(WEBP, 'image/webp'), 'reports');
+
+      // **The access mode is one-way.** Vercel Blob's store has an access
+      // mode that cannot be flipped after the store is created, so the
+      // decision this adapter makes at upload time is the decision that
+      // holds for the life of the blob.
+      //
+      // **This is asserted on every call, not on the first one.** A single
+      // assertion on the first call would pass while a later branch — the
+      // PNG one, the WebP one, the replacement path — asked for public
+      // access, and a publicly-readable blob is exactly the leak ADR-2
+      // exists to prevent.
+      for (const call of put.mock.calls) {
+        expect(call[2]?.access).toBe('private');
+      }
     });
 
     it('stores the blob with a random suffix, so an upload never overwrites', async () => {
@@ -245,6 +273,55 @@ describe('the blob image store', () => {
       await store.store(anUpload(WEBP, 'image/webp'), 'reports');
 
       expect(put).toHaveBeenCalledTimes(3);
+    });
+
+    it('refuses an image with more than forty megapixels', async () => {
+      // **The decompression-bomb defence.** 9000 x 5000 is 45 megapixels —
+      // a few megabytes on disk and hundreds of megabytes decoded.
+      await expect(
+        new BlobImageStore().store(anUpload(aJpeg(9000, 5000), 'image/jpeg'), 'reports'),
+      ).rejects.toThrow(ImageRejectedError);
+
+      // **Nothing was stored.** The check runs before the write, so a bomb
+      // never reaches the store at all.
+      expect(put).not.toHaveBeenCalled();
+    });
+
+    it('refuses a decompression bomb in every format', async () => {
+      await expect(
+        new BlobImageStore().store(anUpload(aPng(9000, 5000), 'image/png'), 'reports'),
+      ).rejects.toThrow(ImageRejectedError);
+
+      await expect(
+        new BlobImageStore().store(anUpload(aWebp(9000, 5000), 'image/webp'), 'reports'),
+      ).rejects.toThrow(ImageRejectedError);
+
+      expect(put).not.toHaveBeenCalled();
+    });
+
+    it('accepts an image of exactly forty megapixels', async () => {
+      // 8000 x 5000 is exactly 40,000,000 pixels — the ceiling itself.
+      const stored = await new BlobImageStore().store(
+        anUpload(aJpeg(8000, 5000), 'image/jpeg'),
+        'reports',
+      );
+
+      expect(stored.path).toMatch(/^reports\//);
+      expect(put).toHaveBeenCalledTimes(1);
+    });
+
+    it('refuses an image whose dimensions cannot be read', async () => {
+      // **The safe answer to "is this small enough?" when the size is
+      // unknown is no.** An image whose decode cost cannot be bounded is not
+      // accepted — and the JPEG here carries no frame header at all.
+      await expect(
+        new BlobImageStore().store(
+          anUpload(Buffer.from([0xff, 0xd8, 0xff, 0xda, 0x00, 0x08]), 'image/jpeg'),
+          'reports',
+        ),
+      ).rejects.toThrow(ImageRejectedError);
+
+      expect(put).not.toHaveBeenCalled();
     });
   });
 

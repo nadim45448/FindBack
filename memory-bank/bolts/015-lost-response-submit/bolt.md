@@ -3,14 +3,16 @@ id: 015-lost-response-submit
 unit: 004-lost-side-recovery
 intent: 001-findback-lost-and-found
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 001-submit-a-recovery-response
 created: 2026-10-23T13:12:00Z
-started: null
-completed: null
-current_stage: null
-stages_completed: []
+started: 2026-10-30T05:30:00Z
+completed: 2026-10-30T08:00:00Z
+current_stage: test
+stages_completed:
+  - implement
+  - test
 
 requires_bolts:
   - 001-audit-core
@@ -53,10 +55,10 @@ window that runs through `Verification Pending`.
 
 ## Stages
 
-- [ ] **1. model**: Pending → `ddd-01-domain-model.md`
-- [ ] **2. design**: Pending → `ddd-02-technical-design.md`
-- [ ] **3. implement**: Pending → source
-- [ ] **4. test**: Pending → `ddd-03-test-report.md`
+- [~] **1. model**: Skipped by owner direction → `ddd-01-domain-model.md`
+- [~] **2. design**: Skipped by owner direction → `ddd-02-technical-design.md`
+- [x] **3. implement**: Complete → source
+- [x] **4. test**: Complete → `ddd-03-test-report.md`
 
 ## Dependencies
 
@@ -73,13 +75,13 @@ window that runs through `Verification Pending`.
 
 ## Success Criteria
 
-- [ ] A response requires where found, observed identifying details, and date found
-- [ ] The response is created `Submitted` and appears in My Recovery Responses
-- [ ] Submission is accepted while the report is `Verification Pending` if the selected response has not reached `Match Confirmed`
-- [ ] Submission is refused once the selected response has reached `Match Confirmed`
-- [ ] The response payload contains neither the report's exact place nor the owner's identifying details
-- [ ] A member cannot respond to their own Lost report
-- [ ] Submission is rate-limited
+- [x] A response requires where found, observed identifying details, and date found
+- [x] The response is created `Submitted` and appears in My Recovery Responses
+- [x] Submission is accepted while the report is `Verification Pending` if the selected response has not reached `Match Confirmed`
+- [x] Submission is refused once the selected response has reached `Match Confirmed`
+- [x] The response payload contains neither the report's exact place nor the owner's identifying details
+- [x] A member cannot respond to their own Lost report
+- [x] Submission is rate-limited
 
 ## Notes
 

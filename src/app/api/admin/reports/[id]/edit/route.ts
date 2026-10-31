@@ -10,6 +10,12 @@
  * validation, and the change detection all live in the service. The route
  * parses the changes and maps the result.
  *
+ * **Image replacement travels as a form part.** FR-53 names image
+ * replacement as one of the eight editable things, so the route accepts a
+ * `multipart/form-data` request whose `image` part carries the replacement
+ * — and a `application/json` request for the text fields alone. The
+ * content type decides the parser; the parser decides the fields.
+ *
  * **The response carries no stored field.** It returns the report's `id`,
  * `status`, and `updatedAt` — the same shape the reporter's edit returns, so
  * a client renders one view for both.
@@ -19,9 +25,9 @@ import { NextResponse } from 'next/server';
 
 import { log, readCsrfToken, readRequestId, readSessionCookie } from '@/app/api/_helpers';
 
-import { identity, listings, readJsonBody, reportLifecycleErrorResponse } from '../../../../reports/report-route-helpers';
+import { identity, listings, reportLifecycleErrorResponse } from '../../../../reports/report-route-helpers';
 
-import { parseReportEditBody } from '../../../../reports/parse-report-edit-request';
+import { parseAdministratorEditBody } from './parse-admin-edit-request';
 
 /** The route's dynamic parameter. */
 interface RouteContext {
@@ -77,12 +83,17 @@ export async function PATCH(request: Request, context: RouteContext): Promise<Ne
 
     // ── The body ───────────────────────────────────────────────────────────
     //
-    // **The same parser the reporter's edit uses.** FR-53's editable set is
-    // the reporter's content set plus image replacement, and the content
-    // fields are parsed identically — so a field the administrator may not
-    // change is dropped at the same boundary, by the same mechanism.
-    const body = await readJsonBody(request);
-    const changes = parseReportEditBody(body);
+    // **The same parser the reporter's edit uses, for the text fields.**
+    // FR-53's editable set is the reporter's content set plus image
+    // replacement, and the content fields are parsed identically — so a field
+    // the administrator may not change is dropped at the same boundary, by
+    // the same mechanism.
+    //
+    // **The image travels as a form part, never as a JSON value.** FR-53
+    // names image replacement as one of the eight editable things, and the
+    // blob store's upload path takes bytes — so a `multipart/form-data`
+    // request carries the replacement alongside the text fields.
+    const parsed = await parseAdministratorEditBody(request);
 
     // ── The use case ───────────────────────────────────────────────────────
     const listingsStack = listings();
@@ -90,7 +101,8 @@ export async function PATCH(request: Request, context: RouteContext): Promise<Ne
     const result = await listingsStack.administratorEdits.edit({
       reportId: id,
       actor: { actorId: actor.actorId },
-      changes,
+      changes: parsed.changes,
+      image: parsed.image,
     });
 
     log(requestId, action, 'success', {

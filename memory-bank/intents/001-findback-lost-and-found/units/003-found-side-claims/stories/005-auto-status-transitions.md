@@ -2,11 +2,11 @@
 id: 005-auto-status-transitions
 unit: 003-found-side-claims
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:46:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 016-claim-decisions
+implemented: true
 traces_to: [FR-22]
 ---
 
@@ -20,17 +20,17 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** a Found report in `Open` with no `Pending` claims, **When** the first claim is submitted, **Then** the report status becomes `Claim Requested`
-- [ ] **Given** a Found report already in `Claim Requested`, **When** an additional claim is submitted, **Then** the report status remains `Claim Requested`
-- [ ] **Given** a Found report in `Claim Requested`, **When** the last remaining `Pending` claim on it is rejected or auto-rejected, **Then** the report status becomes `Open`
-- [ ] **Given** a Found report in `Claim Requested`, **When** a `Pending` claim on it is approved, **Then** the report status becomes `Claim Approved`
-- [ ] **Given** a Found report in `Open`, **When** the reporter withdraws the report, **Then** the report status becomes `Closed`
-- [ ] **Given** a Found report in `Claim Requested`, **When** the reporter withdraws the report, **Then** the report status becomes `Closed`
-- [ ] **Given** a Found report in `Open`, `Claim Requested`, or `Claim Approved`, **When** an administrator closes the report, **Then** the report status becomes `Closed`
-- [ ] **Given** a Found report in a non-terminal status, **When** no human action has occurred, **Then** the system never auto-transitions the report directly to `Returned` or `Closed`
-- [ ] **Given** a Found report, **When** a `Returned` status would be reached, **Then** reaching `Returned` requires an explicit administrator Confirm Returned action
-- [ ] **Given** a report in `Returned` or `Closed`, **When** any further status change is attempted, **Then** the report is terminal and remains in its status
-- [ ] **Given** any claim status value in the system, **When** the Claim status enum is inspected, **Then** it contains only `Pending`, `Approved`, and `Rejected` and there is no `Closed` Claim status
+- [x] **Given** a Found report in `Open` with no `Pending` claims, **When** the first claim is submitted, **Then** the report status becomes `Claim Requested`
+- [x] **Given** a Found report already in `Claim Requested`, **When** an additional claim is submitted, **Then** the report status remains `Claim Requested`
+- [x] **Given** a Found report in `Claim Requested`, **When** the last remaining `Pending` claim on it is rejected or auto-rejected, **Then** the report status becomes `Open`
+- [x] **Given** a Found report in `Claim Requested`, **When** a `Pending` claim on it is approved, **Then** the report status becomes `Claim Approved`
+- [x] **Given** a Found report in `Open`, **When** the reporter withdraws the report, **Then** the report status becomes `Closed`
+- [x] **Given** a Found report in `Claim Requested`, **When** the reporter withdraws the report, **Then** the report status becomes `Closed`
+- [x] **Given** a Found report in `Open`, `Claim Requested`, or `Claim Approved`, **When** an administrator closes the report, **Then** the report status becomes `Closed`
+- [x] **Given** a Found report in a non-terminal status, **When** no human action has occurred, **Then** the system never auto-transitions the report directly to `Returned` or `Closed`
+- [x] **Given** a Found report, **When** a `Returned` status would be reached, **Then** reaching `Returned` requires an explicit administrator Confirm Returned action
+- [x] **Given** a report in `Returned` or `Closed`, **When** any further status change is attempted, **Then** the report is terminal and remains in its status
+- [x] **Given** any claim status value in the system, **When** the Claim status enum is inspected, **Then** it contains only `Pending`, `Approved`, and `Rejected` and there is no `Closed` Claim status
 
 Technical Notes
 

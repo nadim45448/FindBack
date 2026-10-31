@@ -346,6 +346,23 @@ describe('the thread query is scoped to its parents', () => {
     // values are parameterised, so they are read from the query's bindings.
     expect(client.lastValues).toContain('claim-1');
     expect(client.lastValues).not.toContain('claim-2');
+    expect(client.lastValues).not.toContain('__none__');
+    expect(client.lastSql).not.toContain('recovery_response');
+  });
+
+  it('scopes response-only parents without a claim placeholder', async () => {
+    const client = new RecordingClient();
+
+    await new PrismaThreadVisibilityReader(asClient(client)).loadThreadsForViewer(
+      [],
+      ['response-1'],
+      ['lostReportOwner'],
+    );
+
+    expect(client.lastValues).toContain('response-1');
+    expect(client.lastValues).not.toContain('__none__');
+    expect(client.lastSql).toContain('recovery_response');
+    expect(client.lastSql).not.toContain(`= 'claim'`);
   });
 
   it('scopes the response threads separately from the claim threads', async () => {

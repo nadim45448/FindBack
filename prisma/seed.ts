@@ -17,6 +17,7 @@
  * deliberate act and a seed must not undo it.
  */
 
+import { existsSync } from 'node:fs';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
@@ -39,6 +40,17 @@ const LOCAL_CAMPUS_AREAS: ReadonlyArray<{ value: string; label: string }> = [
 ];
 
 async function main(): Promise<void> {
+  // **The seed reads `.env.local` itself.** `tsx` does not load it, and a
+  // seed that could not find `DATABASE_URL` would fail on a correctly
+  // configured checkout — so the file is loaded here, exactly as every
+  // smoke script under `scripts/` does. `.env` is read second, so a
+  // deployment's own environment file is honoured when there is one.
+  for (const file of ['.env.local', '.env']) {
+    if (existsSync(file)) {
+      process.loadEnvFile(file);
+    }
+  }
+
   const connectionString = process.env.DATABASE_URL;
 
   if (!connectionString) {

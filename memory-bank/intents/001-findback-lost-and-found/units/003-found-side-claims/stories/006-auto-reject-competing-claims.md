@@ -2,11 +2,11 @@
 id: 006-auto-reject-competing-claims
 unit: 003-found-side-claims
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:46:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 016-claim-decisions
+implemented: true
 traces_to: [FR-17]
 ---
 
@@ -20,18 +20,18 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** an approval of one `Pending` claim on an item that has other `Pending` claims, **When** the approval commits, **Then** every other `Pending` claim on that report becomes `Rejected` with audit reason "another claim was approved for this item"
-- [ ] **Given** a reporter withdrawal of a Found report while it is in `Claim Requested`, **When** the withdrawal commits, **Then** every `Pending` claim on that report becomes `Rejected` with audit reason "report withdrawn by reporter"
-- [ ] **Given** an administrator close of a Found report while `Pending` claims exist, **When** the close commits, **Then** every `Pending` claim on that report becomes `Rejected` with audit reason "report closed by administrator"
-- [ ] **Given** an administrator close of a Found report whose status is `Claim Approved`, **When** the close commits, **Then** no claims are auto-rejected because none are `Pending`
-- [ ] **Given** an auto-rejection by any of the three triggers, **When** the transaction commits, **Then** the claim's history is preserved and nothing is deleted
-- [ ] **Given** an auto-rejection by any of the three triggers, **When** the transaction commits, **Then** a separate audit event is recorded for each auto-rejected claim with `actor` set to system, `triggered_by` set to the administrator or reporter whose action caused it, `triggering_action`, the claim ID, the Found report ID, the trigger reason, and the timestamp
-- [ ] **Given** two claims auto-rejected by the same trigger in one action, **When** the audit trail is read, **Then** each auto-rejection is a distinct separate event rather than a single combined entry
-- [ ] **Given** an auto-rejection by another claim approval, **When** the rejected claimant's email body is generated, **Then** the visible copy states that another claim on the same item was approved without the wording "another claim was approved for this item" appearing verbatim
-- [ ] **Given** an auto-rejection by another claim approval, **When** the rejected claimant views the claim, **Then** the visible copy is a neutral explanation with a contact-your-administrator path and does not name the winning claimant
-- [ ] **Given** any of the three auto-rejection triggers, **When** the audit trail is read by an administrator, **Then** the trigger reason is stored verbatim exactly as "another claim was approved for this item", "report withdrawn by reporter", or "report closed by administrator" as applicable
-- [ ] **Given** softened user-facing copy has been used for a rejection, **When** the audit trail is inspected, **Then** the verbatim trigger reason is unchanged by the softening
-- [ ] **Given** an auto-rejected claim, **When** the transaction commits, **Then** a claim rejection email is sent to that claimant only
+- [x] **Given** an approval of one `Pending` claim on an item that has other `Pending` claims, **When** the approval commits, **Then** every other `Pending` claim on that report becomes `Rejected` with audit reason "another claim was approved for this item"
+- [x] **Given** a reporter withdrawal of a Found report while it is in `Claim Requested`, **When** the withdrawal commits, **Then** every `Pending` claim on that report becomes `Rejected` with audit reason "report withdrawn by reporter"
+- [x] **Given** an administrator close of a Found report while `Pending` claims exist, **When** the close commits, **Then** every `Pending` claim on that report becomes `Rejected` with audit reason "report closed by administrator"
+- [x] **Given** an administrator close of a Found report whose status is `Claim Approved`, **When** the close commits, **Then** no claims are auto-rejected because none are `Pending`
+- [x] **Given** an auto-rejection by any of the three triggers, **When** the transaction commits, **Then** the claim's history is preserved and nothing is deleted
+- [x] **Given** an auto-rejection by any of the three triggers, **When** the transaction commits, **Then** a separate audit event is recorded for each auto-rejected claim with `actor` set to system, `triggered_by` set to the administrator or reporter whose action caused it, `triggering_action`, the claim ID, the Found report ID, the trigger reason, and the timestamp
+- [x] **Given** two claims auto-rejected by the same trigger in one action, **When** the audit trail is read, **Then** each auto-rejection is a distinct separate event rather than a single combined entry
+- [x] **Given** an auto-rejection by another claim approval, **When** the rejected claimant's email body is generated, **Then** the visible copy states that another claim on the same item was approved without the wording "another claim was approved for this item" appearing verbatim
+- [x] **Given** an auto-rejection by another claim approval, **When** the rejected claimant views the claim, **Then** the visible copy is a neutral explanation with a contact-your-administrator path and does not name the winning claimant
+- [x] **Given** any of the three auto-rejection triggers, **When** the audit trail is read by an administrator, **Then** the trigger reason is stored verbatim exactly as "another claim was approved for this item", "report withdrawn by reporter", or "report closed by administrator" as applicable
+- [x] **Given** softened user-facing copy has been used for a rejection, **When** the audit trail is inspected, **Then** the verbatim trigger reason is unchanged by the softening
+- [x] **Given** an auto-rejected claim, **When** the transaction commits, **Then** a claim rejection email is sent to that claimant only
 
 Technical Notes
 

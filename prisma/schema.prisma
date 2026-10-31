@@ -32,14 +32,14 @@ datasource db {
 /// There is no `updatedAt` and no soft-delete column. A column that could
 /// change invites a code path that changes it.
 model AuditEvent {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   eventNumber Int?
   eventType   String
   parentType  String
-  parentId    String   @db.Uuid
+  parentId    String @db.Uuid
 
-  actorId    String @db.Uuid
-  actorRole  String
+  actorId   String @db.Uuid
+  actorRole String
 
   actingAdministratorId     String? @db.Uuid
   determinedByUserId        String? @db.Uuid
@@ -51,7 +51,7 @@ model AuditEvent {
   metadata       Json?
 
   occurredAt DateTime @default(now()) @db.Timestamptz(6)
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
 
   // The trail view's index. `parentType` leads because the trail query
   // filters on it, and an index whose leading column is unconstrained cannot
@@ -63,7 +63,6 @@ model AuditEvent {
   @@index([parentType, parentId], map: "idx_audit_events_parent_type")
   @@index([eventNumber], map: "idx_audit_events_event_number")
   @@index([occurredAt(sort: Desc)], map: "idx_audit_events_occurred")
-
   /// The physical table name.
   ///
   /// Added by bolt `007`. The table predated the naming convention
@@ -84,8 +83,8 @@ model AuditEvent {
 /// database rather than only to stdout, because Vercel Hobby retains runtime
 /// logs for one hour.
 model AuditReadLog {
-  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  administratorId String @db.Uuid
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  administratorId String  @db.Uuid
   query           String?
   filters         Json?
   resultCount     Int
@@ -95,7 +94,6 @@ model AuditReadLog {
   createdAt DateTime @default(now()) @db.Timestamptz(6)
 
   @@index([administratorId, readAt(sort: Desc)], map: "idx_audit_read_logs_admin_read_at")
-
   /// The physical table name. See `AuditEvent`'s `@@map` for the reason.
   @@map("audit_read_logs")
 }
@@ -112,7 +110,6 @@ model QuotaSnapshot {
   observedAt  DateTime @default(now()) @db.Timestamptz(6)
 
   @@index([resource, observedAt(sort: Desc)], map: "idx_quota_snapshots_resource_observed")
-
   /// The physical table name. See `AuditEvent`'s `@@map` for the reason.
   @@map("quota_snapshots")
 }
@@ -146,32 +143,20 @@ model Account {
   /// The plaintext password never reaches this column.
   passwordHash String
 
-  displayName String
-  selfDeclaredRole        String
+  displayName           String
+  selfDeclaredRole      String
   /// The free text for the `Other` self-declared role. Null for the other three.
   selfDeclaredRoleOther String?
 
-  status         String @default("Pending")
+  status          String  @default("Pending")
   isAdministrator Boolean @default(false)
 
   /// The rejection reason. Null unless the account was rejected.
   rejectionReason String?
 
-  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
-  activatedAt  DateTime? @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  activatedAt   DateTime? @db.Timestamptz(6)
   deactivatedAt DateTime? @db.Timestamptz(6)
-
-  /// The functional unique index. `lower(btrim(email))` rather than the
-  /// stored value, so a row written by any path is deduplicated the same way.
-  @@unique([email], map: "idx_accounts_email_unique")
-  @@index([status, createdAt], map: "idx_accounts_status_created")
-  @@index([isAdministrator], map: "idx_accounts_administrator")
-
-  /// The physical table name. See `AuditEvent`'s `@@map` for the reason.
-  ///
-  /// Bolt `006`'s readers issue raw `SELECT`s against `accounts`, so this
-  /// rename is what makes them runnable against the schema.
-  @@map("accounts")
 
   /// The reports this account submitted.
   ///
@@ -185,8 +170,58 @@ model Account {
   /// The Claims this account submitted.
   claims Claim[]
 
+  /// The Claims this account decided, as an administrator.
+  ///
+  /// **A named relation, because a Claim now refers to an Account twice** —
+  /// once as the claimant and once as the deciding administrator. Prisma
+  /// requires the two relations to be named apart.
+  decidedClaims Claim[] @relation("ClaimDecidedByAdministrator")
+
   /// The Recovery Responses this account submitted.
   recoveryResponses RecoveryResponse[]
+
+  /// The thread messages this account posted.
+  ///
+  /// **A named relation, because a message refers to an Account and a
+  /// Claim, and the message's author is the account.** `ON DELETE RESTRICT`
+  /// on the author, so an account cannot be deleted while its messages are
+  /// still on the record.
+  threadMessages ThreadMessage[]
+
+  /// The Returned confirmations this account recorded, as an administrator.
+  ///
+  /// **A named relation, because a confirmation refers to an Account twice** —
+  /// the confirming administrator and the default receiver. `ON DELETE
+  /// RESTRICT`, so an account cannot be deleted while it is recorded as
+  /// having confirmed a return.
+  returnConfirmations ReturnConfirmation[] @relation("ReturnAdministrator")
+
+  /// The Returned confirmations in which this account is the default
+  /// receiver — the approved claimant on a Found report, or the Lost-report
+  /// owner on a Lost one.
+  ///
+  /// **This is the account that was answerable for the item,** so the
+  /// relation is the record of who received what. `ON DELETE RESTRICT`.
+  receivedReturnConfirmations ReturnConfirmation[] @relation("ReturnDefaultReceiver")
+
+  /// The content removals this administrator performed (FR-36).
+  ///
+  /// **The account is RESTRICT,** so an administrator's account cannot be
+  /// deleted while they are recorded as having withheld content.
+  contentRemovals ContentRemoval[] @relation("ContentRemovalAdministrator")
+
+  /// Live-email uniqueness. The physical index is partial
+  /// (`status <> 'Rejected'`) on `lower(btrim(email))`, so a rejected
+  /// registration does not block a later registration at the same address.
+  /// Rejected rows are kept (FR-5); they just do not occupy the email.
+  @@unique([email], map: "idx_accounts_email_unique")
+  @@index([status, createdAt], map: "idx_accounts_status_created")
+  @@index([isAdministrator], map: "idx_accounts_administrator")
+  /// The physical table name. See `AuditEvent`'s `@@map` for the reason.
+  ///
+  /// Bolt `006`'s readers issue raw `SELECT`s against `accounts`, so this
+  /// rename is what makes them runnable against the schema.
+  @@map("accounts")
 }
 
 /// A revocable session.
@@ -222,7 +257,6 @@ model Session {
   @@unique([tokenHash], map: "idx_sessions_token_hash")
   @@index([accountId], map: "idx_sessions_account")
   @@index([expiresAt], map: "idx_sessions_expires_at")
-
   /// The physical table name. See `AuditEvent`'s `@@map` for the reason.
   @@map("sessions")
 }
@@ -252,7 +286,6 @@ model PasswordResetToken {
   /// For the daily sweep, which filters on both `expiresAt` and `usedAt`.
   /// Correctness never depends on the sweep — expiry is enforced on read.
   @@index([expiresAt, usedAt], map: "idx_password_reset_tokens_expires_at_used_at")
-
   /// The physical table name. See `AuditEvent`'s `@@map` for the reason.
   @@map("password_reset_tokens")
 }
@@ -280,7 +313,6 @@ model RateLimitCounter {
 
   @@unique([bucketKey, windowStart], map: "idx_rate_limit_counters_bucket_window")
   @@index([windowStart], map: "idx_rate_limit_counters_window_start")
-
   /// The physical table name. See `AuditEvent`'s `@@map` for the reason.
   @@map("rate_limit_counters")
 }
@@ -341,6 +373,25 @@ model Report {
   /// An FR-37 Sensitive Field. The blob **path**, never a URL (ADR-2).
   imageRef String? @map("image_ref")
 
+  /// Whether the description has been withheld from members (FR-36).
+  ///
+  /// **The description is marked, not deleted.** The audit trail is
+  /// append-only with no correction path (ADR-6), so a removal's record
+  /// names content that must still exist to be verifiable. The content
+  /// stays on the row; only its presentation changes.
+  ///
+  /// **Not nullable, and defaulting to `false`.** The marker is a fact —
+  /// the description is withheld or it is not — and "unknown" is not a
+  /// state a removal could produce.
+  descriptionWithheld Boolean @default(false) @map("description_withheld")
+
+  /// Whether the image has been withheld from members (FR-36).
+  ///
+  /// **The blob is not deleted either.** The audit record names the target,
+  /// and the target must remain verifiable; the delivery path simply stops
+  /// serving it.
+  imageWithheld Boolean @default(false) @map("image_withheld")
+
   /// The acting member. Server-derived, never client-asserted.
   reporterId String @map("reporter_id") @db.Uuid
 
@@ -358,24 +409,43 @@ model Report {
   /// only** — a Found report has no Recovery Responses.
   recoveryResponses RecoveryResponse[]
 
+  /// The thread messages posted on the Claims against this report.
+  ///
+  /// **The message hangs from the Claim, not from the report,** and the
+  /// report's relation is only for the cascade: the PRD §10 retention rule
+  /// is "retained for the parent report's lifetime", and the hard-delete
+  /// path (FR-10) deletes the report's Claims, which deletes their
+  /// messages with them.
+  threadMessages ThreadMessage[]
+
+  /// The Returned confirmation recorded against this report.
+  ///
+  /// **At most one.** The report's `Returned` status is terminal, so a
+  /// second confirmation is not a second fact about the same handover — it
+  /// is a second handover, which cannot exist.
+  returnConfirmation ReturnConfirmation?
+
+  /// The content removals recorded against this report.
+  ///
+  /// **Zero or more.** A report can carry several removals — its image, its
+  /// description, and each of its thread messages are separate targets.
+  contentRemovals ContentRemoval[]
+
   @@index([status, createdAt(sort: Desc)], map: "idx_reports_status_created")
   @@index([type, status, createdAt(sort: Desc)], map: "idx_reports_type_status_created")
   @@index([category, createdAt(sort: Desc)], map: "idx_reports_category_created")
   @@index([campusArea, createdAt(sort: Desc)], map: "idx_reports_campus_area_created")
   @@index([date(sort: Desc)], map: "idx_reports_date")
   @@index([reporterId, createdAt(sort: Desc)], map: "idx_reports_reporter_created")
-
   /// The FR-49 `mine` partition's access path: the member's own reports,
   /// most recent by the report's **`date`** — not by `created_at`. A report
   /// found yesterday may have been created today; the listing orders by the
   /// report's own date, so the index must carry it.
   @@index([reporterId, date(sort: Desc)], map: "idx_reports_reporter_date")
-
   /// The FR-49 `browse` partition's access path: reports of a status,
   /// most recent by `date`. The exclusion of the viewer's own reports is
   /// applied to the rows this index yields.
   @@index([status, date(sort: Desc)], map: "idx_reports_status_date")
-
   /// The physical table name.
   ///
   /// The twelve columns above — `id`, `type`, `status`, `name`, `category`,
@@ -414,7 +484,6 @@ model CampusArea {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([active], map: "idx_campus_areas_active")
-
   /// The physical table name.
   @@map("campus_areas")
 }
@@ -449,6 +518,16 @@ model Claim {
   /// The reason a rejected Claim was rejected. Null unless it was rejected.
   rejectionReason String? @map("rejection_reason")
 
+  /// The administrator who decided the Claim. Null until it is decided.
+  ///
+  /// **Added by bolt `016`.** The Claim's decision columns live here
+  /// because bolt `016` is the first bolt to *decide* a Claim — bolt `013`
+  /// created the table and taught it to hold a submission.
+  decidedByAdministratorId String? @map("decided_by_administrator_id") @db.Uuid
+
+  /// When the Claim was decided. Null until it is decided.
+  decidedAt DateTime? @map("decided_at") @db.Timestamptz(6)
+
   /// When the Claim was submitted. The column bolt `006`'s visibility reader
   /// orders by — and it is nullable because bolt `008` created the table
   /// before the Claim's submission flow was built.
@@ -466,8 +545,24 @@ model Claim {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
 
-  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  report   Report  @relation(fields: [reportId], references: [id], onDelete: Cascade)
   claimant Account @relation(fields: [claimantId], references: [id], onDelete: Restrict)
+
+  /// The administrator who decided the Claim.
+  ///
+  /// **A named relation, because the Claim refers to an Account twice** —
+  /// the claimant and the decider. `ON DELETE RESTRICT`, so an
+  /// administrator's account cannot be deleted while they are recorded as
+  /// having decided a Claim.
+  decidedByAdministrator Account? @relation("ClaimDecidedByAdministrator", fields: [decidedByAdministratorId], references: [id], onDelete: Restrict)
+
+  /// The messages posted in this Claim's thread.
+  ///
+  /// **One thread per Claim,** so the Claim is the thread's identity and
+  /// every message hangs from it. The messages of one Claim are never
+  /// visible in another's thread — the isolation is in the query, not in a
+  /// filter applied by the caller.
+  threadMessages ThreadMessage[]
 
   /// The existence read the FR-10 gate performs.
   @@index([reportId, status], map: "idx_claims_report_status")
@@ -478,7 +573,9 @@ model Claim {
   /// The FR-49 `claims` partition's access path: the member's own Claims,
   /// most recent by submission time.
   @@index([claimantId, submittedAt(sort: Desc)], map: "idx_claims_claimant_submitted_at")
-
+  /// The duplicate check's read: "does this member have a Pending Claim on
+  /// this report?"
+  @@index([reportId, claimantId, status], map: "idx_claims_report_claimant_status")
   @@map("claims")
 }
 
@@ -527,7 +624,23 @@ model RecoveryResponse {
   /// table before the Response's submission flow was built.
   submittedAt DateTime? @map("submitted_at") @db.Timestamptz(6)
 
-  /// Where the responder says the item was found.
+  /// The campus area where the responder says the item was found.
+  ///
+  /// **FR-44 makes this a required field of a submitted Response** — "Where
+  /// the item was found (campus area) | yes | enum | Fixed deployment list".
+  ///
+  /// **The column is nullable, and `recovery_responses_submitted_fields_check`
+  /// is what makes it required for a submitted Response.** A Response written
+  /// by a lifecycle path — a report's closure resolving its responses, say —
+  /// carries no submission fields at all, and the read must not fail on it.
+  ///
+  /// **It has NO foreign key**, for the same reason `reports.campus_area` has
+  /// none (ADR-20): the membership rule is a *validation* rule, and a
+  /// deactivated area does not rewrite the Responses that already name it.
+  campusArea String? @map("campus_area")
+
+  /// Where the responder says the item was found. **Optional** — FR-44's
+  /// bound is 0–200 characters. **An FR-37 Sensitive Field.**
   whereFoundExactPlace String? @map("where_found_exact_place")
 
   /// The identifying details the responder observed. **An FR-37 Sensitive
@@ -544,7 +657,7 @@ model RecoveryResponse {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
 
-  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  report    Report  @relation(fields: [reportId], references: [id], onDelete: Cascade)
   responder Account @relation(fields: [responderId], references: [id], onDelete: Restrict)
 
   /// The existence read the FR-10 gate performs.
@@ -554,6 +667,275 @@ model RecoveryResponse {
   /// The FR-49 `recovery_responses` partition's access path: the
   /// responder's own Recovery Responses, most recent by submission time.
   @@index([responderId, submittedAt(sort: Desc)], map: "idx_recovery_responses_responder_submitted_at")
-
+  /// The FR-40 one-live-response-per-responder check's read. Serves the
+  /// uniqueness constraint's enforcement as well — see the migration
+  /// `20261030160000_recovery_response_submission_constraints`.
+  @@index([reportId, responderId, status], map: "idx_recovery_responses_report_responder_status")
   @@map("recovery_responses")
+}
+
+/// A message in a per-Claim thread.
+///
+/// **One thread per Claim, and the Claim is the thread's identity.** The
+/// thread is addressed by its parent, exactly as `thread-projection.ts`
+/// says: "a thread's visibility is exactly its parent's visibility". There
+/// is no separate thread row — a Claim with no messages has an *empty*
+/// thread, not a missing one — so this table holds the **messages** and the
+/// Claim id is the thread.
+///
+/// **The polymorphic parent is the Found side only for now.** The
+/// visibility reader (`prisma-thread-visibility-reader.ts`) already reads
+/// `parent_type` and `parent_id` and already understands both `claim` and
+/// `recovery_response`, so this model's shape matches the reader that
+/// already exists. The `recovery_response` parent is added by bolt `018`,
+/// which owns the Lost-side thread; the column is nullable here so that
+/// bolt's rows can be distinguished from this bolt's.
+///
+/// **The body is plain text and nothing else.** FR-26: "only the plain
+/// text content is stored and no attachment is accepted". There is no
+/// attachment column, no mime-type column, and no markup column — the
+/// table has no way to receive anything but text.
+///
+/// **The body length is constrained at the database layer.** Prisma cannot
+/// express a `CHECK` constraint, so `thread_messages_body_length_check`
+/// lives in the migration SQL — added by migration
+/// `20261030120000_claim_thread_messages`. It enforces the same 1–2000
+/// bound as the domain's `createClaimThreadMessageBody`, so a write that
+/// bypassed the domain still cannot leave an out-of-bounds message on the
+/// record.
+///
+/// **`ON DELETE CASCADE` on the Claim,** for the same PRD §10 reason as the
+/// Claim's own relation to the report: the thread is retained for the
+/// parent report's lifetime, and the FR-10 hard-delete path removes the
+/// report's Claims, which removes their messages with them.
+model ThreadMessage {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  /// The kind of parent this thread belongs to.
+  ///
+  /// **Only `claim` is written by this bolt.** The `recovery_response` kind
+  /// is read by the existing visibility reader and is written by bolt
+  /// `018`.
+  parentType String @default("claim") @map("parent_type")
+
+  /// The parent entity's id. For a Claim thread, the Claim's id.
+  parentId String @map("parent_id") @db.Uuid
+
+  /// The Claim the message belongs to.
+  ///
+  /// **A required column, and the isolation is enforced here.** The
+  /// polymorphic `parent_id` is what the visibility reader filters on, and
+  /// this column is the foreign key that makes the message's Claim real.
+  /// A `recovery_response` parent has no Claim, so the column is nullable
+  /// — and the constraint that a `claim` parent must name a Claim lives in
+  /// the migration SQL.
+  claimId String? @map("claim_id") @db.Uuid
+
+  /// Who posted the message.
+  authorId String @map("author_id") @db.Uuid
+
+  /// The author's display name, captured at the time of posting.
+  ///
+  /// **Captured, not joined.** The thread reads as a conversation, and a
+  /// conversation whose authors are re-read from the accounts table would
+  /// change its wording every time an account is renamed. The name is a
+  /// record of who spoke, not a live lookup.
+  authorDisplayName String @map("author_display_name")
+
+  /// The message's plain-text body.
+  body String
+
+  /// Whether the body has been withheld from members (FR-36).
+  ///
+  /// **The body is marked, not deleted.** The audit trail is append-only
+  /// with no correction path (ADR-6), so a removal's record names content
+  /// that must still exist to be verifiable. The content stays on the row;
+  /// only its presentation changes.
+  bodyWithheld Boolean @default(false) @map("body_withheld")
+
+  /// When the message was posted.
+  postedAt DateTime @default(now()) @map("posted_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  claim  Claim?  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  author Account @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  report Report  @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  /// The report the message's parent belongs to.
+  ///
+  /// **Carried on the message rather than derived.** The message hangs from
+  /// the Claim, and the Claim hangs from the report; carrying the report id
+  /// lets the cascade reach the message when the report is hard-deleted
+  /// through the FR-10 path, and lets the reader scope by report without a
+  /// join.
+  reportId String @map("report_id") @db.Uuid
+
+  /// The thread's read: "the messages of this Claim, oldest first".
+  @@index([parentType, parentId, postedAt], map: "idx_thread_messages_parent_posted_at")
+  /// The FR-49 partition's access path: a member's own messages.
+  @@index([authorId, postedAt(sort: Desc)], map: "idx_thread_messages_author_posted_at")
+  /// The cascade's access path.
+  @@index([reportId], map: "idx_thread_messages_report_id")
+  @@map("thread_messages")
+}
+
+/// A Returned confirmation — the record of a physical hand-off.
+///
+/// **Created by bolt `019`.** FR-23, FR-24, and FR-25 all concern this
+/// table, and the table exists so that "an item is marked recovered" and
+/// "somebody was answerable for it" are the *same* fact rather than two
+/// facts that could drift apart.
+///
+/// **One confirmation per report.** The report's `Returned` status is
+/// terminal, and a report can be returned exactly once, so the report id is
+/// unique. The unique constraint is the data layer's version of "exactly
+/// one commits" — the second of two concurrent administrators' confirmations
+/// fails at the constraint rather than leaving a second row.
+///
+/// **The default receiver is an account; the substitute is a name.** The
+/// `default_receiver_account_id` column is the approved claimant on a Found
+/// report and the Lost-report owner on a Lost report. The substitute's
+/// three fields are **nullable together** — a default-receiver confirmation
+/// leaves them all null, and a substitute confirmation fills all three.
+///
+/// **FR-25's guard is enforced here, at the database layer.** The
+/// `return_confirmations_receiver_present_check` constraint requires that a
+/// row carry *either* a default receiver account id *or* all three
+/// substitute fields. A row with no receiver at all is refused by the
+/// database, not merely discouraged by the domain — and the domain is where
+/// the rule is *written*.
+///
+/// **`ON DELETE CASCADE` on the report,** for the same PRD §10 reason as the
+/// Claims and the Recovery Responses: a confirmation is retained for the
+/// parent report's lifetime, and the FR-10 hard-delete path removes the
+/// report and everything hanging from it.
+///
+/// The Accounts are **RESTRICT**: an administrator's account cannot be
+/// deleted while they are recorded as having confirmed a return, and the
+/// default receiver's account cannot be deleted while they are answerable
+/// for a returned item. Accounts are never deleted under FR-5 in any case.
+model ReturnConfirmation {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  /// The report whose physical return was confirmed.
+  reportId String @map("report_id") @db.Uuid
+
+  /// The report's type at the time of the confirmation.
+  ///
+  /// **`Lost` or `Found`,** carried on the row because the *event* the
+  /// confirmation writes differs by direction — events 6 and 7 for a Found
+  /// report, events 21 and 22 for a Lost one — and because the default
+  /// receiver's meaning differs by direction. The value is copied from the
+  /// report row, never supplied by a client.
+  reportType String @map("report_type")
+
+  /// The default receiver's account id.
+  ///
+  /// **The approved claimant on a Found report; the Lost-report owner on a
+  /// Lost report.** The column is `NOT NULL` — every confirmation has a
+  /// default receiver, because the *authorization* of a substitution is the
+  /// default receiver's consent, and without the default receiver there is
+  /// nobody whose consent could be recorded.
+  defaultReceiverAccountId String @map("default_receiver_account_id") @db.Uuid
+
+  /// The substitute receiver's name, or `null` when the default receiver
+  /// physically received the item.
+  ///
+  /// **A name, not an account id.** A substitute is frequently someone with
+  /// no account at all — a passerby, a family member, a classmate — and
+  /// FR-24 records the administrator's affirmation, not an identity.
+  substituteReceiverName String? @map("substitute_receiver_name")
+
+  /// The default receiver's authorization of the substitute, or `null`.
+  authorizationAffirmation String? @map("authorization_affirmation")
+
+  /// The relationship between the default receiver and the substitute, or
+  /// `null`. One of the PRD's five: Friend, Family Member, Colleague,
+  /// Classmate, Other.
+  relationship String?
+
+  /// The administrator who confirmed the return.
+  administratorId String @map("administrator_id") @db.Uuid
+
+  /// When the confirmation happened.
+  confirmedAt DateTime @map("confirmed_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  report        Report  @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  administrator Account @relation("ReturnAdministrator", fields: [administratorId], references: [id], onDelete: Restrict)
+
+  /// The default receiver's account.
+  ///
+  /// **A named relation, because the confirmation refers to an Account
+  /// twice** — the confirming administrator and the default receiver.
+  defaultReceiver Account @relation("ReturnDefaultReceiver", fields: [defaultReceiverAccountId], references: [id], onDelete: Restrict)
+
+  /// **One confirmation per report.** The report's `Returned` status is
+  /// terminal, so a second confirmation is not a second fact about the same
+  /// handover — it is a second handover, which cannot exist.
+  @@unique([reportId], map: "uq_return_confirmations_report_id")
+  /// The administrator's own confirmations.
+  @@index([administratorId, confirmedAt(sort: Desc)], map: "idx_return_confirmations_administrator_confirmed")
+  /// The default receiver's answered-for items.
+  @@index([defaultReceiverAccountId, confirmedAt(sort: Desc)], map: "idx_return_confirmations_receiver_confirmed")
+  @@map("return_confirmations")
+}
+
+/// A content removal — the record of an administrator withholding content.
+///
+/// **Created by bolt `020`.** FR-36 is the requirement, and the table
+/// exists so that "the content is withheld" and "an administrator withheld
+/// it, and why" are the *same* fact rather than two facts that could drift
+/// apart.
+///
+/// **The content is marked, not deleted.** The audit trail is append-only
+/// with no correction path (ADR-6), so a removal's audit record names
+/// content that must still exist for that record to remain verifiable. The
+/// content stays on its own row and is marked withheld there; this table
+/// records the act.
+///
+/// **One removal per target.** A repeated removal of the same content is
+/// not a second moderation act — it is the same act, asked twice — and the
+/// unique constraint says so at the data layer.
+///
+/// **The target is named by kind and id.** The three kinds are closed — a
+/// report's image, a report's description, a thread message — and the kind
+/// says which column or table the id refers to. An id alone would be
+/// ambiguous across three surfaces.
+///
+/// The report is **CASCADE**, for the same PRD §10 reason as every other
+/// report-owned table. The administrator is **RESTRICT** — accounts are
+/// never deleted under FR-5, but stating the rule means the database
+/// enforces it rather than a comment describing an intention.
+model ContentRemoval {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  /// The report the removed content belongs to.
+  reportId String @map("report_id") @db.Uuid
+
+  /// `report_image`, `report_description`, or `thread_message`.
+  targetKind String @map("target_kind")
+
+  /// The id of the row the content lives on.
+  targetId String @map("target_id") @db.Uuid
+
+  /// The administrator's reason, verbatim. 10-500 characters.
+  removalReason String @map("removal_reason")
+
+  /// The administrator who removed the content.
+  removedBy String @map("removed_by") @db.Uuid
+
+  /// When the removal happened.
+  removedAt DateTime @default(now()) @map("removed_at") @db.Timestamptz(6)
+
+  report       Report  @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  administrator Account @relation("ContentRemovalAdministrator", fields: [removedBy], references: [id], onDelete: Restrict)
+
+  /// **One removal per target.** The idempotence rule, at the data layer.
+  @@unique([targetKind, targetId], map: "uq_content_removals_target")
+  /// The administrator's own removals.
+  @@index([removedBy, removedAt(sort: Desc)], map: "idx_content_removals_administrator_removed")
+  @@map("content_removals")
 }

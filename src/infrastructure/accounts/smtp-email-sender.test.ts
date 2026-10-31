@@ -251,6 +251,7 @@ function aSender(port: number, overrides: Record<string, unknown> = {}) {
     password: null,
     from: 'FindBack <no-reply@example.org>',
     secure: false,
+    startTls: true,
     ca: certificatePem,
     ...overrides,
   });
@@ -430,6 +431,7 @@ describe('the SMTP configuration', () => {
       password: 'secret',
       from: 'FindBack <no-reply@example.org>',
       secure: false,
+      startTls: true,
       ca: undefined,
     });
   });
@@ -450,6 +452,13 @@ describe('the SMTP configuration', () => {
     const config = readSmtpConfig({ SMTP_HOST: 'smtp.example.org' });
 
     expect(config?.from).toContain('no-reply');
+  });
+
+  it('skips STARTTLS on the local Mailpit port', () => {
+    const config = readSmtpConfig({ SMTP_HOST: '127.0.0.1', SMTP_PORT: '1025' });
+
+    expect(config?.startTls).toBe(false);
+    expect(config?.secure).toBe(false);
   });
 
   it('reads a custom certificate authority', () => {

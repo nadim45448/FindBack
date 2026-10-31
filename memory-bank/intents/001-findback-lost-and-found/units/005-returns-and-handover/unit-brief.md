@@ -183,17 +183,17 @@ end to end.
 
 ### Stories
 
-- [ ] **001-confirm-returned-default-receiver**: to confirm that an item was physically returned - must - Planned
+- [x] **001-confirm-returned-default-receiver**: to confirm that an item was physically returned - must - Complete
   <br>traces: FR-23
-- [ ] **002-confirm-returned-substitute-receiver**: to record who actually received an item when it was not the default receiver - must - Planned
+- [x] **002-confirm-returned-substitute-receiver**: to record who actually received an item when it was not the default receiver - must - Complete
   <br>traces: FR-24
-- [ ] **003-no-receiver-no-returned-guard**: no item is ever marked recovered without someone being answerable for it - must - Planned
+- [x] **003-no-receiver-no-returned-guard**: no item is ever marked recovered without someone being answerable for it - must - Complete
   <br>traces: FR-25
-- [ ] **004-complete-lost-verification-closeout**: confirming a Lost return to resolve every recovery response at once - must - Planned
+- [x] **004-complete-lost-verification-closeout**: confirming a Lost return to resolve every recovery response at once - must - Complete
   <br>traces: FR-45
-- [ ] **005-close-report**: to close a report that should not proceed - must - Planned
+- [x] **005-close-report**: to close a report that should not proceed - must - Complete
   <br>traces: FR-21
-- [ ] **006-remove-inappropriate-content**: to remove inappropriate content while preserving the record of it - must - Planned
+- [x] **006-remove-inappropriate-content**: to remove inappropriate content while preserving the record of it - must - Complete
   <br>traces: FR-36
-- [ ] **007-lost-side-notification-events**: to be told what happens to my response - must - Planned
+- [x] **007-lost-side-notification-events**: to be told what happens to my response - must - Complete
   <br>traces: FR-46

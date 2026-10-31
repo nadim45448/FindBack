@@ -88,6 +88,34 @@ export interface ReportListingFilter {
   readonly type: ReportType | null;
   /** The statuses, or `null` for the default status view. */
   readonly statuses: readonly ReportStatus[] | null;
+  /**
+   * The **participation's own** statuses, or `null` for no such filter.
+   *
+   * ## Why this is separate from `statuses`
+   *
+   * `statuses` filters the **report's** status. The `claims` and
+   * `recovery_responses` partitions list *participations* — a Claim or a
+   * Recovery Response — and each of those has its **own** status, which is
+   * a different vocabulary from the report's:
+   *
+   * - A Claim's statuses are `Pending`, `Approved`, `Rejected`.
+   * - A Recovery Response's statuses are FR-41's eight.
+   *
+   * §9.4's `My Claims` tabs are `Pending`, `Approved`, `Rejected` — the
+   * **Claim's** status, not the report's. A Claim on a `Claim Requested`
+   * report is still a `Pending` Claim, so filtering on the report's status
+   * would answer a different question than the tab asks.
+   *
+   * **So the participation's status is its own filter,** and the reader
+   * applies it to the participation table's own `status` column.
+   *
+   * The field is `null` for the report partitions, where it is meaningless.
+   *
+   * **The field is optional**, so a filter literal that predates it still
+   * typechecks — and an absent field means no such filter, exactly like an
+   * explicit `null`.
+   */
+  readonly participationStatuses?: readonly string[] | null;
 }
 
 /** The filter that matches everything — no narrowing at all. */
@@ -99,6 +127,7 @@ export function emptyFilter(): ReportListingFilter {
     dateRange: null,
     type: null,
     statuses: null,
+    participationStatuses: null,
   };
 }
 

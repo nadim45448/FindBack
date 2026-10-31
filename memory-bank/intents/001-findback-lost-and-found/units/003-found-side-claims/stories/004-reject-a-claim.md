@@ -2,11 +2,11 @@
 id: 004-reject-a-claim
 unit: 003-found-side-claims
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:46:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 016-claim-decisions
+implemented: true
 traces_to: [FR-18]
 ---
 
@@ -20,16 +20,16 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** a `Pending` claim, **When** an administrator rejects it with a reason of 10-500 characters, **Then** the claim status becomes `Rejected`
-- [ ] **Given** a reason shorter than 10 characters or longer than 500 characters, **When** an administrator attempts to reject, **Then** the rejection is refused and the claim remains `Pending`
-- [ ] **Given** a rejected claim, **When** the rejection commits, **Then** an audit event records the administrator, claim ID, item ID, the reason, and the timestamp
-- [ ] **Given** a rejected claim, **When** the item status does not change because other `Pending` claims remain, **Then** the rejected claim's audit entry is still retained
-- [ ] **Given** a rejected claim that was the only `Pending` claim on the report, **When** the rejection commits, **Then** the Found report lifecycle status returns to `Open`
-- [ ] **Given** a rejected claim while other `Pending` claims remain on the report, **When** the rejection commits, **Then** the Found report lifecycle status remains `Claim Requested`
-- [ ] **Given** a committed rejection, **When** the transaction commits, **Then** a claim decision email carrying the reason is sent to the rejected claimant
-- [ ] **Given** a committed rejection, **When** the emails are dispatched, **Then** no claim decision email of any kind is sent to the finder (reporter) of the Found report
-- [ ] **Given** an administrator attempting to reject a claim that is no longer `Pending`, **When** they submit the rejection, **Then** the request is refused as a conflict and the existing decision is left unchanged
-- [ ] **Given** a non-administrator actor, **When** they attempt to reject a claim, **Then** the action is refused and the claim status is unchanged
+- [x] **Given** a `Pending` claim, **When** an administrator rejects it with a reason of 10-500 characters, **Then** the claim status becomes `Rejected`
+- [x] **Given** a reason shorter than 10 characters or longer than 500 characters, **When** an administrator attempts to reject, **Then** the rejection is refused and the claim remains `Pending`
+- [x] **Given** a rejected claim, **When** the rejection commits, **Then** an audit event records the administrator, claim ID, item ID, the reason, and the timestamp
+- [x] **Given** a rejected claim, **When** the item status does not change because other `Pending` claims remain, **Then** the rejected claim's audit entry is still retained
+- [x] **Given** a rejected claim that was the only `Pending` claim on the report, **When** the rejection commits, **Then** the Found report lifecycle status returns to `Open`
+- [x] **Given** a rejected claim while other `Pending` claims remain on the report, **When** the rejection commits, **Then** the Found report lifecycle status remains `Claim Requested`
+- [x] **Given** a committed rejection, **When** the transaction commits, **Then** a claim decision email carrying the reason is sent to the rejected claimant
+- [x] **Given** a committed rejection, **When** the emails are dispatched, **Then** no claim decision email of any kind is sent to the finder (reporter) of the Found report
+- [x] **Given** an administrator attempting to reject a claim that is no longer `Pending`, **When** they submit the rejection, **Then** the request is refused as a conflict and the existing decision is left unchanged
+- [x] **Given** a non-administrator actor, **When** they attempt to reject a claim, **Then** the action is refused and the claim status is unchanged
 
 Technical Notes
 

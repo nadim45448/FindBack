@@ -9,17 +9,15 @@
  *
  * **The email is sent after the transaction commits** (ADR-3, decision 4).
  * The route runs the decision in a transaction, and only once that
- * transaction has returned does it send the approval email. A send failure
- * **does not roll back the approval**: the approval stands, and the failure
- * is logged (story 002 criterion 6).
- *
- * **A rejection sends no email of any kind** (FR-1, FR-3, story 007).
+ * transaction has returned does it send the approval or rejection email.
+ * A send failure **does not roll back the decision**.
  */
 
 import { NextResponse } from 'next/server';
 
 import { buildIdentityStack } from '@/infrastructure/accounts/identity-stack';
 import { buildAccountApprovedEmail } from '@/application/accounts/account-approved-email';
+import { buildAccountRejectedEmail } from '@/application/accounts/account-rejected-email';
 
 import {
   errorResponse,
@@ -96,12 +94,21 @@ export async function POST(request: Request, context: RouteContext): Promise<Nex
       targetId: outcome.account.id,
     });
 
-    // The email is sent **after** the commit. Only an approval has one.
+    // The email is sent **after** the commit.
     if (decision === 'approve' && outcome.approvalEmailRecipient) {
       await sendApprovalEmail(
         stack,
         outcome.approvalEmailRecipient,
         outcome.account.displayName.value,
+      );
+    }
+
+    if (decision === 'reject' && outcome.rejectionEmailRecipient) {
+      await sendRejectionEmail(
+        stack,
+        outcome.rejectionEmailRecipient,
+        outcome.account.displayName.value,
+        outcome.account.rejectionReason?.value ?? null,
       );
     }
 
@@ -147,6 +154,44 @@ async function sendApprovalEmail(
     // failed background action to be recorded — and carries no sensitive
     // value: the fact of the failure, never the content.
     log(crypto.randomUUID(), 'account.approved_email_failed', 'error', {
+      actorRole: 'system',
+    });
+  }
+}
+
+/**
+ * Send the rejection email, including the administrator's reason.
+ *
+ * **A failure never rolls back the rejection.**
+ */
+async function sendRejectionEmail(
+  stack: ReturnType<typeof buildIdentityStack>,
+  to: string,
+  displayName: string,
+  reason: string | null,
+): Promise<void> {
+  if (!stack.email) {
+    log(crypto.randomUUID(), 'account.rejected_email_not_configured', 'denied', {
+      actorRole: 'system',
+    });
+
+    return;
+  }
+
+  const email = buildAccountRejectedEmail(to, { displayName, reason });
+
+  try {
+    await stack.email.send(email);
+
+    log(crypto.randomUUID(), 'account.rejected_email_sent', 'success', {
+      actorRole: 'system',
+    });
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('[findback] Rejection email sent. Open Mailpit at http://localhost:8025');
+    }
+  } catch {
+    log(crypto.randomUUID(), 'account.rejected_email_failed', 'error', {
       actorRole: 'system',
     });
   }

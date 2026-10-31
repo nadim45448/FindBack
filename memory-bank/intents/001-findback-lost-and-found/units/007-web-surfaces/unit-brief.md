@@ -2,9 +2,9 @@
 unit: 007-web-surfaces
 intent: 001-findback-lost-and-found
 phase: inception
-status: stories-defined
+status: in-progress
 created: 2026-10-23T12:30:00.000Z
-updated: 2026-10-23T12:25:00.000Z
+updated: 2026-10-30T17:10:00.000Z
 unit_type: frontend
 default_bolt_type: simple-construction-bolt
 ---
@@ -200,21 +200,21 @@ Changing a spine requires explicit owner approval.
   <br>traces: FR-30
 - [ ] **002-public-and-authentication-surfaces**: ten clear public and authentication surfaces - must - Planned
   <br>realizes (owned by another unit): FR-1, FR-2, FR-4, FR-51, FR-27
-- [ ] **003-member-view-shell-and-navigation**: four disjoint participation views and a shell that navigates only between entry points - must - Planned
+- [x] **003-member-view-shell-and-navigation**: four disjoint participation views and a shell that navigates only between entry points - must - Implemented
   <br>realizes (owned by another unit): FR-49
-- [ ] **004-item-detail-by-relationship**: the detail page rendered for exactly my relationship to that item - must - Planned
+- [x] **004-item-detail-by-relationship**: the detail page rendered for exactly my relationship to that item - must - Implemented
   <br>realizes (owned by another unit): FR-39, FR-13, FR-37
-- [ ] **005-report-forms-and-member-actions**: to create, edit, delete, or withdraw a report with the correct actions offered at the correct lifecycle point - must - Planned
+- [x] **005-report-forms-and-member-actions**: to create, edit, delete, or withdraw a report with the correct actions offered at the correct lifecycle point - must - Implemented
   <br>realizes (owned by another unit): FR-6, FR-7, FR-8, FR-9, FR-11, FR-10
-- [ ] **006-claim-and-recovery-threads**: Claim and Recovery Response forms and their message threads - must - Planned
+- [x] **006-claim-and-recovery-threads**: Claim and Recovery Response forms and their message threads - must - Implemented
   <br>realizes (owned by another unit): FR-47, FR-26, FR-15, FR-40
-- [ ] **007-administrator-dashboard**: a dashboard that shows me four queue entry points with live counts - must - Planned
+- [x] **007-administrator-dashboard**: a dashboard that shows me four queue entry points with live counts - must - Implemented
   <br>traces: FR-33
-- [ ] **008-administrator-queues**: four working queues that each list exactly their own work and link into it - must - Planned
+- [x] **008-administrator-queues**: four working queues that each list exactly their own work and link into it - must - Implemented
   <br>traces: FR-34, FR-35, FR-50
-- [ ] **009-no-other-notifications**: to prove that no in-app notification stream exists anywhere in the interface - must - Planned
+- [x] **009-no-other-notifications**: to prove that no in-app notification stream exists anywhere in the interface - must - Implemented
   <br>traces: FR-30
-- [ ] **010-contextual-audit-views**: that item's audit trail at its own URL - must - Planned
+- [x] **010-contextual-audit-views**: that item's audit trail at its own URL - must - Implemented
   <br>realizes (owned by another unit): FR-31, FR-32
-- [ ] **011-accessibility-and-secure-image-delivery**: every surface to meet WCAG 2.1 AA and every image to be authorized at the server before it is read - must - Planned
+- [x] **011-accessibility-and-secure-image-delivery**: every surface to meet WCAG 2.1 AA and every image to be authorized at the server before it is read - must - Implemented
   <br>realizes (owned by another unit): FR-37, FR-39

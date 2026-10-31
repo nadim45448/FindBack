@@ -5,7 +5,7 @@ intent: 001-findback-lost-and-found
 status: complete
 priority: must
 created: 2026-10-23T12:50:00Z
-assigned_bolt: 011-lost-status-model
+assigned_bolt: 018-lost-threads
 implemented: true
 traces_to: [FR-40]
 ---
@@ -20,13 +20,13 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** a response in `Submitted` that has not been selected, **When** the responder withdraws it, **Then** the response becomes `Withdrawn` (terminal)
-- [ ] **Given** a response in `Selected for Verification`, **When** the responder attempts to withdraw it, **Then** the withdrawal is refused because selection is now the owner's decision in progress
-- [ ] **Given** a response in `Match Confirmed` or any terminal status, **When** withdrawal is attempted, **Then** it is refused
-- [ ] **Given** a withdrawn response, **When** the Lost report is in `Verification Pending` because of a different selection, **Then** the report status is unaffected
-- [ ] **Given** a responder whose account has been deactivated, **When** their existing responses are inspected, **Then** the responses remain intact and their history is preserved
-- [ ] **Given** a withdrawal, **When** it completes, **Then** an audit event is recorded with the responder as actor and timestamp
-- [ ] **Given** a withdrawn response's thread, **When** it is viewed, **Then** prior messages remain visible and the thread is read-only
+- [x] **Given** a response in `Submitted` that has not been selected, **When** the responder withdraws it, **Then** the response becomes `Withdrawn` (terminal)
+- [x] **Given** a response in `Selected for Verification`, **When** the responder attempts to withdraw it, **Then** the withdrawal is refused because selection is now the owner's decision in progress
+- [x] **Given** a response in `Match Confirmed` or any terminal status, **When** withdrawal is attempted, **Then** it is refused
+- [x] **Given** a withdrawn response, **When** the Lost report is in `Verification Pending` because of a different selection, **Then** the report status is unaffected
+- [x] **Given** a responder whose account has been deactivated, **When** their existing responses are inspected, **Then** the responses remain intact and their history is preserved
+- [x] **Given** a withdrawal, **When** it completes, **Then** an audit event is recorded with the responder as actor and timestamp
+- [x] **Given** a withdrawn response's thread, **When** it is viewed, **Then** prior messages remain visible and the thread is read-only
 
 Technical Notes
 

@@ -149,6 +149,18 @@ export function defaultStatusViewFor(
  * does not reappear underneath. The exception is the `mine` partition, whose
  * statuses are never restricted at all.
  *
+ * ## The participation partitions have **no report status view**
+ *
+ * The `claims` and `recovery_responses` partitions list *participations*,
+ * and the report status view says nothing about them. Applying it would be
+ * a category error: a Claim on a `Claim Requested` report is a `Pending`
+ * Claim, and §9.4's `My Claims` tabs (`Pending`, `Approved`, `Rejected`)
+ * are the **Claim's** statuses, not the report's.
+ *
+ * **So the participation partitions get an empty status view** — no report
+ * status predicate at all — and the participation's own status is filtered
+ * by the filter's `participationStatuses` field instead.
+ *
  * @param partition the partition being listed.
  * @param isAdministrator whether the viewer is an administrator.
  * @param requested the caller's explicit status filter, or `null` for none.
@@ -160,6 +172,13 @@ export function resolveStatusView(
 ): readonly ReportStatus[] {
   if (partition === 'mine') {
     return administratorStatusView();
+  }
+
+  // **The participation partitions are not report listings.** An empty
+  // view means the reader emits no report-status predicate, so a Claim on
+  // a terminal report is still listed — its own status is what decides.
+  if (partition === 'claims' || partition === 'recovery_responses') {
+    return [];
   }
 
   if (requested !== null) {

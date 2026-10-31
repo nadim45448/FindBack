@@ -101,10 +101,13 @@ function aService(options: {
   };
 
   const reports: ReportRepository = {
-    create: async (report: ValidatedReport): Promise<PersistedReport> => {
+    create: async (
+      reportId: string,
+      report: ValidatedReport,
+    ): Promise<PersistedReport> => {
       options.calls.push('reports.create');
 
-      return { ...report, id: 'a-minted-id' };
+      return { ...report, id: reportId };
     },
     // The bolt-8 lifecycle methods. **This suite exercises the create path
     // only**, so they are refusals — a test that reached one would be a test

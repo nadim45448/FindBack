@@ -27,11 +27,17 @@ export interface AccountRepository {
    *
    * The address is normalized by the caller before it reaches here, and the
    * query is case-insensitive regardless — the unique index is functional
-   * (`lower(btrim(email))`), so a row written by any path is found.
+   * (`lower(btrim(email))`), so a row written by any path is found. A live
+   * account is preferred over a `Rejected` one at the same address.
    */
   findByEmail(email: string): Promise<Account | null>;
 
-  /** True when an account already uses this email address. */
+  /**
+   * True when a live account already uses this email address.
+   *
+   * A `Rejected` row does not occupy the address — the member may register
+   * again. `Pending`, `Active`, and `Deactivated` still do.
+   */
   existsByEmail(email: string): Promise<boolean>;
 
   /**

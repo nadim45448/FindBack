@@ -30,28 +30,12 @@
 
 import { del, put } from '@vercel/blob';
 import {
-  ImageRejectedError,
   ImageStorageError,
   type ImageStore,
   type ImageUpload,
   type StoredImage,
 } from '@/application/listings/ports/image-store';
-import {
-  detectImageContentType,
-  SERVABLE_IMAGE_CONTENT_TYPES,
-} from '@/domain/listings';
-
-/** The declared byte ceiling (FR-8): 5 MB. */
-const MAX_BYTES = 5 * 1024 * 1024;
-
-/**
- * The content types the PRD allows (FR-8).
- *
- * **The same allowlist the delivery path serves from** — one list, in the
- * domain, read by both sides. The store writes only what the reader may
- * serve, so the two can never disagree about what is acceptable.
- */
-const ALLOWED_CONTENT_TYPES = new Set<string>(SERVABLE_IMAGE_CONTENT_TYPES);
+import { validateImageUpload } from './image-upload-validation';
 
 /** The extension each allowed content type is stored under. */
 const EXTENSION_BY_CONTENT_TYPE: Readonly<Record<string, string>> = {
@@ -71,7 +55,7 @@ export class BlobImageStore implements ImageStore {
    * (image-handling §5).
    */
   async store(image: ImageUpload, prefix: string): Promise<StoredImage> {
-    this.validate(image);
+    validateImageUpload(image);
 
     const extension = EXTENSION_BY_CONTENT_TYPE[image.contentType] ?? 'bin';
 
@@ -116,47 +100,6 @@ export class BlobImageStore implements ImageStore {
     }
   }
 
-  /**
-   * The server-side validation (image-handling §1).
-   *
-   * Everything here runs **before** the bytes are handed to the store:
-   *
-   * - the declared content type is one of the three FR-8 types;
-   * - the **actual** byte length is within the ceiling — the declared
-   *   `Content-Length` is never trusted;
-   * - the magic bytes **match the declared type** — a `.jpg` that is
-   *   actually an HTML payload is rejected;
-   * - the filename is discarded.
-   */
-  private validate(image: ImageUpload): void {
-    if (!ALLOWED_CONTENT_TYPES.has(image.contentType)) {
-      throw new ImageRejectedError(
-        'That image type is not accepted. Use a JPEG, PNG, or WebP image.',
-      );
-    }
-
-    if (image.bytes.length === 0) {
-      throw new ImageRejectedError('That image is empty.');
-    }
-
-    if (image.bytes.length > MAX_BYTES) {
-      throw new ImageRejectedError('That image is larger than 5 MB.');
-    }
-
-    const detected = detectImageContentType(image.bytes);
-
-    if (detected === null) {
-      throw new ImageRejectedError(
-        'That file is not a JPEG, PNG, or WebP image.',
-      );
-    }
-
-    if (detected !== image.contentType) {
-      throw new ImageRejectedError(
-        'That file does not match its declared image type.',
-      );
-    }
-  }
 }
 
 /**

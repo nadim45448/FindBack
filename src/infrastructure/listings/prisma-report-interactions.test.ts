@@ -31,6 +31,17 @@ const REPORTER_ID = '00000000-0000-4000-8000-000000000801';
 const CLAIMANT_ID = '00000000-0000-4000-8000-000000000802';
 const RESPONDER_ID = '00000000-0000-4000-8000-000000000803';
 
+/**
+ * A second responder, for the cases that need two *live* Responses at once.
+ *
+ * **Bolt `015`'s partial unique index permits one live Response per
+ * responder per report** — and both `Submitted` and `Selected for
+ * Verification` are live. So a fixture that wants two live Responses on one
+ * report must give them to two different responders, exactly as two real
+ * members would.
+ */
+const SECOND_RESPONDER_ID = '00000000-0000-4000-8000-000000000804';
+
 describeWithDatabase('the report interaction adapters (database)', () => {
   const prisma = new PrismaClient({
     adapter: new PrismaPg({ connectionString: connectionString! }),
@@ -48,7 +59,8 @@ describeWithDatabase('the report interaction adapters (database)', () => {
                                "selfDeclaredRole", "status", "isAdministrator")
        VALUES ($1, $2, $3, $4, $5, $6, $7),
               ($8, $9, $3, $10, $5, $6, $7),
-              ($11, $12, $3, $13, $5, $6, $7)
+              ($11, $12, $3, $13, $5, $6, $7),
+              ($14, $15, $3, $16, $5, $6, $7)
        ON CONFLICT ("id") DO NOTHING`,
       REPORTER_ID,
       'reporter@example.test',
@@ -63,6 +75,9 @@ describeWithDatabase('the report interaction adapters (database)', () => {
       RESPONDER_ID,
       'responder@example.test',
       'The Responder',
+      SECOND_RESPONDER_ID,
+      'second-responder@example.test',
+      'The Second Responder',
     );
   });
 
@@ -84,20 +99,36 @@ describeWithDatabase('the report interaction adapters (database)', () => {
   afterAll(async () => {
     await prisma.$executeRawUnsafe('DELETE FROM "reports"');
     await prisma.$executeRawUnsafe(
-      'DELETE FROM "accounts" WHERE "id" IN ($1, $2, $3)',
+      'DELETE FROM "accounts" WHERE "id" IN ($1, $2, $3, $4)',
       REPORTER_ID,
       CLAIMANT_ID,
       RESPONDER_ID,
+      SECOND_RESPONDER_ID,
     );
     await prisma.$disconnect();
   });
 
-  /** Write a Claim against the fixture report. */
+  /**
+   * Write a Claim against the fixture report.
+   *
+   * **A `Pending` Claim carries the submission fields,** because the
+   * schema's `claims_pending_fields_check` requires it — a Pending Claim
+   * always came from a submission, so it always carries the reason, the
+   * identifying details, the date lost, and the submission time. A decided
+   * Claim need not: it keeps whatever it had.
+   */
   async function writeClaim(status: string, claimantId = CLAIMANT_ID): Promise<string> {
     const rows = await prisma.$queryRawUnsafe<{ id: string }[]>(
-      `INSERT INTO "claims" ("report_id", "claimant_id", "status", "rejection_reason")
+      `INSERT INTO "claims" ("report_id", "claimant_id", "status", "rejection_reason",
+                             "reason", "identifying_details", "date_lost", "decided_at",
+                             "submitted_at")
        VALUES ($1::uuid, $2::uuid, $3,
-               CASE WHEN $3 = 'Rejected' THEN 'a prior reason' ELSE NULL END)
+               CASE WHEN $3 = 'Rejected' THEN 'a prior reason' ELSE NULL END,
+               CASE WHEN $3 = 'Pending' THEN 'It is my brown leather wallet.' ELSE NULL END,
+               CASE WHEN $3 = 'Pending' THEN 'Blue cardholder with a dent.' ELSE NULL END,
+               CASE WHEN $3 = 'Pending' THEN DATE '2026-10-20' ELSE NULL END,
+               CASE WHEN $3 = 'Pending' THEN NULL ELSE NOW() END,
+               CASE WHEN $3 = 'Pending' THEN NOW() ELSE NULL END)
        RETURNING "id"`,
       reportId,
       claimantId,
@@ -110,8 +141,17 @@ describeWithDatabase('the report interaction adapters (database)', () => {
   /** Write a Recovery Response against the fixture report. */
   async function writeResponse(status: string, responderId = RESPONDER_ID): Promise<string> {
     const rows = await prisma.$queryRawUnsafe<{ id: string }[]>(
-      `INSERT INTO "recovery_responses" ("report_id", "responder_id", "status")
-       VALUES ($1::uuid, $2::uuid, $3)
+      `INSERT INTO "recovery_responses" ("report_id", "responder_id", "status",
+                                          "campus_area", "where_found_exact_place",
+                                          "observed_identifying_details", "date_found",
+                                          "submitted_at", "created_at", "updated_at")
+       VALUES ($1::uuid, $2::uuid, $3,
+               CASE WHEN $3 = 'Submitted' THEN 'library' ELSE NULL END,
+               CASE WHEN $3 = 'Submitted' THEN 'Library entrance.' ELSE NULL END,
+               CASE WHEN $3 = 'Submitted' THEN 'A silver locket.' ELSE NULL END,
+               CASE WHEN $3 = 'Submitted' THEN DATE '2026-10-26' ELSE NULL END,
+               CASE WHEN $3 = 'Submitted' THEN NOW() ELSE NULL END,
+               NOW(), NOW())
        RETURNING "id"`,
       reportId,
       responderId,
@@ -385,8 +425,11 @@ describeWithDatabase('the report interaction adapters (database)', () => {
 
   describe('the resolution of the non-terminal Recovery Responses', () => {
     it('resolves every non-terminal Response on the report', async () => {
+      // **Two responders, two live Responses.** Bolt `015`'s partial unique
+      // index permits one live Response per responder per report, so two
+      // live Responses on one report must come from two members.
       const submitted = await writeResponse('Submitted');
-      const selected = await writeResponse('Selected for Verification', RESPONDER_ID);
+      const selected = await writeResponse('Selected for Verification', SECOND_RESPONDER_ID);
 
       const resolved = await prisma.$transaction(async (tx) =>
         resolver.resolveWithdrawalResolvedRecoveryResponses(reportId, { transaction: tx }),
@@ -399,7 +442,7 @@ describeWithDatabase('the report interaction adapters (database)', () => {
 
     it('returns exactly the rows it changed', async () => {
       const submitted = await writeResponse('Submitted');
-      const selected = await writeResponse('Selected for Verification', RESPONDER_ID);
+      const selected = await writeResponse('Selected for Verification', SECOND_RESPONDER_ID);
 
       const resolved = await prisma.$transaction(async (tx) =>
         resolver.resolveWithdrawalResolvedRecoveryResponses(reportId, { transaction: tx }),

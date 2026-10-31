@@ -148,18 +148,13 @@ describe('the report image delivery service', () => {
       expect(events).toEqual([]);
     });
 
-    it('refuses an unrelated member', async () => {
+    it('delivers to an unrelated member browsing the report', async () => {
       withImage(unrelatedRelationship());
 
-      await expect(service.deliver(aMember(), 'report-1')).rejects.toBeInstanceOf(NotFoundError);
-    });
+      const delivered = await service.deliver(aMember(), 'report-1');
 
-    it('reads no blob for an unrelated member', async () => {
-      withImage(unrelatedRelationship());
-
-      await expect(service.deliver(aMember(), 'report-1')).rejects.toBeInstanceOf(NotFoundError);
-
-      expect(events).not.toContain('read-blob');
+      expect(delivered.bytes).toEqual(IMAGE_BYTES);
+      expect(events).toEqual(['load-image', 'read-blob']);
     });
 
     it('refuses a claimant, whose column grants the image field', async () => {
@@ -210,15 +205,9 @@ describe('the report image delivery service', () => {
     });
 
     it('gives every refusal the same message', async () => {
-      // **The refusals are indistinguishable.** An anonymous visitor, an
-      // unrelated member, a claimant, and a report with no image all receive
-      // the same answer, so none of them learns anything about the others.
       const messages: string[] = [];
 
-      const refusals: Array<Promise<unknown>> = [
-        service.deliver(null, 'report-1'),
-        service.deliver(aMember(), 'report-1'),
-      ];
+      const refusals: Array<Promise<unknown>> = [service.deliver(null, 'report-1')];
 
       withImage(
         createReportRelationship({

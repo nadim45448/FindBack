@@ -2,11 +2,11 @@
 id: 007-administrator-dashboard
 unit: 007-web-surfaces
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:51:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 021-web-admin
+implemented: true
 traces_to: [FR-33]
 ---
 
@@ -20,22 +20,22 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** an administrator opens `/admin`, **When** the dashboard renders, **Then** exactly four count tiles appear at the top
-- [ ] **Given** the dashboard tiles, **When** they are inspected, **Then** they are Pending Registrations, Pending Claims (Found-side), Items Awaiting Return (Found-side, `Claim Approved`), and Items in Verification (Lost-side, `Verification Pending`)
-- [ ] **Given** a count tile, **When** it is activated, **Then** it navigates to its corresponding queue route
-- [ ] **Given** a count tile, **When** its count is read, **Then** the count matches the number of rows the corresponding queue returns under its own filter
-- [ ] **Given** all four counts are zero, **When** the dashboard renders, **Then** each tile shows `All caught up.` with a subtle check icon and each tile remains navigable
-- [ ] **Given** the dashboard, **When** it is inspected, **Then** there is no `Recent activity` aggregation, activity feed, timeline, or digest section of any kind
-- [ ] **Given** the dashboard, **When** it is inspected, **Then** there is no notification bell, no notification centre, no unread badge, and no notification count anywhere in the topbar or the page
-- [ ] **Given** the dashboard, **When** it is inspected, **Then** there is no `Audit` tile, no fifth queue, and no `Reports to edit` tile
-- [ ] **Given** the administrator topbar, **When** it is inspected, **Then** there is no link to audit and no link to any global audit route
-- [ ] **Given** any `/admin` route, **When** the topbar renders, **Then** no navigation entry points at `/admin/audit` or at any other global audit route
-- [ ] **Given** a non-administrator requests `/admin`, **When** the response renders, **Then** the access screen shows `This area is for administrators only.` and no dashboard content is delivered
-- [ ] **Given** the dashboard tiles, **When** they render, **Then** each tile is keyboard-reachable, presents an interactive bounding box of at least 44 x 44 px, and has a visible focus ring
-- [ ] **Given** the dashboard is loading, **When** the counts are being fetched, **Then** skeleton tiles render using theme tokens and no count of zero is displayed as real data
-- [ ] **Given** the dashboard fails to load, **When** the error renders, **Then** it shows a calm message with `Try again` as primary and `Go back` as secondary, with no stack trace
-- [ ] **Given** a dashboard tile count, **When** it renders, **Then** it uses tabular figures so counts align across tiles
-- [ ] **Given** the dashboard, **When** it renders in dark theme, **Then** every tile, count, and label uses the dark theme tokens and passes AA contrast
+- [x] **Given** an administrator opens `/admin`, **When** the dashboard renders, **Then** exactly four count tiles appear at the top
+- [x] **Given** the dashboard tiles, **When** they are inspected, **Then** they are Pending Registrations, Pending Claims (Found-side), Items Awaiting Return (Found-side, `Claim Approved`), and Items in Verification (Lost-side, `Verification Pending`)
+- [x] **Given** a count tile, **When** it is activated, **Then** it navigates to its corresponding queue route
+- [x] **Given** a count tile, **When** its count is read, **Then** the count matches the number of rows the corresponding queue returns under its own filter
+- [x] **Given** all four counts are zero, **When** the dashboard renders, **Then** each tile shows `All caught up.` with a subtle check icon and each tile remains navigable
+- [x] **Given** the dashboard, **When** it is inspected, **Then** there is no `Recent activity` aggregation, activity feed, timeline, or digest section of any kind
+- [x] **Given** the dashboard, **When** it is inspected, **Then** there is no notification bell, no notification centre, no unread badge, and no notification count anywhere in the topbar or the page
+- [x] **Given** the dashboard, **When** it is inspected, **Then** there is no `Audit` tile, no fifth queue, and no `Reports to edit` tile
+- [x] **Given** the administrator topbar, **When** it is inspected, **Then** there is no link to audit and no link to any global audit route
+- [x] **Given** any `/admin` route, **When** the topbar renders, **Then** no navigation entry points at `/admin/audit` or at any other global audit route
+- [x] **Given** a non-administrator requests `/admin`, **When** the response renders, **Then** the access screen shows `This area is for administrators only.` and no dashboard content is delivered
+- [x] **Given** the dashboard tiles, **When** they render, **Then** each tile is keyboard-reachable, presents an interactive bounding box of at least 44 x 44 px, and has a visible focus ring
+- [x] **Given** the dashboard is loading, **When** the counts are being fetched, **Then** skeleton tiles render using theme tokens and no count of zero is displayed as real data
+- [x] **Given** the dashboard fails to load, **When** the error renders, **Then** it shows a calm message with `Try again` as primary and `Go back` as secondary, with no stack trace
+- [x] **Given** a dashboard tile count, **When** it renders, **Then** it uses tabular figures so counts align across tiles
+- [x] **Given** the dashboard, **When** it renders in dark theme, **Then** every tile, count, and label uses the dark theme tokens and passes AA contrast
 
 Technical Notes
 

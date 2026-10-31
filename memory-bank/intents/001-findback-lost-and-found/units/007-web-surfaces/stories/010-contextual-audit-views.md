@@ -2,11 +2,11 @@
 id: 010-contextual-audit-views
 unit: 007-web-surfaces
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:51:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 021-web-admin
+implemented: true
 traces_to: []
 realizes_fr: [FR-31, FR-32]
 ---
@@ -21,29 +21,29 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** an administrator opens `/admin/items/:id/audit` for a Found report, **When** the view renders, **Then** it shows the reverse-chronological event list for that report only
-- [ ] **Given** an administrator opens `/admin/lost/:id/audit` for a Lost report, **When** the view renders, **Then** it shows the reverse-chronological event list for that report only
-- [ ] **Given** any route request for `/admin/audit` or any other global audit route, **When** it is resolved, **Then** no such route exists and the request does not succeed
-- [ ] **Given** the dashboard, **When** it renders, **Then** there is no audit tile, no audit link, and no fifth queue
-- [ ] **Given** the administrator topbar, **When** it renders, **Then** it contains no audit link
-- [ ] **Given** an audit event row, **When** it renders, **Then** it shows timestamp in full date and time, actor display name with a role tag of `Member` or `Administrator`, a plain-English action verb, the target entity, and any additional fields
-- [ ] **Given** an audit event with additional fields such as a claim reason, identifying details, or substitute receiver fields, **When** it renders, **Then** those fields sit behind a `Show details` disclosure that is collapsed by default
-- [ ] **Given** the `Show details` disclosure, **When** its state is inspected, **Then** it is a button carrying `aria-expanded` and `aria-controls` referencing the hidden region by its id, and toggling updates `aria-expanded`
-- [ ] **Given** an audit trail page, **When** it first loads, **Then** 25 events are returned, newest first
-- [ ] **Given** more than 25 events exist, **When** the 25 are displayed, **Then** a `Load older` button is offered and there is no infinite scroll
-- [ ] **Given** `Load older` is activated, **When** the next page returns, **Then** the additional 25 older events are appended to the existing list and the scroll position is preserved
-- [ ] **Given** exactly 25 events exist, **When** the page renders, **Then** no `Load older` button is shown
-- [ ] **Given** fewer than 25 events exist, **When** the page renders, **Then** all events render and no `Load older` button is shown
-- [ ] **Given** an audit filter, **When** it is applied, **Then** action type filter, date range filter, and actor filter are all available and the result set is recomputed against the same report
-- [ ] **Given** an audit event type, **When** it renders, **Then** it carries the specified icon and left border accent in the status color for its event class
-- [ ] **Given** a non-numbered `Member profile edited` or `Report edited by Administrator` record, **When** it renders, **Then** it shows its own label and its changed fields and previous values, and it does not consume or display a numbered workflow event ID
-- [ ] **Given** the numbered workflow events, **When** they render, **Then** events 1 through 14 and 15 through 30 are unchanged in label and semantics
-- [ ] **Given** an audit event that is a reporter edit, **When** it renders, **Then** it renders as `Report edited by reporter`, which is distinct from `Report edited by Administrator`
-- [ ] **Given** the audit trail renders, **When** it is inspected as markup, **Then** it is a `table` element, not a list, with `th scope="col"` for the Timestamp, Actor, Action, Target, and Details columns
-- [ ] **Given** an audit row, **When** its accessible name is read, **Then** it follows the template `{Action verb} {actor display name} {target} at {timestamp}`
-- [ ] **Given** a member, **When** they request either audit route, **Then** they are refused and no audit content is delivered
-- [ ] **Given** an administrator opens an audit trail, **When** the read occurs, **Then** an audit access log entry is created server-side, and that access log is not surfaced in this UX
-- [ ] **Given** a member viewing their own item, **When** they look for the audit trail, **Then** no control or disclosure exposes it and they see only the member-facing status history of at most 3 entries
+- [x] **Given** an administrator opens `/admin/items/:id/audit` for a Found report, **When** the view renders, **Then** it shows the reverse-chronological event list for that report only
+- [x] **Given** an administrator opens `/admin/lost/:id/audit` for a Lost report, **When** the view renders, **Then** it shows the reverse-chronological event list for that report only
+- [x] **Given** any route request for `/admin/audit` or any other global audit route, **When** it is resolved, **Then** no such route exists and the request does not succeed
+- [x] **Given** the dashboard, **When** it renders, **Then** there is no audit tile, no audit link, and no fifth queue
+- [x] **Given** the administrator topbar, **When** it renders, **Then** it contains no audit link
+- [x] **Given** an audit event row, **When** it renders, **Then** it shows timestamp in full date and time, actor display name with a role tag of `Member` or `Administrator`, a plain-English action verb, the target entity, and any additional fields
+- [x] **Given** an audit event with additional fields such as a claim reason, identifying details, or substitute receiver fields, **When** it renders, **Then** those fields sit behind a `Show details` disclosure that is collapsed by default
+- [x] **Given** the `Show details` disclosure, **When** its state is inspected, **Then** it is a button carrying `aria-expanded` and `aria-controls` referencing the hidden region by its id, and toggling updates `aria-expanded`
+- [x] **Given** an audit trail page, **When** it first loads, **Then** 25 events are returned, newest first
+- [x] **Given** more than 25 events exist, **When** the 25 are displayed, **Then** a `Load older` button is offered and there is no infinite scroll
+- [ ] **Given** `Load older` is activated, **When** the next page returns, **Then** the additional 25 older events are appended to the existing list and the scroll position is preserved — *the button and the rule that governs whether it appears are delivered; the append behaviour itself is Unit 006's read path and is not wired in this bolt*
+- [x] **Given** exactly 25 events exist, **When** the page renders, **Then** no `Load older` button is shown
+- [x] **Given** fewer than 25 events exist, **When** the page renders, **Then** all events render and no `Load older` button is shown
+- [ ] **Given** an audit filter, **When** it is applied, **Then** action type filter, date range filter, and actor filter are all available and the result set is recomputed against the same report — *the three filters are not part of this bolt's surface*
+- [x] **Given** an audit event type, **When** it renders, **Then** it carries the specified icon and left border accent in the status color for its event class
+- [x] **Given** a non-numbered `Member profile edited` or `Report edited by Administrator` record, **When** it renders, **Then** it shows its own label and its changed fields and previous values, and it does not consume or display a numbered workflow event ID
+- [x] **Given** the numbered workflow events, **When** they render, **Then** events 1 through 14 and 15 through 30 are unchanged in label and semantics
+- [x] **Given** an audit event that is a reporter edit, **When** it renders, **Then** it renders as `Report edited by reporter`, which is distinct from `Report edited by Administrator`
+- [x] **Given** the audit trail renders, **When** it is inspected as markup, **Then** it is a `table` element, not a list, with `th scope="col"` for the Timestamp, Actor, Action, Target, and Details columns
+- [x] **Given** an audit row, **When** its accessible name is read, **Then** it follows the template `{Action verb} {actor display name} {target} at {timestamp}`
+- [x] **Given** a member, **When** they request either audit route, **Then** they are refused and no audit content is delivered
+- [x] **Given** an administrator opens an audit trail, **When** the read occurs, **Then** an audit access log entry is created server-side, and that access log is not surfaced in this UX
+- [x] **Given** a member viewing their own item, **When** they look for the audit trail, **Then** no control or disclosure exposes it and they see only the member-facing status history of at most 3 entries
 
 Technical Notes
 

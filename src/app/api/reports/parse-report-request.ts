@@ -102,6 +102,33 @@ export function parseReportBody(body: Record<string, unknown>): ReportDraft {
  * design says so explicitly.
  */
 export async function parseMultipartBody(request: Request): Promise<ParsedReportRequest> {
+  const { fields, form } = await readMultipartForm(request);
+
+  const imagePart = form.get('image');
+
+  if (!(imagePart instanceof File)) {
+    throw new MalformedRequestError(
+      'A multipart request must include the image part.',
+    );
+  }
+
+  return {
+    draft: parseReportBody(fields),
+    image: await readImagePart(imagePart),
+  };
+}
+
+/**
+ * Read a multipart request into its text fields and its parts.
+ *
+ * **Exported so the edit routes parse a form the same way the create route
+ * does.** A multipart body has two kinds of part — text fields and files —
+ * and every route that accepts one needs the same rule for telling them
+ * apart. One reader, one rule.
+ */
+export async function readMultipartForm(
+  request: Request,
+): Promise<{ fields: Record<string, unknown>; form: FormData }> {
   let form: FormData;
 
   try {
@@ -124,18 +151,7 @@ export async function parseMultipartBody(request: Request): Promise<ParsedReport
     }
   }
 
-  const imagePart = form.get('image');
-
-  if (!(imagePart instanceof File)) {
-    throw new MalformedRequestError(
-      'A multipart request must include the image part.',
-    );
-  }
-
-  return {
-    draft: parseReportBody(fields),
-    image: await readImagePart(imagePart),
-  };
+  return { fields, form };
 }
 
 /**
@@ -146,7 +162,7 @@ export async function parseMultipartBody(request: Request): Promise<ParsedReport
  * sends is a claim, not a fact, and an over-sized upload must be refused
  * rather than truncated (image-handling §1).
  */
-async function readImagePart(part: File): Promise<ParsedReportRequest['image']> {
+export async function readImagePart(part: File): Promise<ParsedReportRequest['image']> {
   if (!ALLOWED_IMAGE_TYPES.has(part.type)) {
     throw new ValidationError(
       'image',

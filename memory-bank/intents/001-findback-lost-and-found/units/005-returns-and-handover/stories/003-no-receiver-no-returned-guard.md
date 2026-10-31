@@ -2,11 +2,11 @@
 id: 003-no-receiver-no-returned-guard
 unit: 005-returns-and-handover
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:48:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 019-returns-closeout
+implemented: true
 traces_to: [FR-25]
 ---
 
@@ -20,11 +20,11 @@ I want to refuse a Returned status when no receiver is identified
 
 Acceptance Criteria
 
-- [ ] **Given** a report eligible to become `Returned`, **When** a confirmation is submitted with no receiver and no substitute, **Then** the action is refused and the report's status is unchanged
-- [ ] **Given** a substitute receiver is supplied without a name, **When** the confirmation is submitted, **Then** the action is refused
-- [ ] **Given** a confirmation is refused by this guard, **When** the failure is recorded, **Then** no Returned audit event is written
-- [ ] **Given** any report, **When** it reaches `Returned`, **Then** a receiver is present on the confirmation record
-- [ ] **Given** a confirmation submitted with a receiver, **When** it is processed, **Then** the guard permits the transition to proceed
+- [x] **Given** a report eligible to become `Returned`, **When** a confirmation is submitted with no receiver and no substitute, **Then** the action is refused and the report's status is unchanged
+- [x] **Given** a substitute receiver is supplied without a name, **When** the confirmation is submitted, **Then** the action is refused
+- [x] **Given** a confirmation is refused by this guard, **When** the failure is recorded, **Then** no Returned audit event is written
+- [x] **Given** any report, **When** it reaches `Returned`, **Then** a receiver is present on the confirmation record
+- [x] **Given** a confirmation submitted with a receiver, **When** it is processed, **Then** the guard permits the transition to proceed
 
 Technical Notes
 

@@ -75,8 +75,9 @@ function theAuthorsRelationship(): ReturnType<typeof createReportRelationship> {
 }
 
 describe('the image delivery columns', () => {
-  it('grants the bytes to the two owner columns and the administrator column', () => {
+  it('names the columns that can grant bytes', () => {
     expect(IMAGE_DELIVERY_COLUMNS).toEqual([
+      'unrelatedMember',
       'foundReportOwner',
       'lostReportOwner',
       'administrator',
@@ -84,18 +85,15 @@ describe('the image delivery columns', () => {
   });
 
   it('does not grant the bytes to the claimant column', () => {
-    // **Participation is never permission.** A claimant's projection may
-    // carry the image reference; it may not receive the bytes.
     expect(grantsImageDelivery(['unrelatedMember', 'claimant'])).toBe(false);
   });
 
   it('does not grant the bytes to the recovery responder column', () => {
-    // **A responder must not see another candidate's image.**
     expect(grantsImageDelivery(['unrelatedMember', 'recoveryResponder'])).toBe(false);
   });
 
-  it('does not grant the bytes to the unrelated member column', () => {
-    expect(grantsImageDelivery(['unrelatedMember'])).toBe(false);
+  it('grants the bytes to an unrelated member browsing a report', () => {
+    expect(grantsImageDelivery(['unrelatedMember'])).toBe(true);
   });
 
   it('does not grant the bytes to the anonymous column', () => {
@@ -110,10 +108,10 @@ describe('the per-image delivery decision', () => {
     ).toBe(false);
   });
 
-  it('refuses an unrelated member', () => {
+  it('delivers to an unrelated member browsing a report', () => {
     expect(
       mayReceiveImage(aMember(), anUnrelatedRelationship(), ['unrelatedMember']),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it('refuses a claimant, even though their column grants the image field', () => {
@@ -171,12 +169,14 @@ describe('the per-image delivery decision', () => {
     ).toBe(false);
   });
 
-  it('refuses every column the matrix does not grant', () => {
-    // **Every column, one at a time.** The refusal is the rule applied
-    // uniformly, not a list of cases that happens to cover today's
-    // categories.
+  it('refuses every column that does not grant bytes', () => {
     for (const column of ALL_COLUMNS) {
-      if (column === 'foundReportOwner' || column === 'lostReportOwner' || column === 'administrator') {
+      if (
+        column === 'unrelatedMember' ||
+        column === 'foundReportOwner' ||
+        column === 'lostReportOwner' ||
+        column === 'administrator'
+      ) {
         continue;
       }
 

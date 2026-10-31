@@ -284,6 +284,20 @@ export const NON_NUMBERED_EVENT_CATALOG: readonly CatalogEntry[] = [
     'email',
     'selfDeclaredRole',
   ]),
+  // FR-36: "The action records the administrator and timestamp" and "The
+  // audit trail retains the entry." FR-31's numbered catalog has no removal
+  // event, and FR-31 forbids adding one — so this is a non-numbered record,
+  // the fourth of the kind.
+  //
+  // **The fields are the three FR-36 names, and no more.** The acting
+  // administrator and the timestamp are typed columns on the model, so the
+  // payload carries the target and the reason. The sanitizer denies by
+  // default, so naming exactly those two permits exactly those two.
+  nonNumberedEntry('content.removed_by_administrator', 'Content removed by administrator', [
+    'targetKind',
+    'targetId',
+    'removalReason',
+  ]),
 ];
 
 /** The complete catalog: numbered first, then non-numbered. */

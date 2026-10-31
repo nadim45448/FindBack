@@ -199,29 +199,29 @@ non-numbered and append-only, matching FR-52's profile-edit record.
 
 ### Stories
 
-- [ ] **001-create-lost-item-report**: to file a Lost item report - must - Planned
+- [x] **001-create-lost-item-report**: to file a Lost item report - must - Implemented
   <br>traces: FR-6, FR-8
-- [ ] **002-create-found-item-report**: to file a Found item report - must - Planned
+- [x] **002-create-found-item-report**: to file a Found item report - must - Implemented
   <br>traces: FR-7, FR-8
-- [ ] **003-validate-report-field-set**: my report validated against the authoritative field set - must - Planned
+- [x] **003-validate-report-field-set**: my report validated against the authoritative field set - must - Implemented
   <br>traces: FR-8
-- [ ] **004-edit-own-report**: to correct my own report while it is active - must - Planned
+- [x] **004-edit-own-report**: to correct my own report while it is active - must - Implemented
   <br>traces: FR-9, FR-19
-- [ ] **005-delete-own-report**: to delete my own report - must - Planned
+- [x] **005-delete-own-report**: to delete my own report - must - Implemented
   <br>traces: FR-10
-- [ ] **006-withdraw-own-report**: to withdraw my own report - must - Planned
+- [x] **006-withdraw-own-report**: to withdraw my own report - must - Implemented
   <br>traces: FR-11, FR-20
-- [ ] **007-public-summary-listing**: to browse a paginated summary of Lost and Found reports - must - Planned
+- [x] **007-public-summary-listing**: to browse a paginated summary of Lost and Found reports - must - Implemented
   <br>traces: FR-12, FR-38
-- [ ] **008-authenticated-detail-view**: to open a report's detail page from a listing - must - Planned
+- [x] **008-authenticated-detail-view**: to open a report's detail page from a listing - must - Implemented
   <br>traces: FR-13
-- [ ] **009-search-and-filter**: to search and narrow the combined pool of reports - must - Planned
+- [x] **009-search-and-filter**: to search and narrow the combined pool of reports - must - Implemented
   <br>traces: FR-14
-- [ ] **010-visibility-matrix-by-actor**: to see exactly the fields my relationship to that item permits - must - Planned
+- [x] **010-visibility-matrix-by-actor**: to see exactly the fields my relationship to that item permits - must - Implemented
   <br>traces: FR-39, FR-37
-- [ ] **011-member-facing-view-partition**: my authored reports, other members' reports, my Claims, and my Recovery Responses in separate views - must - Planned
+- [x] **011-member-facing-view-partition**: my authored reports, other members' reports, my Claims, and my Recovery Responses in separate views - must - Implemented
   <br>traces: FR-49
-- [ ] **012-administrator-edit-report**: to correct a report's content and metadata on a non-terminal report - must - Planned
+- [x] **012-administrator-edit-report**: to correct a report's content and metadata on a non-terminal report - must - Implemented
   <br>traces: FR-53
-- [ ] **013-attach-image-to-report**: an image attached to a report and delivered privately - must - Planned
+- [x] **013-attach-image-to-report**: an image attached to a report and delivered privately - must - Implemented
   <br>traces: FR-8

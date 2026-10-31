@@ -3,7 +3,7 @@ id: 016-claim-decisions
 unit: 003-found-side-claims
 intent: 001-findback-lost-and-found
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 002-administrator-claim-review
   - 003-approve-a-claim
@@ -11,10 +11,12 @@ stories:
   - 005-auto-status-transitions
   - 006-auto-reject-competing-claims
 created: 2026-10-23T13:12:30Z
-started: null
-completed: null
-current_stage: null
-stages_completed: []
+started: 2026-10-30T05:00:00Z
+completed: 2026-10-30T06:30:00Z
+current_stage: test
+stages_completed:
+  - implement
+  - test
 
 requires_bolts:
   - 001-audit-core
@@ -61,10 +63,10 @@ distinct auto-rejection triggers.
 
 ## Stages
 
-- [ ] **1. model**: Pending → `ddd-01-domain-model.md`
-- [ ] **2. design**: Pending → `ddd-02-technical-design.md`
-- [ ] **3. implement**: Pending → source
-- [ ] **4. test**: Pending → `ddd-03-test-report.md`
+- [x] **1. model**: Skipped by owner direction → (no artifact)
+- [x] **2. design**: Skipped by owner direction → (no artifact)
+- [x] **3. implement**: Complete → source
+- [x] **4. test**: Complete → `ddd-03-test-report.md`
 
 ## Dependencies
 
@@ -79,13 +81,13 @@ distinct auto-rejection triggers.
 
 ## Success Criteria
 
-- [ ] Approval auto-rejects every other Pending claim and moves the report to `Claim Approved` in one transaction
-- [ ] Two administrators cannot both approve the same claim
-- [ ] Rejection returns the report to `Open` only when no Pending claim remains
-- [ ] The three auto-rejection triggers each record their own audit reason
-- [ ] User-facing auto-rejection copy is softened while the audit reason stays verbatim
-- [ ] There is no `Closed` Claim status
-- [ ] A decision on a non-`Pending` claim is a conflict, not a silent overwrite
+- [x] Approval auto-rejects every other Pending claim and moves the report to `Claim Approved` in one transaction
+- [x] Two administrators cannot both approve the same claim
+- [x] Rejection returns the report to `Open` only when no Pending claim remains
+- [x] The three auto-rejection triggers each record their own audit reason
+- [x] User-facing auto-rejection copy is softened while the audit reason stays verbatim
+- [x] There is no `Closed` Claim status
+- [x] A decision on a non-`Pending` claim is a conflict, not a silent overwrite
 
 ## Notes
 

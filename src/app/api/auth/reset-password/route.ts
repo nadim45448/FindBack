@@ -27,10 +27,10 @@ import { buildIdentityStack } from '@/infrastructure/accounts/identity-stack';
 import {
   log,
   errorResponse,
+  readCsrfBindingToken,
   readCsrfToken,
   readJsonBody,
   readRequestId,
-  readSessionCookie,
   stringField,
 } from '@/app/api/_helpers';
 
@@ -45,10 +45,10 @@ export async function POST(request: Request): Promise<NextResponse> {
     const body = await readJsonBody(request);
 
     // ── CSRF ──────────────────────────────────────────────────────────────
-    const sessionToken = await readSessionCookie();
+    const bindingToken = await readCsrfBindingToken();
     const csrfToken = await readCsrfToken();
     const csrf = stack.csrf.validate(
-      sessionToken ? stack.tokens.hashToken(sessionToken) : null,
+      bindingToken ? stack.tokens.hashToken(bindingToken) : null,
       csrfToken,
     );
 

@@ -5,36 +5,32 @@
  *
  * **The token is read from the URL's fragment, in the browser, and posted
  * in the request body.** The fragment is never sent to the server, so the
- * token never reaches the request line — which is what a platform's access
- * log records. The body is not in the request line either, so the token
- * does not reach the log that way.
- *
- * This is a **client component** for exactly that reason: the fragment is
- * only readable by the browser.
- *
- * **The fragment is read with `useSyncExternalStore`, not with an effect.**
- * The URL is state the browser owns and can change on its own — a back
- * button, a hash change, a pasted link — so it is subscribed to as an
- * external store. Reading it once into `useState` inside a `useEffect`
- * would render the "not valid" message first and then the real one, and
- * would miss a hash change that happened after the first render.
- *
- * The page's **markup** belongs to Unit 007 (web surfaces), which owns the
- * screens. What this bolt owns is the part that touches the credential: the
- * token's path from the email to the form, and the guarantee that it never
- * appears in a log.
+ * token never reaches the request line.
  */
 
-import { useSyncExternalStore } from 'react';
+import { useState, useSyncExternalStore } from 'react';
+import Link from 'next/link';
 
 import { RESET_TOKEN_QUERY_PARAM } from '@/domain/accounts';
 
-/**
- * The token from the URL's fragment.
- *
- * The fragment is a string of `name=value` pairs separated by `&`, so the
- * token is read with the same parsing the query string would get.
- */
+import { csrfHeaders } from '@/ui/csrf';
+import { Field, ErrorSummary, useFocusFirstInvalidField } from '@/ui/form-parts';
+import { validateResetPassword, type FieldErrors } from '@/ui/form-validation';
+import {
+  CONFIRM_PASSWORD_LABEL,
+  NEW_PASSWORD_LABEL,
+  PASSWORD_HINT,
+  RESET_PASSWORD_SUCCESS,
+  SAVE_NEW_PASSWORD,
+  SIGN_IN_TO_YOUR_ACCOUNT,
+} from '@/ui/copy';
+
+/** The field labels the error summary uses. */
+const FIELD_LABELS: Readonly<Record<string, string>> = {
+  newPassword: NEW_PASSWORD_LABEL,
+  confirmPassword: CONFIRM_PASSWORD_LABEL,
+};
+
 function readFragmentToken(): string | null {
   if (typeof window === 'undefined') {
     return null;
@@ -64,7 +60,6 @@ function readFragmentToken(): string | null {
   return null;
 }
 
-/** Nothing changes between renders, so the snapshot is a constant. */
 function subscribeToHashChange(onChange: () => void): () => void {
   window.addEventListener('hashchange', onChange);
 
@@ -73,7 +68,6 @@ function subscribeToHashChange(onChange: () => void): () => void {
   };
 }
 
-/** The server has no fragment, so its snapshot is always "no token". */
 function theServerSnapshot(): null {
   return null;
 }
@@ -85,17 +79,153 @@ export function ResetPasswordForm() {
     theServerSnapshot,
   );
 
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [complete, setComplete] = useState(false);
+
+  useFocusFirstInvalidField(errors, submitted);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    setSubmitted(true);
+    setFormError(null);
+
+    const clientErrors = validateResetPassword({ newPassword, confirmPassword });
+
+    if (Object.keys(clientErrors).length > 0) {
+      setErrors(clientErrors);
+      return;
+    }
+
+    if (!token) {
+      setFormError('This reset link is not valid. Request a new one.');
+      return;
+    }
+
+    setErrors({});
+    setSubmitting(true);
+
+    try {
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...csrfHeaders(),
+        },
+        body: JSON.stringify({ token, newPassword }),
+      });
+
+      if (!response.ok) {
+        const body = (await response.json()) as { error?: string; field?: string };
+
+        if (body.field && body.error) {
+          setErrors({ [body.field]: body.error });
+        } else {
+          setFormError(body.error ?? 'Something went wrong on our side. Try again, or come back in a moment.');
+        }
+
+        setSubmitting(false);
+        return;
+      }
+
+      setComplete(true);
+    } catch {
+      setFormError('Something went wrong on our side. Try again, or come back in a moment.');
+      setSubmitting(false);
+    }
+  }
+
+  function revalidate(field: 'newPassword' | 'confirmPassword', nextNew: string, nextConfirm: string): void {
+    if (!submitted) {
+      return;
+    }
+
+    const next = validateResetPassword({ newPassword: nextNew, confirmPassword: nextConfirm });
+    const current = errors[field];
+
+    if (current && !next[field]) {
+      const updated = { ...errors };
+      delete updated[field];
+      setErrors(updated);
+    }
+  }
+
   if (token === null) {
     return (
-      <p style={{ margin: 0, color: 'var(--on-surface-variant)' }}>
-        This reset link is not valid. Request a new one.
+      <p className="hero__lede">
+        This reset link is not valid.{' '}
+        <Link href="/forgot">Request a new one</Link>.
       </p>
     );
   }
 
+  if (complete) {
+    return (
+      <div className="alert alert--info" role="status">
+        <span aria-hidden="true">✓</span>
+        <div>
+          <p>{RESET_PASSWORD_SUCCESS}</p>
+          <p className="narrow-page__back">
+            <Link href="/login" className="button button--primary">
+              {SIGN_IN_TO_YOUR_ACCOUNT}
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <p style={{ margin: 0, color: 'var(--on-surface-variant)' }}>
-      Enter your new password to finish resetting it.
-    </p>
+    <>
+      {formError ? (
+        <div className="error-summary" role="alert">
+          <p className="error-summary__heading">{formError}</p>
+        </div>
+      ) : null}
+
+      <ErrorSummary heading="Check the form" errors={errors} labels={FIELD_LABELS} />
+
+      <form onSubmit={(event) => void handleSubmit(event)} noValidate>
+        <Field
+          id="newPassword"
+          name="newPassword"
+          label={NEW_PASSWORD_LABEL}
+          type="password"
+          value={newPassword}
+          onChange={(value) => {
+            setNewPassword(value);
+            revalidate('newPassword', value, confirmPassword);
+          }}
+          helper={PASSWORD_HINT}
+          error={errors['newPassword']}
+          required
+          autoComplete="new-password"
+          minLength={8}
+        />
+
+        <Field
+          id="confirmPassword"
+          name="confirmPassword"
+          label={CONFIRM_PASSWORD_LABEL}
+          type="password"
+          value={confirmPassword}
+          onChange={(value) => {
+            setConfirmPassword(value);
+            revalidate('confirmPassword', newPassword, value);
+          }}
+          error={errors['confirmPassword']}
+          required
+          autoComplete="new-password"
+        />
+
+        <button type="submit" className="button button--primary" disabled={submitting}>
+          {submitting ? 'Saving…' : SAVE_NEW_PASSWORD}
+        </button>
+      </form>
+    </>
   );
 }

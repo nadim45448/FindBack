@@ -39,7 +39,7 @@ export interface RateLimitConfig {
 /** The defaults ADR-15 chose. */
 export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
   // Account creation is the most valuable thing an attacker can do here.
-  registerLimit: 5,
+  registerLimit: 30,
   registerWindowSeconds: 60 * 60,
 
   // A campus has many members behind one address, so the IP limit is loose.

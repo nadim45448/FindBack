@@ -13,14 +13,20 @@
  *   to a field.
  * - `public` places no predicate on the reporter at all.
  *
- * **The keyword is an index-backed `tsvector` match, and the expression is
- * the index's expression exactly.** The migration created the GIN index over
- * `to_tsvector('simple', coalesce(name, '') || ' ' || coalesce(description,
- * ''))`; PostgreSQL only uses an index when the query's expression matches
- * the index's *exactly*. A near-miss — a different configuration, a missing
- * `coalesce`, a missing space — silently falls back to a sequential scan, so
- * the expression lives in **one constant** here and the same constant is
- * what the migration's index is built over.
+ * **The keyword is matched by the trigram indexes.** The `pg_trgm` GIN
+ * indexes answer the partial match — a substring of the name or the
+ * description — and they answer it without a sequential scan, which is what
+ * FR-14 requires. See `keywordFragments` for why the `tsvector` index is
+ * not part of the match.
+ *
+ * **The `tsvector` expression is the index's expression exactly.** The
+ * migration created the GIN index over
+ * `to_tsvector('simple', name || ' ' || description)`; PostgreSQL only uses
+ * an index when the query's expression matches the index's *exactly*. A
+ * near-miss — a different configuration, a missing `coalesce`, a missing
+ * space — silently falls back to a sequential scan, so the expression lives
+ * in **one constant** here and the same constant is what the migration's
+ * index is built over.
  *
  * **The keyword surface is `name` and `description` only.** `exact_place` and
  * `identifying_details` are FR-37 Sensitive Fields, and a GIN index over them
@@ -36,12 +42,19 @@
  * the total and the rows cannot disagree — a count taken separately could
  * see a different snapshot than the page.
  *
- * **The participation rows carry no thread id yet.** The thread table
- * (`thread_messages`) belongs to Unit 003 — the Claims workflow — and it does
- * not exist in the schema. The `threadId` on a participation row is
- * therefore always `null` in this bolt, and the reader does not invent a
- * join to a table that is not there. The column is part of the domain's row
- * shape already, so Unit 003 can populate it without changing the shape.
+ * **A thread is addressed by its parent, so the thread id is the parent id.**
+ * There is no `threads` table and no thread entity: a thread *is* the set of
+ * messages hanging from a `(parent_type, parent_id)` pair, and the route
+ * that serves it is `/api/claims/[id]/thread` — the Claim's own id in the
+ * path. So the `threadId` a participation row carries is **the Claim's id**,
+ * or the Recovery Response's id, and no join to `thread_messages` is needed
+ * to produce it.
+ *
+ * **The id is present even when the thread is empty.** A thread with no
+ * messages is still a thread — it is the Claim's conversation, and it is
+ * where the member would post. The link is to the conversation, not to a
+ * message in it, so a `null` here would mean "this conversation does not
+ * exist", which is a different and wrong claim.
  *
  * **Raw SQL, not the Prisma query builder.** The same reason the visibility
  * readers use raw SQL: the emitted SQL must be **assertable in a test**. The
@@ -69,14 +82,26 @@ import { PHYSICAL, TABLES, physical, quoteName } from './physical-columns';
 /**
  * The `tsvector` expression the keyword index is built over.
  *
- * **One artefact, used by the query.** Bolt `007` created the GIN index
- * `idx_reports_search` over `to_tsvector('simple', name || ' ' ||
+ * **One artefact, used by the query-plan assertion.** Bolt `007` created the
+ * GIN index `idx_reports_search` over `to_tsvector('simple', name || ' ' ||
  * description)`. PostgreSQL only uses an index when the query's expression
  * matches the index's *exactly*, so this is that expression, character for
  * character. A near-miss — a different configuration, a `coalesce` wrapper,
  * a missing space — silently falls back to a sequential scan, so the
  * expression lives in **one constant** here and the query-plan assertion is
  * what proves it still matches.
+ *
+ * **The keyword match itself is the trigram path's, not this one's.** A
+ * `tsquery` is a token language: it matches whole lexemes and, in its
+ * prefix form, lexemes that *begin* with the caller's text. It cannot
+ * express a substring in the *middle* of a word — `lue` is not a prefix of
+ * `blue` — so it cannot answer FR-14's "partial match". See
+ * `keywordFragments`.
+ *
+ * **This constant is still exported** because the index it names is still in
+ * the schema, and the suites assert that index is still usable by an
+ * expression that matches it exactly. The assertion is a claim about the
+ * index's presence, and it is the same claim bolt `007` made.
  *
  * **No `coalesce`, because the columns are `NOT NULL`.** A `NULL` in a `||`
  * would collapse the whole vector to `NULL`, but `name` and `description`
@@ -236,7 +261,7 @@ export class PrismaReportListingReader implements ReportListingReader {
             c.${Prisma.raw(quoteName(PHYSICAL.claim.id))} AS id,
             c.${Prisma.raw(quoteName(PHYSICAL.claim.status))} AS status,
             c.${Prisma.raw(quoteName(PHYSICAL.claim.submittedAt))} AS submitted_at,
-            NULL::uuid AS thread_id,
+            c.${Prisma.raw(quoteName(PHYSICAL.claim.id))} AS thread_id,
             r.${Prisma.raw(quoteName(PHYSICAL.report.id))} AS report_id,
             r.${Prisma.raw(quoteName(PHYSICAL.report.type))} AS report_type,
             r.${Prisma.raw(quoteName(PHYSICAL.report.status))} AS report_status,
@@ -289,7 +314,7 @@ export class PrismaReportListingReader implements ReportListingReader {
             rr.${Prisma.raw(quoteName(PHYSICAL.response.id))} AS id,
             rr.${Prisma.raw(quoteName(PHYSICAL.response.status))} AS status,
             rr.${Prisma.raw(quoteName(PHYSICAL.response.submittedAt))} AS submitted_at,
-            NULL::uuid AS thread_id,
+            rr.${Prisma.raw(quoteName(PHYSICAL.response.id))} AS thread_id,
             r.${Prisma.raw(quoteName(PHYSICAL.report.id))} AS report_id,
             r.${Prisma.raw(quoteName(PHYSICAL.report.type))} AS report_type,
             r.${Prisma.raw(quoteName(PHYSICAL.report.status))} AS report_status,
@@ -445,14 +470,104 @@ export class PrismaReportListingReader implements ReportListingReader {
     }
 
     if (filter.keyword !== null && filter.keyword.length > 0) {
-      // **The expression is the index's expression.** A near-miss would
-      // silently fall back to a sequential scan.
-      fragments.push(
-        Prisma.sql`${Prisma.raw(searchVectorExpression(alias))} @@ plainto_tsquery('simple', ${filter.keyword})`,
-      );
+      fragments.push(...this.keywordFragments(filter.keyword, alias));
     }
 
     return fragments;
+  }
+
+  /**
+   * The fragments that implement FR-14's **partial** keyword match.
+   *
+   * **FR-14 says "case-insensitive, partial match".** The PRD is normative
+   * — `requirements.md` states that where the PRD and the stories differ,
+   * the PRD wins — and the PRD says: *"Keyword matches against item name and
+   * description (case-insensitive, partial match)."*
+   *
+   * **The obvious implementation is wrong, and it is wrong in a way no
+   * functional test would catch.** `plainto_tsquery` splits the keyword into
+   * lexemes and requires each lexeme to be a **whole token** in the
+   * document's vector. So `walle` does not match a document containing
+   * `wallet` — the lexeme `walle` is not a token; `wallet` is. A member
+   * searching for `walle` is looking for `wallet`, and the whole-token form
+   * silently returns nothing.
+   *
+   * **The naive repair is also wrong.** `name ILIKE '%walle%'` has exactly
+   * the right matching semantics, and it cannot satisfy the rest of FR-14:
+   * a leading-wildcard `ILIKE` has no usable B-tree index, so every search
+   * becomes a sequential scan over the reports table — which FR-14 forbids
+   * ("Search and listing queries must be index-backed. A full scan over
+   * reports is not acceptable at this data volume") and which the bolt's own
+   * success criteria make a claim about ("no full table scan over
+   * reports").
+   *
+   * **So the match is answered by the trigram indexes alone.** The
+   * `gin_trgm_ops` operator class makes `ILIKE '%substring%'` an
+   * index-backed operation rather than a scan, and — because the pattern
+   * carries the **whole keyword** rather than a lexeme at a time — it
+   * expresses exactly what "partial match" means: the keyword appears as a
+   * substring of the field.
+   *
+   * **The `tsvector` index is not part of the match, and that is the
+   * correction an earlier draft got wrong.** A `tsquery` is a **token**
+   * language: it matches whole lexemes and, in its prefix form, lexemes
+   * that *begin* with the caller's text. It cannot express a substring in
+   * the *middle* of a word — `lue` is not a prefix of `blue`, so
+   * `to_tsquery('simple', 'lue:*')` does not match `A blue wallet` even
+   * though `lue` is plainly a substring of it.
+   *
+   * ANDing the two predicates therefore *narrows the match wrongly*: the
+   * trigram says yes and the tsquery says no, so the row is excluded even
+   * though the keyword is genuinely a substring of its name. The two
+   * predicates do not agree about what a partial match is, so they cannot
+   * be combined at all.
+   *
+   * **The `tsvector` index stays in the schema** — it is bolt `007`'s, and
+   * it answers the whole-word question at the index level for any reader
+   * that asks it. But the keyword *match* is the trigram's, because the
+   * trigram is the only one of the two that can answer the question FR-14
+   * asks.
+   *
+   * **The trigram predicate is on `name` OR `description`, not on their
+   * concatenation.** A single index over `name || ' ' || description` would
+   * match a trigram straddling the two columns — the last character of a
+   * name and the first of a description — which appears in neither field.
+   * Two indexes, two predicates, `OR`-ed: the keyword must be a substring
+   * of the name **or** of the description, which is exactly FR-14's "matches
+   * against item name and description".
+   *
+   * **The keyword is a bind parameter throughout.** The `ILIKE` pattern is
+   * built by escaping the caller's substring and wrapping it in `%`, and the
+   * escaped value is bound — never interpolated.
+   *
+   * **The escaped pattern is what makes the match a literal substring.**
+   * A keyword of `%` or `_` would otherwise be a wildcard — `_` matches any
+   * single character — and a member searching for `blue_bag` would match
+   * `blueXbag`. The escaping puts a backslash before each metacharacter,
+   * and PostgreSQL's `LIKE` honours the escape character.
+   *
+   * @param keyword the caller's keyword.
+   * @param alias the report table's alias in the query.
+   */
+  private keywordFragments(keyword: string, alias: string): Prisma.Sql[] {
+    const escaped = escapeLikePattern(keyword);
+    const pattern = `%${escaped}%`;
+
+    // **A keyword with no searchable text has no text to match.** A keyword
+    // of only punctuation — `!!!` — has no letters or digits, and a
+    // `LIKE` pattern of `%!!!%` would match only a row that literally
+    // contains those marks. The keyword still contributes its predicate, so
+    // the result is a search that finds nothing rather than a search that
+    // finds everything.
+    return [
+      // **The trigram path — the partial match, and the whole of it.**
+      // Two predicates, `OR`-ed, because the keyword may be a substring of
+      // either covered column.
+      Prisma.sql`(
+        ${Prisma.raw(alias)}.${Prisma.raw(quoteName(PHYSICAL.report.name))} ILIKE ${pattern}
+        OR ${Prisma.raw(alias)}.${Prisma.raw(quoteName(PHYSICAL.report.description))} ILIKE ${pattern}
+      )`,
+    ];
   }
 
   /**
@@ -462,8 +577,29 @@ export class PrismaReportListingReader implements ReportListingReader {
    * the partition disjoint — the query returns only the member's own Claims
    * or Responses.
    *
-   * **The remaining filters apply to the related report**, because that is
-   * what the row shows.
+   * **The ownership exclusion is second, and it is part of the partition's
+   * definition rather than a filter applied afterwards.** FR-49 says the
+   * `claims` partition holds "only Claims they submitted on **other members'**
+   * Found reports", and the `recovery_responses` partition the same for Lost
+   * reports. A member's own report is in `mine`; a Claim on one's own report
+   * is not a thing (FR-15 forbids claiming on your own report), so this is
+   * belt-and-braces against the same report appearing in two partitions.
+   *
+   * The exclusion is a predicate in the query for the same reason `browse`
+   * carries its own: a reader that loaded the participation rows and then
+   * filtered out the member's own reports would be the load-then-filter
+   * defect FR-39 names, applied to the partition instead of to a field.
+   *
+   * **The remaining report filters apply to the related report**, because
+   * that is what the row shows.
+   *
+   * **The participation's own status filter applies to the participation
+   * table.** §9.4's `My Claims` tabs are `Pending`, `Approved`, and
+   * `Rejected` — the **Claim's** status, not the report's. A Claim on a
+   * `Claim Requested` report is still a `Pending` Claim, so a filter on
+   * the report's status would answer a different question than the tab
+   * asks. The predicate is on the participation's `status` column, and it
+   * is a predicate **in the query** for the same reason the partition is.
    */
   private buildParticipationPredicate(
     participationAlias: string,
@@ -475,12 +611,43 @@ export class PrismaReportListingReader implements ReportListingReader {
   ): Prisma.Sql {
     const fragments: Prisma.Sql[] = [
       Prisma.sql`${Prisma.raw(participationAlias)}.${Prisma.raw(quoteName(participationColumn))} = ${viewerId}`,
+      Prisma.sql`${Prisma.raw(reportAlias)}.${Prisma.raw(quoteName(PHYSICAL.report.reporterId))} <> ${viewerId}`,
     ];
 
     fragments.push(...this.reportFilterFragments(filter, statuses, reportAlias));
 
+    const participationStatuses = filter.participationStatuses;
+
+    if (participationStatuses !== null && participationStatuses !== undefined && participationStatuses.length > 0) {
+      fragments.push(
+        Prisma.sql`${Prisma.raw(participationAlias)}.${Prisma.raw(quoteName(PHYSICAL.claim.status))} IN (${Prisma.join(participationStatuses)})`,
+      );
+    }
+
     return whereOf(fragments);
   }
+}
+
+/**
+ * Escape the `LIKE` metacharacters in a keyword.
+ *
+ * **The keyword is a literal substring, not a pattern.** `ILIKE` treats `%`
+ * as "any run of characters" and `_` as "any single character", so a
+ * keyword of `blue_bag` would otherwise match `blueXbag`, and a keyword of
+ * `%` would match every row. The escaping puts a backslash before each
+ * metacharacter, and PostgreSQL's `LIKE` honours the escape character — so
+ * the caller's text is matched literally.
+ *
+ * **The escape character itself is escaped first**, so a keyword ending in
+ * a backslash cannot escape the closing wildcard it is followed by.
+ *
+ * The result is still bound as a parameter — this function only decides
+ * *what* the pattern says, never how it reaches the database.
+ *
+ * @param keyword the caller's keyword.
+ */
+function escapeLikePattern(keyword: string): string {
+  return keyword.replace(/[\\%_]/g, (character) => `\\${character}`);
 }
 
 /**

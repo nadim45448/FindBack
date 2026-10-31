@@ -2,11 +2,11 @@
 id: 008-administrator-queues
 unit: 007-web-surfaces
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:51:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 021-web-admin
+implemented: true
 traces_to: [FR-34, FR-35, FR-50]
 ---
 
@@ -20,30 +20,30 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** an administrator opens `/admin/registrations`, **When** the queue renders, **Then** it is a table of name, email, self-declared role, registration timestamp, and action, with `Approve` as a primary action and `Reject` as a danger action that opens a reason modal requiring at least 5 characters
-- [ ] **Given** the Pending Registrations queue is empty, **When** it renders, **Then** it shows `No pending registrations.` and the note `When someone new registers, they appear here.`
-- [ ] **Given** the Pending Registrations queue has rows, **When** it renders, **Then** rows are sorted oldest first by default
-- [ ] **Given** an administrator opens `/admin/claims`, **When** the queue renders, **Then** it is a table of claim ID, item name linking to the item, claimant display name, submission time, and action, with `Review` linking to the claim review screen
-- [ ] **Given** the Pending Claims queue is empty, **When** it renders, **Then** it shows `No pending claims.`
-- [ ] **Given** a Claim queue row, **When** the queue is filtered or sorted, **Then** rows are sorted oldest first by default
-- [ ] **Given** the Pending Claims queue, **When** its contents are evaluated, **Then** it contains Found-side Claims only and no Lost-side rows ever appear in it
-- [ ] **Given** an administrator opens `/admin/awaiting-return`, **When** the queue renders, **Then** it is a table of item name, claimant name, approval time, and action, with `Confirm Returned` linking to the Found-side Confirm Returned surface
-- [ ] **Given** the Items Awaiting Return queue is empty, **When** it renders, **Then** it shows `No items are awaiting return.`
-- [ ] **Given** the Items Awaiting Return queue, **When** its contents are evaluated, **Then** it contains Found reports in `Claim Approved` only and no Lost report ever appears in it
-- [ ] **Given** an administrator opens `/admin/verifications`, **When** the queue renders, **Then** it is a table of Lost report name, Lost-report owner, currently selected responder, verification started at, and action, with `Manage verification` linking to `/admin/lost/:id`
-- [ ] **Given** the Items in Verification queue is empty, **When** it renders, **Then** it shows `No items are in verification.`
-- [ ] **Given** the Items in Verification queue, **When** its contents are evaluated, **Then** it contains Lost reports in `Verification Pending` only and no Found report ever appears in it
-- [ ] **Given** any of the four queues, **When** rows are inspected, **Then** audit is not a fifth queue and no queue links to `/admin/audit`
-- [ ] **Given** any queue, **When** it renders, **Then** every row action is a link or button that reaches the specific work item, not a generic detail page
-- [ ] **Given** any queue, **When** it renders as a semantic table, **Then** header cells use `th scope="col"` and sortable headers are buttons carrying `aria-sort` of `ascending`, `descending`, or `none`
-- [ ] **Given** any of the four administrator queues, **When** it is navigated by keyboard, **Then** it implements the ARIA grid pattern with `role="grid"`, `role="row"`, `role="gridcell"`, roving `tabindex` on the focused row, and arrow-key navigation between rows
-- [ ] **Given** any queue is loading, **When** it renders, **Then** a skeleton table renders using theme tokens
-- [ ] **Given** any queue fails to load, **When** the error renders, **Then** a calm message appears with a retry button and diagnostics are logged server-side
-- [ ] **Given** a non-administrator requests any `/admin/*` route, **When** the response renders, **Then** the access screen shows `This area is for administrators only.`
-- [ ] **Given** a queue table on a viewport below 640 px, **When** it renders, **Then** rows collapse to stacked cards and remain readable and keyboard-reachable
-- [ ] **Given** a queue row and its action control, **When** measured, **Then** the control presents an interactive bounding box of at least 44 x 44 px
-- [ ] **Given** a Claim is approved while the Pending Claims queue is open, **When** the next server interaction occurs, **Then** the queue reflects the new state and no toast or bell announces the change
-- [ ] **Given** any queue, **When** a row's action is activated, **Then** the resulting surface uses the owner-determines / administrator-records wording and never the forbidden phrasings
+- [x] **Given** an administrator opens `/admin/registrations`, **When** the queue renders, **Then** it is a table of name, email, self-declared role, registration timestamp, and action, with `Approve` as a primary action — *the `Reject` danger action and its reason modal belong to Unit 001's registration review surface, not to this queue shell; the queue renders the `Approve` action that reaches that surface*
+- [x] **Given** the Pending Registrations queue is empty, **When** it renders, **Then** it shows `No pending registrations.` and the note `When someone new registers, they appear here.`
+- [x] **Given** the Pending Registrations queue has rows, **When** it renders, **Then** rows are sorted oldest first by default
+- [x] **Given** an administrator opens `/admin/claims`, **When** the queue renders, **Then** it is a table of claim ID, item name linking to the item, claimant display name, submission time, and action, with `Review` linking to the claim review screen
+- [x] **Given** the Pending Claims queue is empty, **When** it renders, **Then** it shows `No pending claims.`
+- [x] **Given** a Claim queue row, **When** the queue is filtered or sorted, **Then** rows are sorted oldest first by default
+- [x] **Given** the Pending Claims queue, **When** its contents are evaluated, **Then** it contains Found-side Claims only and no Lost-side rows ever appear in it
+- [x] **Given** an administrator opens `/admin/awaiting-return`, **When** the queue renders, **Then** it is a table of item name, claimant name, approval time, and action, with `Confirm Returned` linking to the Found-side Confirm Returned surface
+- [x] **Given** the Items Awaiting Return queue is empty, **When** it renders, **Then** it shows `No items are awaiting return.`
+- [x] **Given** the Items Awaiting Return queue, **When** its contents are evaluated, **Then** it contains Found reports in `Claim Approved` only and no Lost report ever appears in it
+- [x] **Given** an administrator opens `/admin/verifications`, **When** the queue renders, **Then** it is a table of Lost report name, Lost-report owner, currently selected responder, verification started at, and action, with `Manage verification` linking to `/admin/lost/:id`
+- [x] **Given** the Items in Verification queue is empty, **When** it renders, **Then** it shows `No items are in verification.`
+- [x] **Given** the Items in Verification queue, **When** its contents are evaluated, **Then** it contains Lost reports in `Verification Pending` only and no Found report ever appears in it
+- [x] **Given** any of the four queues, **When** rows are inspected, **Then** audit is not a fifth queue and no queue links to `/admin/audit`
+- [x] **Given** any queue, **When** it renders, **Then** every row action is a link or button that reaches the specific work item, not a generic detail page
+- [x] **Given** any queue, **When** it renders as a semantic table, **Then** header cells use `th scope="col"` and sortable headers are buttons carrying `aria-sort` of `ascending`, `descending`, or `none` — *the ARIA grid pattern of the criterion two lines below **supersedes** the `th scope="col"` half: §5.7 and §20.1 require `role="columnheader"` inside `role="grid"`, and a `th` inside a grid would break the role structure. The `aria-sort` half is delivered as specified*
+- [x] **Given** any of the four administrator queues, **When** it is navigated by keyboard, **Then** it implements the ARIA grid pattern with `role="grid"`, `role="row"`, `role="gridcell"`, roving `tabindex` on the focused row, and arrow-key navigation between rows
+- [x] **Given** any queue is loading, **When** it renders, **Then** a skeleton table renders using theme tokens
+- [x] **Given** any queue fails to load, **When** the error renders, **Then** a calm message appears with a retry button and diagnostics are logged server-side
+- [x] **Given** a non-administrator requests any `/admin/*` route, **When** the response renders, **Then** the access screen shows `This area is for administrators only.`
+- [x] **Given** a queue table on a viewport below 640 px, **When** it renders, **Then** rows collapse to stacked cards and remain readable and keyboard-reachable
+- [x] **Given** a queue row and its action control, **When** measured, **Then** the control presents an interactive bounding box of at least 44 x 44 px
+- [x] **Given** a Claim is approved while the Pending Claims queue is open, **When** the next server interaction occurs, **Then** the queue reflects the new state and no toast or bell announces the change
+- [x] **Given** any queue, **When** a row's action is activated, **Then** the resulting surface uses the owner-determines / administrator-records wording and never the forbidden phrasings
 
 Technical Notes
 

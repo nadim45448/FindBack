@@ -106,8 +106,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     });
 
     const response = NextResponse.json({
+      id: outcome.actor.actorId,
       status: outcome.actor.status,
       isAdministrator: outcome.actor.isAdministrator,
+      displayName: outcome.actor.displayName,
+      csrfToken: stack.csrf.computeToken(stack.tokens.hashToken(token)),
     });
 
     response.headers.append('Set-Cookie', buildSessionCookie(token));

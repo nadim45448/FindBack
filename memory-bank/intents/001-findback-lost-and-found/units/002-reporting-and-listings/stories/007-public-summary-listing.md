@@ -2,11 +2,11 @@
 id: 007-public-summary-listing
 unit: 002-reporting-and-listings
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:46:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 009-reporting-search
+implemented: true
 traces_to: [FR-12, FR-38]
 ---
 

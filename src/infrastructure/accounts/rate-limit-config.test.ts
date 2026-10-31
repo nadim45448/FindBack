@@ -14,8 +14,8 @@ describe('the rate-limit configuration', () => {
   it('defaults to the values ADR-15 chose', () => {
     const config = readRateLimitConfig({});
 
-    // Registration: 5 an hour, IP-scoped.
-    expect(config.registerLimit).toBe(5);
+    // Registration: 30 an hour, IP-scoped.
+    expect(config.registerLimit).toBe(30);
     expect(config.registerWindowSeconds).toBe(3600);
 
     // Login IP: 20 in 15 minutes, loose for a shared campus address.

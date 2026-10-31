@@ -2,11 +2,11 @@
 id: 003-owner-provisional-selection
 unit: 004-lost-side-recovery
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:48:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 017-lost-lifecycle-determination
+implemented: true
 traces_to: [FR-42, FR-43]
 ---
 
@@ -20,13 +20,13 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** a Lost report in `Open` with one or more `Submitted` responses, **When** the owner selects one response, **Then** that response becomes `Selected for Verification` and the report becomes `Verification Pending`
-- [ ] **Given** the owner selects one response, **When** sibling responses exist, **Then** those siblings remain `Submitted` and are displayed as `Submitted — Standby`
-- [ ] **Given** a selection has been made, **When** the owner selects a different response, **Then** the previous selection reverts to `Submitted` and the new one becomes `Selected for Verification`
-- [ ] **Given** a selection, **When** it is inspected afterward, **Then** no sibling has been closed, rejected, or withdrawn as a side effect
-- [ ] **Given** a non-owner attempts to select a response, **When** the action is attempted, **Then** it is refused with an authorization error
-- [ ] **Given** two owner sessions select different responses concurrently, **When** both requests are processed, **Then** exactly one selection is committed and the other receives a conflict
-- [ ] **Given** a selection, **When** it completes, **Then** an audit event is recorded with the owner as actor and the selected response as target
+- [x] **Given** a Lost report in `Open` with one or more `Submitted` responses, **When** the owner selects one response, **Then** that response becomes `Selected for Verification` and the report becomes `Verification Pending`
+- [x] **Given** the owner selects one response, **When** sibling responses exist, **Then** those siblings remain `Submitted` and are displayed as `Submitted — Standby`
+- [ ] **Given** a selection has been made, **When** the owner selects a different response, **Then** the previous selection reverts to `Submitted` and the new one becomes `Selected for Verification` — **not implemented; the PRD wins.** FR-43 permits a new selection only after a `Not a Match`, so the previous selection keeps its `Not a Match` status and the report returns to `Open` for a new candidate.
+- [x] **Given** a selection, **When** it is inspected afterward, **Then** no sibling has been closed, rejected, or withdrawn as a side effect
+- [x] **Given** a non-owner attempts to select a response, **When** the action is attempted, **Then** it is refused with an authorization error
+- [x] **Given** two owner sessions select different responses concurrently, **When** both requests are processed, **Then** exactly one selection is committed and the other receives a conflict
+- [x] **Given** a selection, **When** it completes, **Then** an audit event is recorded with the owner as actor and the selected response as target
 
 Technical Notes
 

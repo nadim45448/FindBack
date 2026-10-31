@@ -125,6 +125,24 @@ function jsonRequest(body: unknown): Request {
   });
 }
 
+/** A multipart request carrying an image part. */
+function multipartRequest(): Request {
+  const form = new FormData();
+
+  form.set('type', 'Lost');
+  form.set('name', 'Brown leather wallet');
+  form.set('category', 'Wallet');
+  form.set('description', 'A brown leather wallet with a folded receipt inside.');
+  form.set('date', '2026-10-28');
+  form.set('campusArea', 'library');
+  form.set(
+    'image',
+    new File([Buffer.from([0xff, 0xd8, 0xff, 0xe0])], 'photo.jpg', { type: 'image/jpeg' }),
+  );
+
+  return new Request('http://localhost/api/reports', { method: 'POST', body: form });
+}
+
 describe('the reports route', () => {
   beforeEach(() => {
     cookieJar.clear();
@@ -177,6 +195,29 @@ describe('the reports route', () => {
       const response = await POST(jsonRequest(aBody()));
 
       expect(response.status).toBe(403);
+    });
+
+    it('refuses a Pending actor’s upload with a 403', async () => {
+      // **The refusal covers the upload, not just the text fields.** A
+      // Pending member attaching an image is refused exactly as a Pending
+      // member sending a JSON body is — and the gate sits *before* the
+      // body is read, so the bytes are never even pulled in.
+      actor = { ...(actor as object), status: 'Pending', capability: 'none' };
+
+      const response = await POST(multipartRequest());
+
+      expect(response.status).toBe(403);
+    });
+
+    it('stores nothing when it refuses a Pending actor’s upload', async () => {
+      actor = { ...(actor as object), status: 'Pending', capability: 'none' };
+
+      await POST(multipartRequest());
+
+      // **A refusal leaves no trace.** The image never reached the use
+      // case, so no blob was written and no report row was created.
+      expect(receivedImage).toBeNull();
+      expect(receivedDraft).toBeNull();
     });
 
     it('refuses a request with no valid CSRF token with a 403', async () => {
@@ -468,7 +509,11 @@ describeWithDatabase('the reports route, against a live database', () => {
     );
 
     await prisma.$transaction(async (tx) =>
-      repository.create({ ...validated, reporterId: ACTOR_ID }, { transaction: tx }),
+      repository.create(
+        crypto.randomUUID(),
+        { ...validated, reporterId: ACTOR_ID },
+        { transaction: tx },
+      ),
     );
   }
 

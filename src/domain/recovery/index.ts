@@ -20,7 +20,20 @@
  * SQL `UPDATE`; all of them read it from here.
  */
 
+export * from './candidate-image-delivery';
+export * from './lost-closure-decision';
+export * from './lost-report-status';
+export * from './lost-returned-closeout';
+export * from './recovery-response';
+export * from './recovery-response-date-found';
+export * from './recovery-response-determination';
+export * from './recovery-response-field-validator';
+export * from './recovery-response-observed-details';
+export * from './recovery-response-selection';
 export * from './recovery-response-status';
+export * from './recovery-response-submission-decision';
+export * from './recovery-response-thread';
 export * from './recovery-response-transition';
+export * from './recovery-response-where-found';
 export * from './recovery-response-withdrawal';
 export * from './standby-display';

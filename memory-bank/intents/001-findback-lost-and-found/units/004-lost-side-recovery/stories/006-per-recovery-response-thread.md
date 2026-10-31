@@ -2,11 +2,11 @@
 id: 006-per-recovery-response-thread
 unit: 004-lost-side-recovery
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:49:30Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 018-lost-threads
+implemented: true
 traces_to: [FR-47]
 ---
 
@@ -20,14 +20,14 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** a response in `Submitted`, `Selected for Verification`, or `Match Confirmed`, **When** an authorized participant posts a message, **Then** the message is added to that response's thread
-- [ ] **Given** a response in any terminal status, **When** a message is posted, **Then** the post is refused
-- [ ] **Given** the parent report is `Returned` or `Closed`, **When** a message is posted on any of its responses, **Then** the post is refused
-- [ ] **Given** two competing responders on the same Lost report, **When** responder A requests responder B's thread, **Then** the request is refused at the API layer
-- [ ] **Given** a thread that becomes read-only, **When** it is viewed, **Then** all prior messages remain visible in order and none have been deleted
-- [ ] **Given** a Lost report in verification, **When** an administrator views it, **Then** every response's thread is visible, including those of standby responders
-- [ ] **Given** a cross-thread access attempt, **When** it is made, **Then** it is denied by the server rather than hidden by the interface
-- [ ] **Given** a thread participant list, **When** it is assembled, **Then** it is derived from that single response's participants only, never from the parent report's other responses
+- [x] **Given** a response in `Submitted`, `Selected for Verification`, or `Match Confirmed`, **When** an authorized participant posts a message, **Then** the message is added to that response's thread
+- [x] **Given** a response in any terminal status, **When** a message is posted, **Then** the post is refused
+- [x] **Given** the parent report is `Returned` or `Closed`, **When** a message is posted on any of its responses, **Then** the post is refused
+- [x] **Given** two competing responders on the same Lost report, **When** responder A requests responder B's thread, **Then** the request is refused at the API layer
+- [x] **Given** a thread that becomes read-only, **When** it is viewed, **Then** all prior messages remain visible in order and none have been deleted
+- [x] **Given** a Lost report in verification, **When** an administrator views it, **Then** every response's thread is visible, including those of standby responders
+- [x] **Given** a cross-thread access attempt, **When** it is made, **Then** it is denied by the server rather than hidden by the interface
+- [x] **Given** a thread participant list, **When** it is assembled, **Then** it is derived from that single response's participants only, never from the parent report's other responses
 
 Technical Notes
 

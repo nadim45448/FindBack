@@ -39,6 +39,7 @@ aidlc/diagnostics/
 .env
 .env.local
 .env.*.local
+.local/
 npm-debug.log*
 yarn-error.log*
 /node_modules

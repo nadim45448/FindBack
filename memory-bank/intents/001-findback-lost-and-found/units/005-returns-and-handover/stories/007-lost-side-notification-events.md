@@ -2,11 +2,11 @@
 id: 007-lost-side-notification-events
 unit: 005-returns-and-handover
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:50:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 020-returns-moderation
+implemented: true
 traces_to: [FR-46]
 ---
 
@@ -20,14 +20,14 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** Lost-side email events 4, 5, and 6, **When** they fire, **Then** each reaches its defined recipient according to the PRD notification table
-- [ ] **Given** a Lost report confirmed `Returned`, **When** event 7 fires, **Then** it is delivered to the Lost-report owner
-- [ ] **Given** a matched response that reached `Completed — Report Returned` and a report that reached `Returned`, **When** event 8 fires, **Then** it is delivered to the matched responder
-- [ ] **Given** a response at `Match Confirmed` while the report is still `Verification Pending`, **When** notifications are evaluated, **Then** event 8 does **not** fire
-- [ ] **Given** standby and resolved responders, **When** event 8 is dispatched, **Then** they do not receive it
-- [ ] **Given** events 7 and 8, **When** the Lost Returned transition commits, **Then** they fire atomically with it
-- [ ] **Given** any notification send failure, **When** it occurs, **Then** the underlying transition still stands and the failure is logged without sensitive values
-- [ ] **Given** the frozen product's notification rules, **When** any surface is designed, **Then** no unsupported channel and no event beyond those enumerated in FR-46 is introduced
+- [x] **Given** Lost-side email events 4, 5, and 6, **When** they fire, **Then** each reaches its defined recipient according to the PRD notification table
+- [x] **Given** a Lost report confirmed `Returned`, **When** event 7 fires, **Then** it is delivered to the Lost-report owner
+- [x] **Given** a matched response that reached `Completed — Report Returned` and a report that reached `Returned`, **When** event 8 fires, **Then** it is delivered to the matched responder
+- [x] **Given** a response at `Match Confirmed` while the report is still `Verification Pending`, **When** notifications are evaluated, **Then** event 8 does **not** fire
+- [x] **Given** standby and resolved responders, **When** event 8 is dispatched, **Then** they do not receive it
+- [x] **Given** events 7 and 8, **When** the Lost Returned transition commits, **Then** they fire atomically with it
+- [x] **Given** any notification send failure, **When** it occurs, **Then** the underlying transition still stands and the failure is logged without sensitive values
+- [x] **Given** the frozen product's notification rules, **When** any surface is designed, **Then** no unsupported channel and no event beyond those enumerated in FR-46 is introduced
 
 Technical Notes
 

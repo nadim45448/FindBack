@@ -81,6 +81,10 @@ class Harness {
     store: async (_image: ImageUpload, prefix: string): Promise<StoredImage> => {
       this.calls.push(`images.store:${prefix}`);
 
+      if (this.imagesFailWith) {
+        throw this.imagesFailWith;
+      }
+
       return { path: `${prefix}/stored-image.jpg` };
     },
     delete: async (path: string): Promise<void> => {
@@ -88,19 +92,30 @@ class Harness {
     },
   };
 
+  /** The error the blob store throws, when the harness is set to fail it. */
+  imagesFailWith: Error | null = null;
+
   /** The transaction handle the repository was given, if any. */
   repositoryHandle: TransactionHandle | null = null;
 
   /** The validated report the repository was given. */
   received: ValidatedReport | null = null;
 
+  /** The id the repository was given. */
+  receivedId: string | null = null;
+
   readonly reports: ReportRepository = {
-    create: async (report: ValidatedReport, transaction: TransactionHandle): Promise<PersistedReport> => {
+    create: async (
+      reportId: string,
+      report: ValidatedReport,
+      transaction: TransactionHandle,
+    ): Promise<PersistedReport> => {
       this.calls.push('reports.create');
       this.repositoryHandle = transaction;
       this.received = report;
+      this.receivedId = reportId;
 
-      return { ...report, id: 'a-minted-id' };
+      return { ...report, id: reportId };
     },
     // The bolt-8 lifecycle methods. **This suite exercises the create path
     // only**, so they are refusals — a test that reached one would be a test
@@ -193,13 +208,47 @@ describe('the report creation service', () => {
     // The order is the mechanism: a submission that breaks a rule must
     // never reach the blob store, and the blob must exist before the row
     // that points at it.
-    expect(harness.calls).toEqual([
-      'areas.listActive',
-      'images.store:reports',
+    //
+    // **The store's prefix is entity-scoped**, so the recorded call carries
+    // the minted id rather than the bare `reports` prefix.
+    expect(harness.calls[0]).toBe('areas.listActive');
+    expect(harness.calls[1]).toMatch(/^images\.store:reports\/[0-9a-f-]{36}$/);
+    expect(harness.calls.slice(2)).toEqual([
       'transactions.run',
       'reports.create',
       'audit.record',
     ]);
+  });
+
+  it('mints the report id before the upload, and namespaces the blob by it', async () => {
+    const harness = new Harness();
+
+    await harness.service().create(
+      aRequest({
+        image: { bytes: Buffer.from([0xff, 0xd8, 0xff]), contentType: 'image/jpeg' },
+      }),
+    );
+
+    // **The id exists before the row does.** The upload happens before the
+    // insert (image-handling §5), and the blob's path is namespaced by the
+    // entity id (image-handling §4) — so the id has to be minted first.
+    const minted = harness.receivedId;
+
+    expect(minted).toMatch(/^[0-9a-f-]{36}$/);
+
+    // The prefix carries **that** id — the same one the row was written
+    // with, not a second one.
+    expect(harness.calls[1]).toBe(`images.store:reports/${minted}`);
+    expect(harness.received?.imageRef?.path).toBe(`reports/${minted}/stored-image.jpg`);
+  });
+
+  it('gives two reports two different ids, and two different prefixes', async () => {
+    const harness = new Harness();
+
+    const first = await harness.service().create(aRequest());
+    const second = await harness.service().create(aRequest());
+
+    expect(first.report.id).not.toBe(second.report.id);
   });
 
   it('passes the transaction handle to the repository', async () => {
@@ -221,12 +270,12 @@ describe('the report creation service', () => {
     expect(harness.received?.reporterId).toBe('the-reporter');
   });
 
-  it('returns the persisted report with the id the repository minted', async () => {
+  it('returns the persisted report with the id it was written with', async () => {
     const harness = new Harness();
 
     const result = await harness.service().create(aRequest());
 
-    expect(result.report.id).toBe('a-minted-id');
+    expect(result.report.id).toBe(harness.receivedId);
     expect(result.report.status).toBe('Open');
     expect(result.event.type).toBe('report.created');
   });
@@ -240,7 +289,7 @@ describe('the report creation service', () => {
       }),
     );
 
-    expect(harness.received?.imageRef?.path).toBe('reports/stored-image.jpg');
+    expect(harness.received?.imageRef?.path).toBe(`reports/${harness.receivedId}/stored-image.jpg`);
   });
 
   it('stores no image when the request carries none', async () => {
@@ -248,7 +297,7 @@ describe('the report creation service', () => {
 
     await harness.service().create(aRequest());
 
-    expect(harness.calls).not.toContain('images.store:reports');
+    expect(harness.calls.some((call) => call.startsWith('images.store'))).toBe(false);
     expect(harness.received?.imageRef).toBeNull();
   });
 
@@ -282,7 +331,7 @@ describe('the report creation service', () => {
 
     // The event is for a report that now certainly exists. An event for a
     // report that may not exist is worse than a missing one.
-    expect(result.event.reportId).toBe('a-minted-id');
+    expect(result.event.reportId).toBe(harness.receivedId);
     expect(result.event.reporterId).toBe('the-reporter');
   });
 
@@ -330,5 +379,56 @@ describe('the report creation service', () => {
 
     expect(recorded?.metadata).toMatchObject({ imagePresence: true });
     expect(JSON.stringify(recorded?.metadata)).not.toContain('stored-image');
+  });
+
+  it('sends no notification when the upload succeeds', async () => {
+    const harness = new Harness();
+
+    await harness.service().create(
+      aRequest({
+        image: { bytes: Buffer.from([0xff, 0xd8, 0xff]), contentType: 'image/jpeg' },
+      }),
+    );
+
+    // **An image success never triggers a notification.** The service has no
+    // notification port at all — there is nowhere for an email to come from
+    // — and this asserts the *sequence* it does have, so a notification
+    // dispatcher added to this path would show up as a new call rather than
+    // as a silent behaviour change.
+    expect(harness.calls).toEqual([
+      'areas.listActive',
+      expect.stringMatching(/^images\.store:reports\/[0-9a-f-]{36}$/),
+      'transactions.run',
+      'reports.create',
+      'audit.record',
+    ]);
+  });
+
+  it('sends no notification when the upload fails', async () => {
+    const harness = new Harness();
+
+    // **An image failure never blocks email** — and, on this path, there is
+    // no email to block. The report creation path carries no notification:
+    // the member is told the outcome in the response, and the Lost-side
+    // notifications belong to the lifecycle events, not to a report's
+    // creation. So a failed upload is the *only* thing that happens.
+    harness.imagesFailWith = new Error('The blob store did not respond.');
+
+    await expect(
+      harness.service().create(
+        aRequest({
+          image: { bytes: Buffer.from([0xff, 0xd8, 0xff]), contentType: 'image/jpeg' },
+        }),
+      ),
+    ).rejects.toThrow('The blob store did not respond.');
+
+    expect(harness.calls).toEqual([
+      'areas.listActive',
+      expect.stringMatching(/^images\.store:reports\/[0-9a-f-]{36}$/),
+    ]);
+
+    // **Nothing was written** — no report, no audit event.
+    expect(harness.calls).not.toContain('reports.create');
+    expect(harness.calls).not.toContain('audit.record');
   });
 });

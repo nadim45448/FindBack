@@ -486,16 +486,27 @@ describeWithDatabase('the report listing reader (database)', () => {
     it('lists only the member’s own Claims', async () => {
       const reportId = await writeReport({ name: 'A found wallet' });
 
+      // **A `Pending` Claim carries the submission fields,** because the
+      // schema's `claims_pending_fields_check` requires it — a Pending Claim
+      // always came from a submission.
       await prisma.$executeRawUnsafe(
-        `INSERT INTO "claims" ("report_id", "claimant_id", "status", "submitted_at", "created_at", "updated_at")
-         VALUES ($1::uuid, $2::uuid, 'Pending', NOW(), NOW(), NOW())`,
+        `INSERT INTO "claims" ("report_id", "claimant_id", "status", "submitted_at",
+                               "reason", "identifying_details", "date_lost",
+                               "created_at", "updated_at")
+         VALUES ($1::uuid, $2::uuid, 'Pending', NOW(),
+                 'It is my brown leather wallet.', 'Blue cardholder with a dent.',
+                 DATE '2026-10-20', NOW(), NOW())`,
         reportId,
         CLAIMANT_ID,
       );
 
       await prisma.$executeRawUnsafe(
-        `INSERT INTO "claims" ("report_id", "claimant_id", "status", "submitted_at", "created_at", "updated_at")
-         VALUES ($1::uuid, $2::uuid, 'Pending', NOW(), NOW(), NOW())`,
+        `INSERT INTO "claims" ("report_id", "claimant_id", "status", "submitted_at",
+                               "reason", "identifying_details", "date_lost",
+                               "created_at", "updated_at")
+         VALUES ($1::uuid, $2::uuid, 'Pending', NOW(),
+                 'It is my brown leather wallet.', 'Blue cardholder with a dent.',
+                 DATE '2026-10-20', NOW(), NOW())`,
         reportId,
         RESPONDER_ID,
       );
@@ -516,8 +527,13 @@ describeWithDatabase('the report listing reader (database)', () => {
       const reportId = await writeReport({ name: 'A lost wallet', type: 'Lost' });
 
       await prisma.$executeRawUnsafe(
-        `INSERT INTO "recovery_responses" ("report_id", "responder_id", "status", "submitted_at", "created_at", "updated_at")
-         VALUES ($1::uuid, $2::uuid, 'Submitted', NOW(), NOW(), NOW())`,
+        `INSERT INTO "recovery_responses" ("report_id", "responder_id", "status",
+                                            "campus_area", "where_found_exact_place",
+                                            "observed_identifying_details", "date_found",
+                                            "submitted_at", "created_at", "updated_at")
+         VALUES ($1::uuid, $2::uuid, 'Submitted', 'library', 'Library entrance.',
+                 'A silver locket.', DATE '2026-10-26',
+                 NOW(), NOW(), NOW())`,
         reportId,
         RESPONDER_ID,
       );
@@ -538,9 +554,15 @@ describeWithDatabase('the report listing reader (database)', () => {
       const other = await writeReport({ name: 'A red bag' });
 
       await prisma.$executeRawUnsafe(
-        `INSERT INTO "claims" ("report_id", "claimant_id", "status", "submitted_at", "created_at", "updated_at")
-         VALUES ($1::uuid, $3::uuid, 'Pending', NOW(), NOW(), NOW()),
-                ($2::uuid, $3::uuid, 'Pending', NOW(), NOW(), NOW())`,
+        `INSERT INTO "claims" ("report_id", "claimant_id", "status", "submitted_at",
+                               "reason", "identifying_details", "date_lost",
+                               "created_at", "updated_at")
+         VALUES ($1::uuid, $3::uuid, 'Pending', NOW(),
+                 'It is my blue leather wallet.', 'Blue cardholder with a dent.',
+                 DATE '2026-10-20', NOW(), NOW()),
+                ($2::uuid, $3::uuid, 'Pending', NOW(),
+                 'It is my red fabric bag.', 'Red bag with a torn strap.',
+                 DATE '2026-10-20', NOW(), NOW())`,
         matching,
         other,
         CLAIMANT_ID,
@@ -589,6 +611,17 @@ describeWithDatabase('the report listing reader (database)', () => {
       // serve and no scan permitted, so the search index is the only plan
       // left — and the query would fail if the reader's expression did not
       // match it.
+      //
+      // **The query carries no `ORDER BY` and no status filter, and that is
+      // what isolates the claim.** An `ORDER BY date` gives the planner a
+      // *better* plan than the search index: it walks `idx_reports_date` for
+      // the ordering and applies the keyword as a filter. A status filter
+      // does the same through `idx_reports_status_date`. Both plans are
+      // index-backed and fast, and both prove nothing about the search
+      // index — which is why this assertion used to pass a query that could
+      // have lost its search index entirely. With the keyword predicate as
+      // the only thing the plan has to satisfy, the search index is the
+      // only plan left.
       await prisma.$executeRawUnsafe(
         `INSERT INTO "reports" ("type", "status", "name", "category", "description",
                                 "date", "campus_area", "reporter_id", "created_at", "updated_at")
@@ -608,9 +641,7 @@ describeWithDatabase('the report listing reader (database)', () => {
            SELECT r."id"
            FROM "reports" r
            WHERE ${searchVectorExpression('r')}
-             @@ plainto_tsquery('simple', $1)
-             AND r."status" IN ('Open')
-           ORDER BY r."date" DESC`,
+             @@ plainto_tsquery('simple', $1)`,
           '1337',
         );
       });

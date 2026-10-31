@@ -91,6 +91,14 @@ export interface ProjectedRecoveryResponse {
   readonly responseId: string;
   readonly status: string;
   readonly submittedAt: string;
+  /**
+   * The campus area the responder says the item was found in.
+   *
+   * **FR-44's required where-found field, and not a Sensitive Field.** It
+   * is the deployment's campus-area enum, so it is granted with the
+   * response rather than behind FR-37's sensitive grant.
+   */
+  readonly campusArea?: string;
   /** FR-37 sensitive — the responder, the Lost-report owner, and administrators. */
   readonly whereFoundExactPlace?: string;
   readonly observedIdentifyingDetails?: string;

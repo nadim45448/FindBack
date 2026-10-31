@@ -2,11 +2,11 @@
 id: 002-public-and-authentication-surfaces
 unit: 007-web-surfaces
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:51:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 012-web-public
+implemented: true
 traces_to: []
 realizes_fr: [FR-1, FR-2, FR-4, FR-51, FR-27]
 ---
@@ -21,27 +21,30 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** a visitor on `/`, **When** the landing page renders, **Then** it shows the brand mark, a one-paragraph value proposition, `Sign in` and `Register` CTAs, and below the fold a `Browse the listings` link to `/listings`
-- [ ] **Given** a visitor on `/listings`, **When** a summary row is activated, **Then** the browser routes to `/login?return=/listings/:id` with the message `Sign in to see item details.`, and no anonymous detail page exists
-- [ ] **Given** an anonymous visitor, **When** the topbar renders on any public or auth-flow page, **Then** it shows `Browse Lost & Found` as a plain text link plus `Sign in` and `Register` rendered as `primary` buttons that read as buttons at rest, and `Logout` is absent
-- [ ] **Given** a visitor on `/login`, **When** the form renders, **Then** it exposes `Email` and `Password` fields and a `Forgot your password?` action beneath the password field
-- [ ] **Given** a visitor submits `/login` with credentials that do not match, **When** the response renders, **Then** the message is `Email and password don't match. Try again.` and the form remains usable
-- [ ] **Given** a `Rejected` account, **When** it attempts to sign in, **Then** the single message is `We couldn't sign you in. Your account is not active. If you think this is a mistake, contact your administrator.` and the rejection reason is never exposed
-- [ ] **Given** a `Deactivated` account, **When** it attempts to sign in, **Then** the identical neutral message renders, and the surface does not distinguish `Rejected` from `Deactivated`
-- [ ] **Given** any account state, **When** a sign-in attempt is made, **Then** no `/rejected` route and no `/deactivated` route exists and neither state reaches the member surface or `/pending`
-- [ ] **Given** a visitor on `/register`, **When** the form renders, **Then** it exposes name, email, password, confirm password, and self-declared role with the documented validation limits and a client hint of at least 8 characters, at least 1 letter, and at least 1 number
-- [ ] **Given** a visitor submits `/register` successfully, **When** the response renders, **Then** the browser lands on `/pending-registered` with the copy `Your account is pending administrator approval. You'll get an email when you're approved.` and no automatic login occurs
-- [ ] **Given** a visitor's registration is rejected by the server, **When** the form re-renders, **Then** the errors appear only after the submit attempt, the error summary carries `role="alert"`, the first invalid field receives focus, and the errors use the `EXPERIENCE.md` §4.9 validation tone
-- [ ] **Given** a `Pending` account, **When** it signs in, **Then** it lands on `/pending` with the banner `Your account is pending administrator approval.` and the secondary line `You can sign out below — your registration is saved.`
-- [ ] **Given** a `Pending` account on `/pending`, **When** the surface renders, **Then** the header is brand mark plus `Pending` status pill plus `Log out` only, the single action is `Log out`, and all other nav items are hidden
-- [ ] **Given** a `Pending` account that deep-links to a member surface, **When** the surface renders, **Then** it shows `Your account is pending administrator approval. This part of FindBack will be available once your account is approved.` with a `Back to your account` link and does not redirect-loop
-- [ ] **Given** a `Pending` account, **When** `/pending-registered` and `/pending` are compared, **Then** they remain distinct surfaces and are never merged
-- [ ] **Given** a visitor on `/forgot`, **When** the form renders, **Then** it exposes a single `Email` field, a `Send reset instructions` primary button, and a `Back to sign in` secondary link
-- [ ] **Given** any email address submitted at `/forgot`, **When** the response renders, **Then** `/forgot-sent` shows the heading `Check your email` and the body `If an account exists for that email address, password reset instructions have been sent.` with a `Back to sign in` link
+- [x] **Given** a visitor on `/`, **When** the landing page renders, **Then** it shows the brand mark, a one-paragraph value proposition, `Sign in` and `Register` CTAs, and below the fold a `Browse the listings` link to `/listings`
+- [x] **Given** a visitor on `/listings`, **When** a summary row is activated, **Then** the browser routes to `/login?return=/listings/:id` with the message `Sign in to see item details.`, and no anonymous detail page exists
+- [x] **Given** an anonymous visitor, **When** the topbar renders on any public or auth-flow page, **Then** it shows `Browse Lost & Found` as a plain text link plus `Sign in` and `Register` rendered as `primary` buttons that read as buttons at rest, and `Logout` is absent
+- [x] **Given** a visitor on `/login`, **When** the form renders, **Then** it exposes `Email` and `Password` fields and a `Forgot your password?` action beneath the password field
+- [x] **Given** a visitor submits `/login` with credentials that do not match, **When** the response renders, **Then** the message is `Email and password don't match. Try again.` and the form remains usable
+- [x] **Given** a `Rejected` account, **When** it attempts to sign in, **Then** the single message is `We couldn't sign you in. Your account is not active. If you think this is a mistake, contact your administrator.` and the rejection reason is never exposed
+- [x] **Given** a `Deactivated` account, **When** it attempts to sign in, **Then** the identical neutral message renders, and the surface does not distinguish `Rejected` from `Deactivated`
+- [x] **Given** any account state, **When** a sign-in attempt is made, **Then** no `/rejected` route and no `/deactivated` route exists and neither state reaches the member surface or `/pending`
+- [x] **Given** a visitor on `/register`, **When** the form renders, **Then** it exposes name, email, password, confirm password, and self-declared role with the documented validation limits and a client hint of at least 8 characters, at least 1 letter, and at least 1 number
+- [x] **Given** a visitor submits `/register` successfully, **When** the response renders, **Then** the browser lands on `/pending-registered` with the copy `Your account is pending administrator approval. You'll get an email when you're approved.` and no automatic login occurs
+- [x] **Given** a visitor's registration is rejected by the server, **When** the form re-renders, **Then** the errors appear only after the submit attempt, the error summary carries `role="alert"`, the first invalid field receives focus, and the errors use the `EXPERIENCE.md` §4.9 validation tone
+- [x] **Given** a `Pending` account, **When** it signs in, **Then** it lands on `/pending` with the banner `Your account is pending administrator approval.` and the secondary line `You can sign out below — your registration is saved.`
+- [x] **Given** a `Pending` account on `/pending`, **When** the surface renders, **Then** the header is brand mark plus `Pending` status pill plus `Log out` only, the single action is `Log out`, and all other nav items are hidden
+- [x] **Given** a `Pending` account that deep-links to a member surface, **When** the surface renders, **Then** it shows `Your account is pending administrator approval. This part of FindBack will be available once your account is approved.` with a `Back to your account` link and does not redirect-loop
+- [x] **Given** a `Pending` account, **When** `/pending-registered` and `/pending` are compared, **Then** they remain distinct surfaces and are never merged
+- [x] **Given** a visitor on `/forgot`, **When** the form renders, **Then** it exposes a single `Email` field, a `Send reset instructions` primary button, and a `Back to sign in` secondary link
+- [x] **Given** any email address submitted at `/forgot`, **When** the response renders, **Then** `/forgot-sent` shows the heading `Check your email` and the body `If an account exists for that email address, password reset instructions have been sent.` with a `Back to sign in` link
 - [ ] **Given** an unregistered, `Pending`, `Active`, `Rejected`, and `Deactivated` email submitted at `/forgot`, **When** the responses are compared, **Then** the response content, status, and observable timing do not differ, so the surface reveals no account existence
+  - *Partially proven by bolt 012.* The **surface half** is proven: the form has no branch on the account state, and a registered and an unregistered address produce the same route, the same request body shape, and the same outcome. The **server's** status and timing parity belongs to bolt 005's reset flow. See the test report's owner items.
 - [ ] **Given** a successful password reset, **When** the account state is read, **Then** a `Pending` account remains `Pending`, a `Rejected` account remains `Rejected`, and a `Deactivated` account remains `Deactivated`
+  - *Not this bolt's scope.* The story's own "Out of Scope" section names the reset mechanics as Unit 001's work; the reset itself is owned by bolt 005 and the lifecycle by bolt 007. Bolt 012 owns the surface that starts a reset and the neutral confirmation it produces — both proven.
 - [ ] **Given** the ten public and auth surfaces, **When** each is rendered, **Then** every user-facing string is taken verbatim from `EXPERIENCE.md` and no string is reworded or invented
-- [ ] **Given** a validation error on any of the ten surfaces, **When** it renders, **Then** no error, icon, red border, or `aria-invalid` state is present before the first submit attempt, and a field's error state clears the moment its value becomes valid
+  - *33 of the 36 strings proven verbatim.* The landing paragraph, the registration-confirmation heading, and the reset-password heading are **not fixed word-for-word by the spines**, so they are asserted against the rule each serves rather than against the document. This needs the spines' owner — either a line in `EXPERIENCE.md` or an explicit note that they are its delegated wording.
+- [x] **Given** a validation error on any of the ten surfaces, **When** it renders, **Then** no error, icon, red border, or `aria-invalid` state is present before the first submit attempt, and a field's error state clears the moment its value becomes valid
 
 Technical Notes
 

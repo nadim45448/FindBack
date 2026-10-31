@@ -91,6 +91,7 @@ describeWithDatabase('bolt 004 — the identity performance budgets', () => {
 
   async function clearTables(): Promise<void> {
     await prisma.session.deleteMany({});
+    await prisma.passwordResetToken.deleteMany({});
     await prisma.account.deleteMany({});
     await prisma.rateLimitCounter.deleteMany({});
     await clearAuditTablesForTest(prisma);
@@ -251,7 +252,10 @@ describeWithDatabase('bolt 004 — the identity performance budgets', () => {
     const stack = buildIdentityStack();
 
     const rows = await prisma.$queryRaw<Array<{ id: string }>>`
-      SELECT "id" FROM "accounts" WHERE lower(btrim("email")) = lower(btrim(${email}))
+      SELECT "id" FROM "accounts"
+      WHERE lower(btrim("email")) = lower(btrim(${email}))
+      ORDER BY CASE WHEN "status" = 'Rejected' THEN 1 ELSE 0 END, "createdAt" DESC
+      LIMIT 1
     `;
 
     const accountId = rows[0]?.id ?? '';
@@ -326,7 +330,10 @@ describeWithDatabase('bolt 004 — the identity performance budgets', () => {
     );
 
     const rows = await prisma.$queryRaw<Array<{ id: string }>>`
-      SELECT "id" FROM "accounts" WHERE lower(btrim("email")) = lower(btrim(${administratorEmail}))
+      SELECT "id" FROM "accounts"
+      WHERE lower(btrim("email")) = lower(btrim(${administratorEmail}))
+      ORDER BY CASE WHEN "status" = 'Rejected' THEN 1 ELSE 0 END, "createdAt" DESC
+      LIMIT 1
     `;
 
     await prisma.account.update({

@@ -109,7 +109,7 @@ describeWithDatabase('bolt 004 — the identity acceptance criteria', () => {
   /**
    * A fresh client IP.
    *
-   * The rate limiter buckets by IP, and the registration bucket allows five
+   * The rate limiter buckets by IP, and the registration bucket allows 30
    * registrations an hour. A test that reused one IP would throttle itself
    * out of the route it is trying to exercise, so every request gets its own.
    */
@@ -125,6 +125,7 @@ describeWithDatabase('bolt 004 — the identity acceptance criteria', () => {
   /** Clear every table the suites touch. */
   async function clearTables(): Promise<void> {
     await prisma.session.deleteMany({});
+    await prisma.passwordResetToken.deleteMany({});
     await prisma.account.deleteMany({});
     await prisma.rateLimitCounter.deleteMany({});
     await clearAuditTablesForTest(prisma);
@@ -165,7 +166,10 @@ describeWithDatabase('bolt 004 — the identity acceptance criteria', () => {
   /** The account row for an email address. */
   async function accountFor(email: string): Promise<string> {
     const rows = await prisma.$queryRaw<Array<{ id: string }>>`
-      SELECT "id" FROM "accounts" WHERE lower(btrim("email")) = lower(btrim(${email}))
+      SELECT "id" FROM "accounts"
+      WHERE lower(btrim("email")) = lower(btrim(${email}))
+      ORDER BY CASE WHEN "status" = 'Rejected' THEN 1 ELSE 0 END, "createdAt" DESC
+      LIMIT 1
     `;
 
     const id = rows[0]?.id;
@@ -419,7 +423,7 @@ describeWithDatabase('bolt 004 — the identity acceptance criteria', () => {
       expect(outcome.approvalEmailRecipient).toBe(email);
     });
 
-    it('criterion 2: rejecting makes the account Rejected, records the reason, and sends no email', async () => {
+    it('criterion 2: rejecting makes the account Rejected, records the reason, and queues the rejection email', async () => {
       const email = aUniqueEmail();
       await registerVia({ email });
 
@@ -439,10 +443,11 @@ describeWithDatabase('bolt 004 — the identity acceptance criteria', () => {
       expect(row?.status).toBe('Rejected');
       expect(row?.rejectionReason).toBe('Not a member of the organization');
 
-      // **No email** — a rejection has no recipient, so the route never
-      // reaches the send, and no email line is logged.
-      expect(linesFor('account.approved_email_not_configured')).toHaveLength(0);
-      expect(linesFor('account.approved_email_failed')).toHaveLength(0);
+      expect(linesFor('account.rejected_email_failed')).toHaveLength(0);
+      expect(
+        linesFor('account.rejected_email_not_configured').length +
+          linesFor('account.rejected_email_sent').length,
+      ).toBe(1);
 
       const rejection = await prisma.auditEvent.findFirst({
         where: { eventType: 'registration.rejected' },
@@ -620,6 +625,41 @@ describeWithDatabase('bolt 004 — the identity acceptance criteria', () => {
 
       expect(row?.status).toBe('Rejected');
       expect(row?.rejectionReason).toBeNull();
+    });
+
+    it('edge case: a rejected email can be registered again', async () => {
+      const email = aUniqueEmail();
+      await registerVia({ email });
+
+      const rejectedId = await accountFor(email);
+
+      await anAdministrator();
+
+      const rejection = await decisionRoute(
+        jsonRequest({ decision: 'reject', reason: 'Not a member of the organization' }),
+        { params: Promise.resolve({ id: rejectedId }) },
+      );
+
+      expect(rejection.status).toBe(200);
+
+      requestContext.sessionToken = null;
+      requestContext.csrfToken = null;
+
+      const second = await registerVia({ email, displayName: 'Jane Again' });
+
+      expect(second.status).toBe(201);
+      expect(await bodyOf(second)).toEqual({ status: 'Pending' });
+
+      const liveId = await accountFor(email);
+
+      expect(liveId).not.toBe(rejectedId);
+
+      const live = await prisma.account.findUnique({ where: { id: liveId } });
+      const rejected = await prisma.account.findUnique({ where: { id: rejectedId } });
+
+      expect(live?.status).toBe('Pending');
+      expect(live?.displayName).toBe('Jane Again');
+      expect(rejected?.status).toBe('Rejected');
     });
   });
 
@@ -1183,7 +1223,7 @@ describeWithDatabase('bolt 004 — the identity acceptance criteria', () => {
       expect(rejection?.reason).toBe('Not a member of the organization');
     });
 
-    it('criterion 5: a rejection sends no email of any kind', async () => {
+    it('criterion 5: a rejection emails the applicant with the reason', async () => {
       const email = aUniqueEmail();
       await registerVia({ email });
 
@@ -1196,10 +1236,11 @@ describeWithDatabase('bolt 004 — the identity acceptance criteria', () => {
         { params: Promise.resolve({ id: accountId }) },
       );
 
-      // **No email line was logged** — neither the "not configured" nor the
-      // "failed" one. The route had no recipient to send to.
-      expect(linesFor('account.approved_email_not_configured')).toHaveLength(0);
-      expect(linesFor('account.approved_email_failed')).toHaveLength(0);
+      expect(linesFor('account.rejected_email_failed')).toHaveLength(0);
+      expect(
+        linesFor('account.rejected_email_not_configured').length +
+          linesFor('account.rejected_email_sent').length,
+      ).toBe(1);
 
       // And the subject account's trail carries the registration and the
       // rejection — and nothing else. (The administrator's own registration

@@ -80,7 +80,17 @@ const CLAIM_SELECT = {
 
 /** The `recovery_responses` columns. */
 const RESPONSE_SELECT = {
-  base: ['id', 'reportId', 'responderId', 'status', 'submittedAt'] as const,
+  /**
+   * The base columns.
+   *
+   * **`campusArea` is a base column, not a sensitive one.** FR-44's
+   * where-found area is the deployment's campus-area enum — the same
+   * enumeration the report's own campus area uses — and it is not one of
+   * FR-37's Sensitive Fields. §9.6 lists it beside the exact place as one
+   * of the response's two where-found fields, and it is granted with the
+   * response itself.
+   */
+  base: ['id', 'reportId', 'responderId', 'status', 'submittedAt', 'campusArea'] as const,
   sensitive: [
     'whereFoundExactPlace',
     'observedIdentifyingDetails',

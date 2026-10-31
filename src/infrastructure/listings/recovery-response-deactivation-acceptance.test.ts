@@ -35,6 +35,14 @@ describeWithDatabase('deactivating a responder (database)', () => {
   const ownerId = '00000000-0000-4000-8000-000000000741';
   const responderId = '00000000-0000-4000-8000-000000000742';
   const administratorId = '00000000-0000-4000-8000-000000000743';
+  /**
+   * A second responder, for the "every response on the report" case.
+   *
+   * **Bolt `015`'s uniqueness index refuses a second *live* response from the
+   * same responder on the same report** — so a second row on the report
+   * belongs to another responder.
+   */
+  const otherResponderId = '00000000-0000-4000-8000-000000000744';
 
   let reportId = '';
   let responseId = '';
@@ -93,13 +101,19 @@ describeWithDatabase('deactivating a responder (database)', () => {
   beforeAll(async () => {
     await anAccount(ownerId, 'rr-deactivate-owner@example.test');
     await anAccount(responderId, 'rr-deactivate-responder@example.test');
+    await anAccount(otherResponderId, 'rr-deactivate-other-responder@example.test');
     await anAccount(administratorId, 'rr-deactivate-admin@example.test', true);
 
     reportId = await aLostReport();
 
     const rows = await prisma.$queryRawUnsafe<{ id: string }[]>(
-      `INSERT INTO "recovery_responses" ("report_id", "responder_id", "status", "submitted_at")
-       VALUES ($1, $2, 'Submitted', NOW())
+      `INSERT INTO "recovery_responses" ("report_id", "responder_id", "status",
+                                          "campus_area", "where_found_exact_place",
+                                          "observed_identifying_details", "date_found",
+                                          "submitted_at", "created_at", "updated_at")
+       VALUES ($1, $2, 'Submitted', 'library', 'On a bench.',
+               'Brown leather, zip closure.', DATE '2026-10-28',
+               NOW(), NOW(), NOW())
        RETURNING "id"`,
       reportId,
       responderId,
@@ -119,10 +133,11 @@ describeWithDatabase('deactivating a responder (database)', () => {
     );
     await prisma.$executeRawUnsafe('DELETE FROM "reports" WHERE "id" = $1::uuid', reportId);
     await prisma.$executeRawUnsafe(
-      'DELETE FROM "accounts" WHERE "id" IN ($1, $2, $3)',
+      'DELETE FROM "accounts" WHERE "id" IN ($1, $2, $3, $4)',
       ownerId,
       responderId,
       administratorId,
+      otherResponderId,
     );
     await prisma.$disconnect();
   });
@@ -192,21 +207,32 @@ describeWithDatabase('deactivating a responder (database)', () => {
     });
 
     it('leaves every response on the report intact', async () => {
-      // **The whole set, not just the one.** A second response from the same
-      // responder makes the point that nothing was selectively preserved.
+      // **The whole set, not just the one.** A second response from a
+      // *different* responder makes the point that nothing was selectively
+      // preserved — and a second *live* response from the same responder is
+      // refused by bolt `015`'s uniqueness index, so the second row belongs
+      // to another responder.
       const extra = await prisma.$queryRawUnsafe<{ id: string }[]>(
-        `INSERT INTO "recovery_responses" ("report_id", "responder_id", "status", "submitted_at")
-         VALUES ($1, $2, 'Submitted', NOW())
+        `INSERT INTO "recovery_responses" ("report_id", "responder_id", "status",
+                                            "campus_area", "where_found_exact_place",
+                                            "observed_identifying_details", "date_found",
+                                            "submitted_at", "created_at", "updated_at")
+         VALUES ($1, $2, 'Submitted', 'library', 'On a bench.',
+                 'Brown leather, zip closure.', DATE '2026-10-28',
+                 NOW(), NOW(), NOW())
          RETURNING "id"`,
         reportId,
-        responderId,
+        otherResponderId,
       );
 
       const rows = await prisma.$queryRawUnsafe<{ id: string; status: string }[]>(
-        `SELECT "id", "status" FROM "recovery_responses" WHERE "responder_id" = $1::uuid`,
-        responderId,
+        `SELECT "id", "status" FROM "recovery_responses" WHERE "report_id" = $1::uuid`,
+        reportId,
       );
 
+      // **Every response on the report, not only the deactivated
+      // responder's.** The deactivation is refused by the foreign key while
+      // responses exist, and nothing is selectively preserved.
       expect(rows).toHaveLength(2);
       expect(rows.every((row) => row.status === 'Submitted')).toBe(true);
       expect(rows.map((row) => row.id)).toContain(extra[0]!.id);

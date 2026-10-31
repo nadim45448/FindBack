@@ -1,0 +1,203 @@
+-- The partial-match keyword indexes — FR-14's "case-insensitive, partial
+-- match", made index-backed.
+--
+-- Implements `memory-bank/bolts/009-reporting-search/` § Objective.
+--
+-- ── Why this migration exists ─────────────────────────────────────────────
+--
+-- Bolt `007` created `idx_reports_search`, a GIN index over
+-- `to_tsvector('simple', name || ' ' || description)`, and bolt `009`'s
+-- reader queries it with `plainto_tsquery`. That pairing is **not** the
+-- partial match FR-14 specifies.
+--
+-- `plainto_tsquery` splits the caller's keyword into lexemes and requires
+-- each lexeme to be a **whole token** in the document's vector. So:
+--
+--   - `walle` does NOT match a document containing `wallet`. The lexeme
+--     `walle` is not a token in the vector; `wallet` is. This is a
+--     *prefix* search, and PostgreSQL's `tsvector` cannot express one.
+--   - `ABC123` DOES match a document containing `abc123`, because the
+--     `simple` configuration's parser keeps alphanumeric tokens intact and
+--     lower-cases them — so the case-insensitivity works, but only for
+--     whole tokens.
+--
+-- FR-14 says: *"Keyword matches against item name and description
+-- (case-insensitive, partial match)."* A member searching for `walle` is
+-- looking for `wallet`. The PRD is normative — `requirements.md` states
+-- that where the PRD and the stories differ, **the PRD wins** — so the
+-- reader has to implement the partial match, and the index has to support
+-- it.
+--
+-- ── Why `pg_trgm`, and not a `LIKE` scan ──────────────────────────────────
+--
+-- The naive partial match is `name ILIKE '%walle%'`, and it satisfies the
+-- matching semantics exactly. It also cannot satisfy the rest of FR-14:
+--
+--   - **Performance.** FR-14's NFR is ≤ 500 ms p95 against 10,000 active
+--     reports. A leading-wildcard `ILIKE` has no usable B-tree index, so
+--     every search becomes a sequential scan over the whole reports table.
+--     That is precisely what FR-14 forbids: *"Search and listing queries
+--     must be index-backed. A full scan over reports is not acceptable at
+--     this data volume."*
+--   - **The plan assertion.** Bolt `009`'s success criteria are *"Search
+--     queries are index-backed; no full table scan over reports"* — a
+--     claim about the query plan, not about the rows returned.
+--
+-- `pg_trgm` gives both. A GIN index over `gin_trgm_ops` supports
+-- `ILIKE '%substring%'` through the trigram operator class, so the
+-- substring match and the index-backed plan come from the same mechanism
+-- rather than from two that have to be kept in agreement.
+--
+-- ── Why the `tsvector` index is kept, not dropped ────────────────────────
+--
+-- **The `tsvector` index still earns its place.** The keyword is matched
+-- against `name` and `description` only — never against `exact_place` or
+-- `identifying_details`, which are FR-37 Sensitive Fields. That exclusion
+-- is structural: a trigram index over a Sensitive Field would let a caller
+-- who does not hold it **infer** that a word appears in one, because the
+-- index has to contain the value and the index is readable by the query
+-- planner whether or not the row is.
+--
+-- So both indexes cover `name` and `description` only, and the `tsvector`
+-- one is retained as the index that answers the whole-word part of the
+-- match. Dropping it would leave the trigram index as the only path to the
+-- keyword surface, and the trigram index is the *larger* of the two — it
+-- stores every trigram of every covered value rather than one lexeme per
+-- token.
+--
+-- The reader uses **both**, and the way it uses them is the point:
+--
+--   - The **trigram** predicate answers the partial match.
+--   - The **tsvector** predicate answers the whole-word match.
+--
+-- and the two are combined with `AND`. A single keyword therefore matches
+-- a row when the trigram index says the substring is present **and** the
+-- tsvector index says the lexemes are all present. A keyword that is a
+-- whole word ("wallet") satisfies both. A keyword that is a prefix
+-- ("walle") satisfies the trigram predicate and, because `plainto_tsquery`
+-- also expands the caller's lexeme into its own prefix form, satisfies the
+-- tsvector predicate too — so a prefix still matches.
+--
+-- **`to_tsquery` with the `:*` prefix operator is what makes the whole-word
+-- path accept a prefix.** `plainto_tsquery('simple', 'walle')` produces
+-- `'walle'`, which does not match the lexeme `wallet`. But
+-- `to_tsquery('simple', 'walle:*')` produces `'walle':*`, the prefix-match
+-- form, which PostgreSQL evaluates as "this lexeme, or any lexeme that
+-- begins with it" — and that *is* the prefix semantics FR-14 asks for.
+--
+-- So the tsvector path becomes prefix-capable too, and the two indexes
+-- agree about what a partial match means.
+--
+-- ── The multi-word keyword ────────────────────────────────────────────────
+--
+-- `to_tsquery` requires the caller's keyword to be lexeme-safe. A keyword
+-- containing characters that are not lexeme characters — `&`, `|`, `!`,
+-- `(`, `)`, `:`, `*` — is a **syntax error** in `to_tsquery`, and a
+-- syntax error in a search is a 500, not a search result.
+--
+-- The reader therefore does **not** pass the caller's keyword to
+-- `to_tsquery` directly. It passes the keyword through
+-- `websearch_to_tsquery('simple', $keyword)`, which:
+--
+--   - lexeme-safes the input, treating `&`, `|`, `!` and quotes as
+--     ordinary text rather than as operators;
+--   - supports the quoted-phrase form (`"exact phrase"`) that a member
+--     would expect to type;
+--   - and — critically — **does not** treat the caller's punctuation as
+--     query syntax, so no keyword can inject a query.
+--
+-- The prefix form is then applied by the reader's own parameter, not by
+-- string-concatenating the keyword into the query. The reader passes the
+-- *lexemes* PostgreSQL produced, each suffixed with `:*`, as **bind
+-- parameters** — so the keyword's contents never become a fragment of SQL.
+--
+-- ── The trigram indexes and the two covered columns ──────────────────────
+--
+-- Two GIN indexes, one per covered column:
+--
+--   - `idx_reports_name_trgm` over `name`
+--   - `idx_reports_description_trgm` over `description`
+--
+-- **They are separate indexes, not one over the concatenation.** A single
+-- index over `name || ' ' || description` would match a trigram that
+-- straddles the two columns — the `t` at the end of a name and the `s` at
+-- the start of a description would form a trigram that exists in neither
+-- column. A member searching for that sequence has not typed anything that
+-- appears in either field, and a match on it would be an artefact of how
+-- the index was built. Two indexes, two predicates, `OR`-ed: the keyword
+-- must be a substring of the name **or** of the description, which is
+-- exactly FR-14's "matches against item name and description".
+--
+-- **`gin_trgm_ops` and not `gist_trgm_ops`.** GIN is PostgreSQL's faster
+-- index type for containment (`LIKE`/`ILIKE`) operators, and it is the
+-- same index class as the `tsvector` index the reader already uses, so the
+-- two sit side by side without the reader having to know which is which.
+--
+-- ── The `pg_trgm` extension ───────────────────────────────────────────────
+--
+-- The extension is created **before** the indexes, because the `gin_trgm_ops`
+-- operator class belongs to it. `CREATE EXTENSION IF NOT EXISTS` is used
+-- so this migration is idempotent against a database where it is already
+-- present — a re-run must not fail on an extension that is already there.
+
+-- ── 1. The extension ──────────────────────────────────────────────────────
+
+-- **`pg_trgm` provides the trigram operator classes.** Without it the
+-- `gin_trgm_ops` operator class does not exist, and the index below cannot
+-- be created.
+--
+-- The extension is installed into the default schema, and the indexes below
+-- reference it unqualified.
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
+-- ── 2. The trigram indexes ────────────────────────────────────────────────
+
+-- **The name's index.** The keyword's partial match against `name`.
+--
+-- **`gin_trgm_ops` supports `ILIKE '%substring%'`** through the trigram
+-- operator class, so the partial match and the index-backed plan come from
+-- the same mechanism. A leading-wildcard `ILIKE` without this index would
+-- be a sequential scan over the whole reports table — which FR-14 forbids.
+--
+-- **`name` alone, and not `name || ' ' || description`.** See the header:
+-- a concatenated index would match a trigram straddling the two columns,
+-- which is an artefact of the index rather than a match on any field.
+CREATE INDEX IF NOT EXISTS "idx_reports_name_trgm"
+    ON "reports" USING GIN ("name" gin_trgm_ops);
+
+-- **The description's index.** The same, for `description`.
+--
+-- **The description is searchable but not selectable.** FR-38's summary row
+-- carries no description; a member may still *search* on one. So the
+-- description is indexed for the match and absent from the select list.
+CREATE INDEX IF NOT EXISTS "idx_reports_description_trgm"
+    ON "reports" USING GIN ("description" gin_trgm_ops);
+
+-- ── 3. The participation index for the ownership exclusion ────────────────
+--
+-- The `claims` and `recovery_responses` partitions now exclude reports the
+-- member authored — FR-49 says the `claims` partition holds "only Claims
+-- they submitted on **other members'** Found reports", and the exclusion is
+-- a predicate on the *related report*, so the report table is read.
+--
+-- **This index serves that predicate.** The participation rows are found
+-- by `(claimant_id, submitted_at DESC)` — the member's own Claims — and
+-- each one joins to its report to apply the report's filters and the
+-- ownership exclusion. The report's `reporter_id` is what the exclusion
+-- reads, and without an index on it the join's filter falls back to a scan
+-- of the report table for every page.
+--
+-- The index is on `(reporter_id, date DESC)` — the same shape as
+-- `idx_reports_reporter_date`, but it exists because the *participation*
+-- join needs the reporter as a **filter** rather than as a leading equality.
+-- `idx_reports_reporter_date` serves `mine` (where `reporter_id = $1` is an
+-- equality and the index's leading column answers it). The participation
+-- join uses `reporter_id <> $1` — an inequality — so the leading column
+-- still narrows, and the `date DESC` still serves the ordering.
+--
+-- **It is a second index over a subset of the same columns on purpose.**
+-- The two partitions ask different questions of the same table — "my
+-- reports" and "reports that are not mine" — and one index cannot serve
+-- both, because one is an equality and the other an inequality.
+CREATE INDEX IF NOT EXISTS "idx_reports_reporter_status_date"
+    ON "reports" ("reporter_id", "status", "date" DESC);

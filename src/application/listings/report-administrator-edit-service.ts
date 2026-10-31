@@ -227,7 +227,7 @@ export class ReportAdministratorEditService {
     }
 
     const imageReplacement = request.image
-      ? await this.images.store(request.image, 'reports')
+      ? await this.images.store(request.image, `reports/${report.id}`)
       : null;
 
     const imageChanged = imageReplacement !== null && report.imageRef !== null;

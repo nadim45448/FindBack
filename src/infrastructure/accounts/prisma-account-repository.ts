@@ -107,13 +107,16 @@ export class PrismaAccountRepository implements AccountRepository {
    * Find an account by its email address.
    *
    * The lookup is on `lower(btrim(email))` — the same expression the unique
-   * index uses — so a row written by any path is found, and the lookup
-   * cannot return two accounts.
+   * index uses — so a row written by any path is found. A live account
+   * (`Pending` / `Active` / `Deactivated`) is preferred over a `Rejected`
+   * one, so a later registration at a previously rejected address is the
+   * account login and reset see.
    */
   async findByEmail(email: string): Promise<Account | null> {
     const rows = await this.client.$queryRaw<AccountRow[]>(Prisma.sql`
       SELECT * FROM "accounts"
       WHERE lower(btrim("email")) = lower(btrim(${email}))
+      ORDER BY CASE WHEN "status" = 'Rejected' THEN 1 ELSE 0 END, "createdAt" DESC
       LIMIT 1
     `);
 
@@ -126,6 +129,7 @@ export class PrismaAccountRepository implements AccountRepository {
     const rows = await this.client.$queryRaw<{ count: bigint }[]>(Prisma.sql`
       SELECT count(*)::bigint AS count FROM "accounts"
       WHERE lower(btrim("email")) = lower(btrim(${email}))
+        AND "status" <> 'Rejected'
     `);
 
     return (rows[0]?.count ?? 0n) > 0n;

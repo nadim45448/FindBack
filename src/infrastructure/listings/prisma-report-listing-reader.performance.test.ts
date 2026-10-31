@@ -222,6 +222,13 @@ describeWithDatabase('the report listing reader (performance)', () => {
     // index. If the reader's expression had drifted from the index's there
     // would be none it could use, and the query would fail. So this proves
     // what matters: **the index is usable by this query.**
+    //
+    // **The query carries no `ORDER BY` and no status filter.** An ordering
+    // gives the planner a better alternative than the search index — it
+    // walks the `date` index for the ordering and filters as it goes,
+    // whether or not the search index exists — and a status filter does the
+    // same through the status index. Both plans are index-backed and prove
+    // nothing about the search index.
     const explained = await prisma.$transaction(async (tx) => {
       await tx.$executeRawUnsafe('SET LOCAL enable_seqscan = off');
 
@@ -230,9 +237,7 @@ describeWithDatabase('the report listing reader (performance)', () => {
          SELECT r."id"
          FROM "reports" r
          WHERE ${searchVectorExpression('r')}
-           @@ plainto_tsquery('simple', $1)
-           AND r."status" IN ('Open', 'Claim Requested', 'Claim Approved', 'Verification Pending')
-         ORDER BY r."date" DESC`,
+           @@ plainto_tsquery('simple', $1)`,
         KEYWORD,
       );
     });

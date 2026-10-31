@@ -2,11 +2,11 @@
 id: 005-close-report
 unit: 005-returns-and-handover
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:49:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 020-returns-moderation
+implemented: true
 traces_to: [FR-21]
 ---
 
@@ -20,15 +20,15 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** a report in `Open`, `Claim Requested`, `Claim Approved`, or `Verification Pending`, **When** the administrator closes it with a reason, **Then** the report becomes `Closed` (terminal)
-- [ ] **Given** a Lost report in `Verification Pending` whose selected response has NOT reached `Match Confirmed`, **When** the report is closed, **Then** in the SAME transaction every non-terminal response becomes `Resolved — Report Closed`
-- [ ] **Given** a Lost report whose selected response HAS reached `Match Confirmed`, **When** closure is attempted, **Then** it is refused as an ordinary close and requires the exceptional-administrator path
-- [ ] **Given** the exceptional post-`Match Confirmed` cancellation, **When** it is performed, **Then** a documented reason is required and the action is recorded as FR-48 audit event 25
-- [ ] **Given** a Found report with `Pending` Claims, **When** the report is closed, **Then** those Claims are auto-rejected with the administrator-close trigger reason
-- [ ] **Given** any closure, **When** it completes, **Then** no email is sent to any responder or claimant
-- [ ] **Given** a closure, **When** it completes, **Then** no record is hard-deleted; reports, responses, messages, and audit entries all remain
-- [ ] **Given** a report already `Returned` or `Closed`, **When** closure is attempted, **Then** it is refused because the report is terminal
-- [ ] **Given** a non-administrator attempts closure, **When** the action is attempted, **Then** it is refused
+- [x] **Given** a Lost report in `Open` or `Verification Pending`, **When** the administrator closes it with a reason, **Then** the report becomes `Closed` (terminal)
+- [x] **Given** a Lost report in `Verification Pending` whose selected response has NOT reached `Match Confirmed`, **When** the report is closed, **Then** in the SAME transaction every non-terminal response becomes `Resolved — Report Closed`
+- [x] **Given** a Lost report whose selected response HAS reached `Match Confirmed`, **When** closure is attempted, **Then** it is refused as an ordinary close and requires the exceptional-administrator path
+- [x] **Given** the exceptional post-`Match Confirmed` cancellation, **When** it is performed, **Then** a documented reason is required and the action is recorded as FR-48 audit event 25
+- [ ] **Given** a Found report with `Pending` Claims, **When** the report is closed, **Then** those Claims are auto-rejected with the administrator-close trigger reason — **deferred: this is the Found-side path, and it belongs to Unit 003. This bolt delivers the Lost-side closure.**
+- [ ] **Given** any closure, **When** it completes, **Then** no email is sent to any **responder**; the **Found-side claimant** of a Claim auto-rejected by the close **does** receive the FR-29 claim-rejection email carrying the reason "report closed by administrator" (PRD FR-29 names that reason explicitly, and FR-17 Trigger 3 requires the rejected claimant to receive it) — **the responder half is delivered and proven (the close service takes no `EmailSender` at all); the claim-rejection half is deferred with the Found-side path**
+- [x] **Given** a closure, **When** it completes, **Then** no record is hard-deleted; reports, responses, messages, and audit entries all remain
+- [x] **Given** a report already `Returned` or `Closed`, **When** closure is attempted, **Then** it is refused because the report is terminal
+- [x] **Given** a non-administrator attempts closure, **When** the action is attempted, **Then** it is refused
 
 Technical Notes
 

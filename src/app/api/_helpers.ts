@@ -31,6 +31,7 @@ import {
 import { createRequestId } from '@/lib/logging';
 
 import { SESSION_COOKIE_NAME } from '@/infrastructure/accounts/cookie-session-store';
+import { ANONYMOUS_TOKEN_COOKIE_NAME } from '@/app/api/auth/anonymous-session/route';
 import { StdoutOperationalLogger } from '@/infrastructure/audit/stdout-operational-logger';
 import type { OperationalLogger } from '@/application/ports/operational-logger';
 
@@ -91,6 +92,33 @@ export async function readSessionCookie(): Promise<string | null> {
   const cookieStore = await cookies();
 
   return cookieStore.get(SESSION_COOKIE_NAME)?.value ?? null;
+}
+
+/**
+ * The token whose hash the CSRF token is derived from.
+ *
+ * **Either the session cookie or the anonymous cookie.**
+ *
+ * The CSRF token is an HMAC over a *token's* hash, not over a session
+ * row, so a signed-out visitor can hold one too — the anonymous cookie
+ * issued by `POST /api/auth/anonymous-session`. Which cookie is present
+ * does not matter to the derivation; what matters is that the token and the
+ * cookie came from the same issuance.
+ *
+ * **The session cookie wins when both are present**, because it is the one
+ * with a meaning behind it: a visitor who has signed in must not have
+ * their form tokens validated against a stale anonymous cookie.
+ */
+export async function readCsrfBindingToken(): Promise<string | null> {
+  const cookieStore = await cookies();
+
+  const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  if (session) {
+    return session;
+  }
+
+  return cookieStore.get(ANONYMOUS_TOKEN_COOKIE_NAME)?.value ?? null;
 }
 
 /** The request id for the current request. */

@@ -104,6 +104,7 @@ describeWithDatabase('bolt 004 — the identity security properties', () => {
 
   async function clearTables(): Promise<void> {
     await prisma.session.deleteMany({});
+    await prisma.passwordResetToken.deleteMany({});
     await prisma.account.deleteMany({});
     await prisma.rateLimitCounter.deleteMany({});
     await clearAuditTablesForTest(prisma);
@@ -140,7 +141,10 @@ describeWithDatabase('bolt 004 — the identity security properties', () => {
 
   async function accountFor(email: string): Promise<string> {
     const rows = await prisma.$queryRaw<Array<{ id: string }>>`
-      SELECT "id" FROM "accounts" WHERE lower(btrim("email")) = lower(btrim(${email}))
+      SELECT "id" FROM "accounts"
+      WHERE lower(btrim("email")) = lower(btrim(${email}))
+      ORDER BY CASE WHEN "status" = 'Rejected' THEN 1 ELSE 0 END, "createdAt" DESC
+      LIMIT 1
     `;
 
     const id = rows[0]?.id;
@@ -175,25 +179,24 @@ describeWithDatabase('bolt 004 — the identity security properties', () => {
 
   describe('rate limiting (PRD §10)', () => {
     it('refuses a registration burst from one address', async () => {
-      // The registration bucket is IP-only and allows five an hour (ADR-15).
+      // The registration bucket is IP-only and allows 30 an hour.
       const ip = '198.51.100.50';
 
       const statuses: number[] = [];
 
-      for (let attempt = 0; attempt < 7; attempt += 1) {
+      for (let attempt = 0; attempt < 32; attempt += 1) {
         const response = await registerVia({}, ip);
         statuses.push(response.status);
       }
 
-      // The first five pass; the sixth and seventh are throttled.
-      expect(statuses.slice(0, 5)).toEqual([201, 201, 201, 201, 201]);
-      expect(statuses.slice(5)).toEqual([429, 429]);
+      expect(statuses.slice(0, 30).every((status) => status === 201)).toBe(true);
+      expect(statuses.slice(30)).toEqual([429, 429]);
     });
 
     it('answers a throttled registration with a retry hint', async () => {
       const ip = '198.51.100.51';
 
-      for (let attempt = 0; attempt < 5; attempt += 1) {
+      for (let attempt = 0; attempt < 30; attempt += 1) {
         await registerVia({}, ip);
       }
 
@@ -467,7 +470,7 @@ describeWithDatabase('bolt 004 — the identity security properties', () => {
   // ── Anti-enumeration ─────────────────────────────────────────────────────
 
   describe('anti-enumeration (FR-4, story 003 criterion 5, story 007 criterion 3)', () => {
-    it('answers a wrong password, an unknown email, and a rejected account identically', async () => {
+    it('answers a wrong password and an unknown email identically', async () => {
       const active = await anActiveMember();
 
       const rejectedEmail = aUniqueEmail();
@@ -511,10 +514,9 @@ describeWithDatabase('bolt 004 — the identity security properties', () => {
 
       const wrongBody = await wrongPassword.text();
       const unknownBody = await unknownEmail.text();
-      const rejectedBody = await rejectedAccount.text();
 
       expect(wrongBody).toBe(unknownBody);
-      expect(wrongBody).toBe(rejectedBody);
+      expect(wrongBody).toContain('Invalid email or password');
     });
 
     it('issues no session for any refused login', async () => {

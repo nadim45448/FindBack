@@ -83,6 +83,7 @@ export const PHYSICAL = {
     responderId: 'responder_id',
     status: 'status',
     submittedAt: 'submitted_at',
+    campusArea: 'campus_area',
     whereFoundExactPlace: 'where_found_exact_place',
     observedIdentifyingDetails: 'observed_identifying_details',
     dateFound: 'date_found',

@@ -10,8 +10,11 @@
 # Usage:
 #   docker compose up -d      # start
 #   docker compose ps         # check
-#   docker compose down       # stop (keeps data)
-#   docker compose down -v    # stop and delete the database volume
+#   docker compose down       # stop (KEEPS users, reports, listings)
+#   docker compose down -v    # stop and DELETE the database volume
+#
+# Closing the app or stopping containers does not wipe product data.
+# Only `down -v` does. Tests use a separate `findback_test` database.
 
 services:
   postgres:
@@ -27,12 +30,21 @@ services:
       - '5433:5432'
     volumes:
       - findback-pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init-test-db.sql:/docker-entrypoint-initdb.d/01-init-test-db.sql:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U findback -d findback']
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 10s
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: findback-mailpit
+    restart: unless-stopped
+    ports:
+      - '1025:1025'
+      - '8025:8025'
 
 volumes:
   findback-pgdata:

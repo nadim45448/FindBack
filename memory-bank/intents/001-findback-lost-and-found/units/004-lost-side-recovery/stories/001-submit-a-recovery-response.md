@@ -2,11 +2,11 @@
 id: 001-submit-a-recovery-response
 unit: 004-lost-side-recovery
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:47:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 015-lost-response-submit
+implemented: true
 traces_to: [FR-40, FR-44]
 ---
 
@@ -20,14 +20,14 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** an `Open` Lost report that is not the responder's own, **When** the responder submits a response with where found, observed identifying details, and date found, **Then** a Recovery Response is created with status `Submitted` and appears in My Recovery Responses
-- [ ] **Given** a Lost report in `Verification Pending`, **When** the selected response has NOT reached `Match Confirmed`, **Then** a new response is still accepted and created as `Submitted`
-- [ ] **Given** a Lost report in `Verification Pending`, **When** the selected response HAS reached `Match Confirmed`, **Then** no further response can be accepted or selected
-- [ ] **Given** a response missing where found, observed identifying details, or date found, **When** it is submitted, **Then** validation fails and no response is created
-- [ ] **Given** a responder viewing a Lost report they are responding to, **When** the response form is rendered, **Then** the Lost report's exact place and the owner's identifying details are not present in the response payload
-- [ ] **Given** a responder submitting a response to their own Lost report, **When** the action is attempted, **Then** it is refused with an authorization error
-- [ ] **Given** repeated response submissions from one member, **When** the request count exceeds the configured limit, **Then** the submission is rate-limited
-- [ ] **Given** a response is created, **When** the transition is audited, **Then** the audit record contains actor and timestamp but no thread body, no exact place, and no observed identifying details
+- [x] **Given** an `Open` Lost report that is not the responder's own, **When** the responder submits a response with where found, observed identifying details, and date found, **Then** a Recovery Response is created with status `Submitted` and appears in My Recovery Responses
+- [x] **Given** a Lost report in `Verification Pending`, **When** the selected response has NOT reached `Match Confirmed`, **Then** a new response is still accepted and created as `Submitted`
+- [x] **Given** a Lost report in `Verification Pending`, **When** the selected response HAS reached `Match Confirmed`, **Then** no further response can be accepted or selected
+- [x] **Given** a response missing where found, observed identifying details, or date found, **When** it is submitted, **Then** validation fails and no response is created
+- [x] **Given** a responder viewing a Lost report they are responding to, **When** the response form is rendered, **Then** the Lost report's exact place and the owner's identifying details are not present in the response payload
+- [x] **Given** a responder submitting a response to their own Lost report, **When** the action is attempted, **Then** it is refused with an authorization error
+- [x] **Given** repeated response submissions from one member, **When** the request count exceeds the configured limit, **Then** the submission is rate-limited
+- [x] **Given** a response is created, **When** the transition is audited, **Then** the audit record contains actor and timestamp but no thread body, no exact place, and no observed identifying details
 
 Technical Notes
 

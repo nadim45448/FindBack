@@ -1,14 +1,44 @@
-:root {
-  /* Tokens transcribed from the frozen DESIGN.md.
-     See src/ui/tokens.ts for the typed source of truth. */
+/**
+ * The FindBack token layer and component layer.
+ *
+ * Source of truth:
+ *   _bmad-output/planning-artifacts/ux-designs/ux-FindBack-2026-08-29/DESIGN.md
+ *
+ * Every value here is transcribed from DESIGN.md. `src/ui/tokens.ts` holds
+ * the same values as typed constants; `tokens.test.ts` asserts the two
+ * copies agree, so they cannot drift.
+ *
+ * ## The theme binds to `[data-theme]`, not to the media query alone
+ *
+ * DESIGN.md binds tokens to `[data-theme="light"]` and `[data-theme="dark"]`.
+ * The `<html data-theme>` attribute is set inline before first paint (see
+ * `theme-script.tsx`), so there is no flash of the wrong theme.
+ *
+ * The `prefers-color-scheme` media query appears **once**, at the bottom,
+ * and it only sets the *initial* attribute. A stored `Light` or `Dark`
+ * preference then overrides it — which is why the media query block and the
+ * `[data-theme]` blocks are separate, and why the media query must not
+ * redeclare the token values.
+ */
 
+/* -------------------------------------------------------------------------- */
+/* Tokens — light is the default                                               */
+/* -------------------------------------------------------------------------- */
+
+:root,
+[data-theme='light'] {
+  /* Brand — light. Dark theme remaps these so filled buttons still read. */
   --brand-primary: #7c2907;
-  --brand-primary-hover: #9a3412;
-  --brand-primary-active: #7f1d1d;
+  --brand-primary-hover: #5c1f05;
+  --brand-primary-active: #3d1403;
   --brand-primary-soft: #ffe7d6;
   --brand-on-primary: #ffffff;
   --brand-secondary: #1e5a4e;
+  --danger-strong: #7f1d1d;
+  --danger-strong-hover: #641111;
+  --danger-strong-active: #4d0c0c;
 
+  /* Light theme surfaces. */
   --background: #faf7f2;
   --surface: #ffffff;
   --surface-dim: #f2ede4;
@@ -27,6 +57,7 @@
   --disabled-text: #9a8e78;
   --link: #7c2907;
 
+  /* Semantic feedback — theme-independent. */
   --semantic-success: #2d7a4f;
   --semantic-success-soft: #d6f0df;
   --semantic-warning: #b45309;
@@ -36,11 +67,129 @@
   --semantic-info: #1e5a8e;
   --semantic-info-soft: #d6e8f5;
 
-  --font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --touch-target: 44px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  /* ── Status colours (DESIGN.md §Status colors) ────────────────────────── */
+  /* The audit trail's left-border accents name these tokens, not colours. */
+  --status-report-open: #7c2907;
+  --status-report-closed: #5c5246;
+  --status-report-returned: #1e5a4e;
+  --status-claim-pending: #7c2d12;
+  --status-claim-approved: #1e5a4e;
+  --status-claim-rejected: #7f1d1d;
+  --status-rr-submitted: #7c2d12;
+  --status-rr-selected: #7c2907;
+  --status-rr-match-confirmed: #1e5a4e;
+  --status-rr-not-a-match: #7f1d1d;
+  --status-rr-completed: #1e5a4e;
+  --status-rr-resolved-returned: #1e5a4e;
+  --status-rr-resolved-closed: #5c5246;
+  --status-rr-withdrawn: #5c5246;
+  --status-account-active: #1e5a4e;
+  --status-account-rejected: #7f1d1d;
+  --status-account-deactivated: #5c5246;
+
+  /* The logo inherits the theme's ink. */
+  --fb-logo-color: #7c2907;
+
+  /* Landing page — the BMAD mockup's landing-only tokens. */
+  --landing-secondary-soft: #d6ebe5;
+  --landing-link-hover: #16463c;
+
+  /* Elevation — warm ink-tinted, soft glow rather than drop shadow. */
+  --elevation-1: 0 1px 2px rgba(31, 27, 22, 0.06), 0 1px 3px rgba(31, 27, 22, 0.04);
+  --elevation-2: 0 2px 6px rgba(31, 27, 22, 0.08), 0 4px 12px rgba(31, 27, 22, 0.06);
+  --elevation-3: 0 8px 24px rgba(31, 27, 22, 0.14), 0 2px 6px rgba(31, 27, 22, 0.08);
+  --elevation-4: 0 12px 32px rgba(31, 27, 22, 0.2), 0 4px 8px rgba(31, 27, 22, 0.1);
+}
+
+[data-theme='dark'] {
+  --brand-primary: #fb923c;
+  --brand-primary-hover: #ffb875;
+  --brand-primary-active: #fba86c;
+  --brand-primary-soft: #3a1f0e;
+  --brand-on-primary: #1f1b16;
+  --brand-secondary: #7bc9b5;
+  --danger-strong: #7f1d1d;
+  --danger-strong-hover: #641111;
+  --danger-strong-active: #4d0c0c;
+
+  --background: #161310;
+  --surface: #211c18;
+  --surface-dim: #1b1613;
+  --surface-raised: #2a241f;
+  --surface-container-low: #1f1a16;
+  --surface-container: #251f1a;
+  --surface-container-high: #2d2620;
+  --surface-overlay: #000000b3;
+  --on-background: #f5efe5;
+  --on-surface: #f5efe5;
+  --on-surface-variant: #c4b8a4;
+  --border-subtle: #2d2620;
+  --border-default: #3d352c;
+  --border-strong: #5c5246;
+  --focus-ring: #fb923c;
+  --disabled-bg: #251f1a;
+  --disabled-text: #5c5246;
+  --link: #fb923c;
+
+  /* ── Semantic feedback — the DARK theme's own values ─────────────────── */
+  /*
+   * **The soft fills are dark in this theme, and that is the fix for a real
+   * contrast failure.**
+   *
+   * DESIGN.md calls the semantic palette "theme-independent" and states the
+   * soft-fill alert rule: body text renders in the theme's `on-background` on
+   * the soft fill, "since `on-background` passes AA on every soft-fill
+   * token". **That claim is true in the light theme and false in this one.**
+   * The light theme's `on-background` is dark ink (`#1f1b16`) and the soft
+   * fills are light pastels, so the pair measures 7.64:1 – 15.06:1. Here
+   * `on-background` is light ink (`#f5efe5`), so the *same* light pastel
+   * measured **1.04:1** — light ink on a near-white fill, which is
+   * effectively invisible.
+   *
+   * EXPERIENCE.md §1117 is explicit that the two themes carry their own
+   * soft fills — it names `colors.light.info-soft` and `colors.dark.info-soft`
+   * separately — and §20.2 requires that "Both themes meet AA contrast".
+   * **The dark theme's soft fills were simply never defined** — the token
+   * names existed and pointed at the light theme's values.
+   *
+   * So the dark theme gets its own dark-tinted soft fills here. The body
+   * ink on them measures **11.71:1 – 14.36:1**, comfortably past AA, and the
+   * tinted hue still reads as the same semantic family as the light theme's.
+   *
+   * The saturated foregrounds are darkened in the other direction — raised to
+   * lighter tints that clear 4.5:1 on the dark surface *and* on the dark soft
+   * fill, because the foreground drives the icon and the heading. The
+   * light theme's `#b91c1c` measures 2.61:1 on this theme's surface, which
+   * is why it needed raising.
+   */
+  --semantic-success: #86efac;
+  --semantic-success-soft: #14301f;
+  --semantic-warning: #fcd34d;
+  --semantic-warning-soft: #3a2410;
+  --semantic-error: #fca5a5;
+  --semantic-error-soft: #3d1616;
+  --semantic-info: #93c5fd;
+  --semantic-info-soft: #12293d;
+
+  --fb-logo-color: #f5efe5;
+
+  /* Landing page — the BMAD mockup's landing-only tokens. */
+  --landing-secondary-soft: #16302a;
+  --landing-link-hover: #a1dccb;
+
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --elevation-2: 0 2px 6px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.35);
+  --elevation-3: 0 8px 24px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
+  --elevation-4: 0 12px 32px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.45);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Tokens — theme-independent                                                  */
+/* -------------------------------------------------------------------------- */
+
+:root {
+  --font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -52,29 +201,62 @@
   --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
+
+  --page-margin: 16px;
+
+  --font-display-lg: 700 44px/1.15 system-ui, sans-serif;
+  --font-headline-lg: 700 32px/1.2 system-ui, sans-serif;
+  --font-headline-md: 600 24px/1.25 system-ui, sans-serif;
+  --font-headline-sm: 600 20px/1.3 system-ui, sans-serif;
+  --font-title-md: 600 16px/1.4 system-ui, sans-serif;
+  --font-body-lg: 400 17px/1.55 system-ui, sans-serif;
+  --font-body-md: 400 15px/1.55 system-ui, sans-serif;
+  --font-body-sm: 400 13px/1.55 system-ui, sans-serif;
+  --font-label: 500 14px/1.4 system-ui, sans-serif;
+  --font-label-caps: 600 12px/1.4 system-ui, sans-serif;
+  --font-caption: 400 12px/1.4 system-ui, sans-serif;
+  --font-helper: 400 13px/1.4 system-ui, sans-serif;
+  --font-error-text: 500 13px/1.4 system-ui, sans-serif;
+  --font-status-text: 600 13px/1.4 system-ui, sans-serif;
+
+  --tracking-display: -0.02em;
+  --tracking-headline: -0.015em;
+  --tracking-label-caps: 0.06em;
+
+  --touch-target: 44px;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-button: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+
+  /* The landing page's art panel — the mockup's 20 px card radius. */
+  --landing-radius-xl: 20px;
+
+  --button-height-sm: 32px;
+  --button-height-md: 44px;
+  --button-height-lg: 48px;
+  --button-padding-sm: 12px;
+  --button-padding-md: 16px;
+  --button-padding-lg: 20px;
+
+  --input-height: 44px;
+  --textarea-min-height: 96px;
+  --form-max-width: 640px;
+  --content-max-width: 1024px;
+  --topbar-height: 64px;
+
+  --duration-micro: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --easing-emphasis: cubic-bezier(0.3, 0, 0.1, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #161310;
-    --surface: #211c18;
-    --surface-dim: #1b1613;
-    --surface-container-low: #1f1a16;
-    --surface-container: #251f1a;
-    --surface-container-high: #2d2620;
-    --surface-overlay: #000000b3;
-    --on-background: #f5efe5;
-    --on-surface: #f5efe5;
-    --on-surface-variant: #c4b8a4;
-    --border-subtle: #2d2620;
-    --border-default: #3d352c;
-    --border-strong: #5c5246;
-    --focus-ring: #fb923c;
-    --disabled-bg: #251f1a;
-    --disabled-text: #5c5246;
-    --link: #fb923c;
-  }
-}
+/* -------------------------------------------------------------------------- */
+/* Base                                                                       */
+/* -------------------------------------------------------------------------- */
 
 * {
   box-sizing: border-box;
@@ -104,6 +286,2186 @@ a {
   outline-offset: 2px;
 }
 
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+/* Tabular figures for timestamps, IDs, and counts so columns align. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* `label-caps` — uppercase with positive tracking. */
+.label-caps {
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label-caps);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Brand mark                                                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The wordmark.
+ *
+ * **It is a pair of theme-swapped images, not text.** The SVG carries
+ * hard-coded colours, so `currentColor` cannot reach into it — the light
+ * and dark variants are separate files and CSS shows one of them. The
+ * `.brand-mark img[data-theme-variant='dark']` rule and its companions
+ * live with the landing page's own theme-swap rules.
+ */
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  color: var(--fb-logo-color);
+}
+
+/**
+ * The wordmark image.
+ *
+ * **32 px tall, width automatic.** The mockup's topbar sizes the
+ * wordmark to 32 px, and DESIGN.md's minimum wordmark width is 96 px —
+ * which 32 px of height clears comfortably.
+ */
+.brand-mark__image {
+  display: block;
+  height: 32px;
+  width: auto;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Layout shell                                                               */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The skip-to-content link.
+ *
+ * **It is the first focusable element on the page.** It is visually hidden
+ * until focused, then appears — the standard pattern, and the one the
+ * acceptance criterion names.
+ */
+.skip-link {
+  position: absolute;
+  left: var(--space-4);
+  top: var(--space-4);
+  z-index: 100;
+  padding: var(--space-3) var(--space-4);
+  background: var(--brand-primary);
+  color: var(--brand-on-primary);
+  border-radius: var(--radius-md);
+  font: var(--font-label);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/**
+ * The page container.
+ *
+ * **The 12-column grid on desktop.** The content is capped at 1024 px and
+ * the page margin follows the breakpoint.
+ */
+.page {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--space-8) var(--page-margin) var(--space-16);
+}
+
+.hero__title {
+  margin: 0 0 var(--space-5);
+  font: var(--font-headline-md);
+  letter-spacing: var(--tracking-headline);
+  color: var(--on-surface);
+}
+
+.hero__lede {
+  margin: 0 0 var(--space-6);
+  font: var(--font-helper);
+  color: var(--on-surface-variant);
+}
+
+/** A form column — single column, capped at 640 px. */
+.form-column {
+  width: 100%;
+  max-width: var(--form-max-width);
+}
+
+/**
+ * Auth pages (`/login`, `/register`) fill the viewport below the topbar
+ * so the card can sit in the centre, matching the generated mockups.
+ */
+.page:has(.auth-shell) {
+  max-width: none;
+  padding: 0;
+}
+
+/**
+ * Report forms — mockup `14-report-lost` / `15-report-found`.
+ *
+ * The main landmark narrows to the 640 px form column (not a centred column
+ * inside the 1024 px page), with slightly tighter top padding than Browse.
+ */
+.page:has(.form-page) {
+  max-width: var(--form-max-width);
+  padding-top: var(--space-6);
+}
+
+.auth-shell {
+  min-height: calc(100vh - var(--topbar-height));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--page-margin);
+}
+
+.auth-card {
+  max-width: 440px;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow: var(--elevation-1);
+}
+
+.auth-card--wide {
+  max-width: 480px;
+}
+
+.auth-card h1 {
+  margin: 0 0 var(--space-6);
+  font: 700 24px/1.3 system-ui, sans-serif;
+  color: var(--on-surface);
+  text-align: center;
+}
+
+.auth-card__logo {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 var(--space-5);
+}
+
+.auth-card__logo img {
+  width: 160px;
+  height: auto;
+}
+
+.auth-card__lede {
+  margin: 0 0 var(--space-6);
+  font: var(--font-helper);
+  color: var(--on-surface-variant);
+}
+
+.auth-card--wide .auth-card__lede {
+  margin-bottom: var(--space-5);
+}
+
+.auth-card .field {
+  margin-bottom: 0;
+}
+
+.auth-card .field + .field {
+  margin-top: var(--space-4);
+}
+
+.auth-card form > .button {
+  width: 100%;
+  margin-top: var(--space-5);
+}
+
+.auth-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.auth-actions .button {
+  width: 100%;
+  margin-top: 0;
+  text-decoration: none;
+}
+
+.auth-actions__forgot {
+  align-self: center;
+  color: var(--link);
+  font: var(--font-label);
+  text-decoration: none;
+}
+
+.auth-actions__forgot:hover,
+.auth-actions__forgot:focus-visible,
+.auth-actions .button:hover,
+.auth-actions .button:focus-visible {
+  text-decoration: none;
+}
+
+/** Forgot / forgot-sent — mockup's 480 px centred column. */
+.narrow-page {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/** Report form content stack inside the narrowed page. */
+.form-page {
+  width: 100%;
+}
+
+.form-page .hero__title {
+  margin-bottom: var(--space-5);
+}
+
+.form-page .hero__lede {
+  margin-bottom: var(--space-6);
+}
+
+.form-page .error-summary {
+  margin-bottom: var(--space-5);
+}
+
+/** Member list pages — mockup `08-my-reports`, `10-my-claims`. */
+.page:has(.member-view-page),
+.page:has(.listings-page--member) {
+  padding-top: var(--space-6);
+}
+
+.member-view-page__lede {
+  margin: 0 0 var(--space-4);
+  max-width: 52rem;
+}
+
+.member-view-page__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.member-view-page__title {
+  margin: 0;
+  font: var(--font-headline-md);
+  letter-spacing: var(--tracking-headline);
+  color: var(--on-surface);
+}
+
+.member-view-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.member-filter-card {
+  margin-bottom: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--elevation-1);
+}
+
+.member-filter-card__heading {
+  margin: 0 0 var(--space-3);
+  font: var(--font-headline-sm);
+  color: var(--on-surface);
+}
+
+.member-filter-card .field {
+  margin: 0;
+  max-width: 280px;
+}
+
+.member-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--elevation-1);
+}
+
+.member-data-table th {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-container-low);
+  color: var(--on-surface-variant);
+  font: 600 13px/1.3 system-ui, sans-serif;
+  text-align: left;
+}
+
+.member-data-table td {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+  font: var(--font-body-sm);
+}
+
+.member-data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.member-data-table__row {
+  cursor: pointer;
+}
+
+.member-data-table__row:hover {
+  background: var(--surface-container-low);
+}
+
+.member-data-table__row:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.member-data-table__item-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.member-data-table__item-link:hover,
+.member-data-table__item-link:focus-visible {
+  text-decoration: underline;
+}
+
+.member-data-table__actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.member-data-table__meta {
+  margin-top: var(--space-1);
+  color: var(--on-surface-variant);
+  font: var(--font-helper);
+}
+
+@media (max-width: 768px) {
+  .member-data-table thead {
+    display: none;
+  }
+
+  .member-data-table,
+  .member-data-table tbody,
+  .member-data-table tr,
+  .member-data-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .member-data-table__row {
+    margin-bottom: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+  }
+
+  .member-data-table td {
+    padding: var(--space-1) 0;
+    border: none;
+  }
+
+  .member-data-table td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    color: var(--on-surface-variant);
+    font: 600 12px/1.4 system-ui, sans-serif;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+}
+
+.report-form .field + .field {
+  margin-top: var(--space-5);
+}
+
+.report-form .char-counter {
+  display: block;
+  margin-top: var(--space-2);
+}
+
+.report-form__actions {
+  justify-content: flex-end;
+  margin-top: var(--space-6);
+}
+
+.sensitive-flag--inline {
+  display: inline;
+  margin-left: var(--space-2);
+  font: inherit;
+}
+
+.page:has(.item-detail-page) {
+  padding-top: var(--space-6);
+}
+
+.item-detail-page .breadcrumbs {
+  margin-bottom: var(--space-3);
+}
+
+.item-detail__header {
+  margin-bottom: var(--space-5);
+}
+
+.item-detail__title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.item-detail__title {
+  margin: 0;
+  font: var(--font-headline-lg);
+  letter-spacing: var(--tracking-headline);
+  line-height: 1.2;
+  color: var(--on-surface);
+}
+
+.item-detail__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.reporter-callout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--brand-primary-soft);
+}
+
+.reporter-callout__label {
+  margin: 0;
+  color: var(--brand-primary);
+  font: var(--font-label);
+  font-weight: 600;
+}
+
+.reporter-callout__actions .button-row {
+  margin: 0;
+  justify-content: flex-end;
+}
+
+.detail-grid {
+  display: grid;
+  gap: var(--space-6);
+}
+
+@media (min-width: 900px) {
+  .detail-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
+    align-items: start;
+  }
+}
+
+.detail-grid__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.detail-grid__aside {
+  min-width: 0;
+}
+
+.detail-image-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-container);
+  overflow: hidden;
+  color: var(--on-surface-variant);
+  font: var(--font-body-sm);
+}
+
+.detail-image-frame__empty {
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.detail-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-section.detail-section--card {
+  padding: var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--elevation-1);
+}
+
+.detail-section--card .detail-section__heading {
+  margin: 0 0 var(--space-3);
+  font: 600 12px/1.3 system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+
+.detail-section__body {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--on-surface);
+}
+
+.detail-section__actions {
+  margin-top: var(--space-4);
+}
+
+.detail-section__actions--standalone {
+  margin-top: 0;
+}
+
+.detail-meta {
+  margin: 0;
+}
+
+.detail-meta--grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3) var(--space-4);
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .detail-meta--grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-meta__row {
+  display: grid;
+  gap: 2px;
+}
+
+.detail-meta__row dt {
+  margin: 0;
+  color: var(--on-surface-variant);
+  font: 600 12px/1.3 system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.detail-meta__row dd {
+  margin: 0;
+  font-weight: 500;
+  font: var(--font-body-sm);
+}
+
+.detail-list--stacked {
+  gap: var(--space-3);
+}
+
+.detail-list__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.detail-list__row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.narrow-page form > .button--primary {
+  width: 100%;
+  margin-top: var(--space-4);
+}
+
+.narrow-page__back {
+  margin-top: var(--space-4);
+}
+
+.forgot-sent__retry {
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.page:has(.confirm-shell) {
+  max-width: none;
+  padding: 0;
+}
+
+.confirm-shell {
+  min-height: calc(100vh - var(--topbar-height));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--page-margin);
+}
+
+.confirm-card {
+  max-width: 480px;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow: var(--elevation-1);
+  text-align: center;
+}
+
+.confirm-card__icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--semantic-success-soft);
+  color: var(--semantic-success);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.confirm-card h1 {
+  margin: 0 0 var(--space-3);
+  font: 700 24px/1.3 system-ui, sans-serif;
+  color: var(--on-surface);
+}
+
+.confirm-card p {
+  margin: 0 0 var(--space-3);
+  color: var(--on-surface-variant);
+}
+
+.confirm-card__action {
+  margin-top: var(--space-6);
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  margin: 0 0 var(--space-5);
+  border-radius: var(--radius-md);
+  border-left: 4px solid;
+  background: var(--surface);
+  color: var(--on-background);
+}
+
+.alert--info {
+  border-left-color: var(--semantic-info);
+  background: var(--semantic-info-soft);
+}
+
+.alert--success {
+  border-left-color: var(--semantic-success);
+  background: var(--semantic-success-soft);
+}
+
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--elevation-1);
+}
+
+.page:has(.pending-account) {
+  max-width: none;
+  padding: 0;
+}
+
+.pending-banner {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--space-5) var(--page-margin) 0;
+}
+
+.pending-banner__inner {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  background: var(--semantic-warning-soft);
+  border: 1px solid var(--semantic-warning);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.pending-banner__icon {
+  font-size: 20px;
+  color: var(--semantic-warning);
+  line-height: 1;
+}
+
+.pending-banner__body {
+  flex: 1;
+  font: var(--font-body-sm);
+  color: var(--on-background);
+}
+
+.pending-banner__body strong {
+  display: block;
+  font: var(--font-title-md);
+  margin-bottom: 2px;
+}
+
+.pending-account__page {
+  max-width: var(--form-max-width);
+  margin: 0 auto;
+  padding: var(--space-8) var(--page-margin) var(--space-16);
+}
+
+.pending-account__title {
+  margin: 0 0 var(--space-5);
+  font: 600 24px/1.25 system-ui, sans-serif;
+  color: var(--on-surface);
+}
+
+.pending-account__card {
+  border: 1px solid var(--border-subtle);
+}
+
+.pending-account__card-title {
+  margin: 0 0 var(--space-3);
+  font: 600 20px/1.3 system-ui, sans-serif;
+  color: var(--on-surface);
+}
+
+.pending-account__card p {
+  margin: 0;
+}
+
+.pending-account__until {
+  margin-top: var(--space-3);
+}
+
+.pending-account__list {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+  color: var(--on-surface-variant);
+}
+
+.auth-footer {
+  margin: var(--space-6) 0 0;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border-subtle);
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  text-align: center;
+}
+
+.auth-footer a {
+  font-weight: 600;
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.topbar__spacer {
+  flex: 1;
+}
+
+/** The main grid — 4 columns on mobile. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  :root {
+    --page-margin: 24px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --page-margin: 32px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--space-8);
+  }
+
+  .page {
+    padding-top: var(--space-12);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Topbar                                                                     */
+/* -------------------------------------------------------------------------- */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 0 var(--page-margin);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.topbar__brand {
+  display: inline-flex;
+  align-items: center;
+  color: var(--fb-logo-color);
+  text-decoration: none;
+}
+
+.topbar__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-right: auto;
+}
+
+/**
+ * The landing page's topbar on a narrow screen.
+ *
+ * **The nav link is hidden below 768 px, as the BMAD mockup hides it.**
+ * The mockup's landing page collapses the topbar's nav into a hamburger
+ * below that breakpoint; the hamburger itself belongs to the Account menu
+ * work that is not built yet, so the nav link is hidden outright rather
+ * than left to wrap. A wrapped "Browse Lost & Found" turns a one-line
+ * header into a three-line one on a phone.
+ *
+ * **The rule is scoped to the landing page** through `body:has(.landing)`
+ * — the landing page is the only route that renders `.landing`, and the
+ * topbar is shared chrome that the other surfaces keep intact.
+ */
+@media (max-width: 768px) {
+  body:has(.landing) .topbar__nav {
+    display: none;
+  }
+}
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/**
+ * The signed-in member's display name.
+ *
+ * **It is not a menu trigger.** The Account menu is story 003's work; until
+ * then the name is plain text, so the topbar does not offer an affordance
+ * that does nothing.
+ */
+.topbar__identity {
+  color: var(--on-surface-variant);
+  font: var(--font-body-sm);
+  white-space: nowrap;
+}
+
+/**
+ * The Account menu trigger — initials circle, first name, caret.
+ *
+ * **This is header chrome, not a profile photo.** EXPERIENCE.md §9.4a
+ * forbids an avatar upload; the circle shows initials only.
+ */
+.account-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  height: var(--touch-target);
+  padding: 0 var(--space-3);
+  background: var(--surface);
+  color: var(--on-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font: 600 14px/1.4 var(--font-family);
+}
+
+.account-menu__trigger:hover {
+  background: var(--surface-container-high);
+}
+
+.account-menu__trigger[aria-expanded='true'] {
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.account-menu__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  color: var(--brand-on-primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.account-menu__name {
+  white-space: nowrap;
+}
+
+.account-menu__caret {
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translate(-2px, -2px);
+  opacity: 0.7;
+}
+
+.account-menu__header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  color: var(--on-surface-variant);
+  font: var(--font-helper);
+}
+
+.account-menu__header strong {
+  color: var(--on-surface);
+  font-size: 14px;
+}
+
+/* The primary nav link — a plain text link, not a button. */
+.topbar__link {
+  color: var(--on-surface);
+  font: var(--font-label);
+  text-decoration: none;
+
+  /*
+   * **The 44px floor applies to a text link too.** The visible text is
+   * short, but the *target* is what a finger or a screen-reader cursor has
+   * to hit — and a ~20px-tall inline link is below the WCAG 2.1 AA target
+   * floor (§20.4). The link is given the floor through its box rather than
+   * through visible padding, so the header's typography is unchanged.
+   */
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+}
+
+.topbar__link:hover {
+  text-decoration: underline;
+}
+
+/**
+ * The topbar's buttons never wrap.
+ *
+ * **"Sign in" is two words, and a narrow phone can wrap them.** A
+ * two-line button in the header breaks the header's single-line rhythm
+ * and makes the button taller than the 44 px the topbar is sized for.
+ *
+ * **The rule is written against the button's own class** rather than
+ * `.topbar__actions .button`, because a descendant selector ending in
+ * `.button` would shadow the bare `.button` block for any rule that
+ * finds a class by substring.
+ */
+.topbar__actions > .button,
+.topbar__actions > .button--primary,
+.topbar__actions > .button--secondary,
+.topbar__actions > .button--tertiary {
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Buttons                                                                     */
+/* -------------------------------------------------------------------------- */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: var(--touch-target);
+  height: var(--button-height-md);
+  padding: 0 var(--button-padding-md);
+  border: 1px solid transparent;
+  border-radius: var(--radius-button);
+  font: var(--font-title-md);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-base) var(--easing-standard),
+    border-color var(--duration-base) var(--easing-standard);
+}
+
+.button--primary {
+  background: var(--brand-primary);
+  color: var(--brand-on-primary);
+}
+
+.button--primary:visited,
+.button--primary:hover,
+.button--primary:active {
+  color: var(--brand-on-primary);
+}
+
+/**
+ * The small button.
+ *
+ * **44 px, not 32 px.** DESIGN.md's `button-height-sm` is 32 px, but the
+ * topbar's CTAs must clear the **44 × 44 touch-target floor** — and a 32 px
+ * button fails it on both axes. The topbar CTAs use `sm` for *scale*, not
+ * for a sub-floor size, so the height stays at the 44 px floor.
+ */
+.button--sm {
+  height: var(--button-height-md);
+  padding: 0 var(--space-4);
+  font: var(--font-label);
+  border-radius: var(--radius-md);
+}
+
+.button--primary:hover:not(:disabled) {
+  background: var(--brand-primary-hover);
+}
+
+.button--primary:active:not(:disabled) {
+  background: var(--brand-primary-active);
+}
+
+.button--secondary {
+  background: var(--surface);
+  color: var(--brand-primary);
+  border-color: var(--border-default);
+}
+
+.button--secondary:visited,
+.button--secondary:hover,
+.button--secondary:active {
+  color: var(--brand-primary);
+}
+
+.button--secondary:hover:not(:disabled) {
+  background: var(--brand-primary-soft);
+}
+
+[data-theme='dark'] .button--secondary {
+  border-color: var(--border-strong);
+}
+
+[data-theme='dark'] .button--secondary:hover:not(:disabled) {
+  border-color: var(--brand-primary);
+}
+
+.button--tertiary {
+  background: transparent;
+  color: var(--on-surface-variant);
+}
+
+.button--tertiary:hover:not(:disabled) {
+  background: var(--surface-container-high);
+}
+
+.button--danger {
+  background: var(--semantic-error);
+  color: #ffffff;
+}
+
+.button:disabled {
+  background: var(--disabled-bg);
+  color: var(--disabled-text);
+  border-color: transparent;
+  cursor: not-allowed;
+}
+
+/* An icon-only button — 44 × 44 interactive box, 20 px icon. */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--surface-dim);
+}
+
+/**
+ * The theme toggle.
+ *
+ * **Its radius is `radius.md` (10 px), not fully rounded** — that is what
+ * distinguishes it from the icon-only buttons it sits beside.
+ */
+.theme-toggle {
+  border-radius: var(--radius-md);
+  border-color: var(--border-default);
+  background: var(--surface);
+  color: var(--on-surface);
+}
+
+.theme-toggle:hover:not(:disabled) {
+  background: var(--surface-container-high);
+}
+
+.theme-toggle[aria-expanded='true'] {
+  background: var(--brand-primary-soft);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Theme popover                                                              */
+/* -------------------------------------------------------------------------- */
+
+.theme-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  min-width: 180px;
+  padding: var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-3);
+}
+
+.theme-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--on-surface);
+  font: var(--font-body-md);
+  text-align: left;
+  cursor: pointer;
+}
+
+.theme-menu__item:hover {
+  background: var(--surface-container-high);
+}
+
+.theme-menu__item[aria-checked='true'] {
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Forms                                                                      */
+/* -------------------------------------------------------------------------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.field__label {
+  font: var(--font-label);
+  color: var(--on-surface);
+}
+
+.field__required {
+  color: var(--semantic-error);
+}
+
+.field__helper {
+  font: var(--font-helper);
+  color: var(--on-surface-variant);
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  min-height: var(--input-height);
+  padding: 14px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--on-surface);
+  font: var(--font-body-md);
+}
+
+.input--date {
+  cursor: pointer;
+  color-scheme: light dark;
+}
+
+.input--date::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--focus-ring);
+  box-shadow: inset 0 0 0 1px var(--focus-ring);
+}
+
+.textarea {
+  min-height: var(--textarea-min-height);
+  resize: vertical;
+}
+
+.input:disabled,
+.select:disabled,
+.textarea:disabled {
+  background: var(--disabled-bg);
+  color: var(--disabled-text);
+}
+
+/**
+ * The invalid state.
+ *
+ * **The border carries the error colour and the field carries
+ * `aria-invalid`** — the state is not conveyed by colour alone.
+ */
+.input[aria-invalid='true'],
+.select[aria-invalid='true'],
+.textarea[aria-invalid='true'] {
+  border-color: var(--semantic-error);
+}
+
+.field__error {
+  font: var(--font-error-text);
+  color: var(--semantic-error);
+}
+
+/**
+ * Facebook-style floating label: the label sits inside the field and
+ * lifts when the field is focused or has a value. It remains a real
+ * `<label>`, not a placeholder.
+ */
+.field--float {
+  gap: 0;
+}
+
+.field--float .field__control {
+  position: relative;
+}
+
+.field--float .input {
+  min-height: 56px;
+  padding: 22px 16px 8px;
+}
+
+.field--float .field__label {
+  position: absolute;
+  left: 16px;
+  top: 18px;
+  margin: 0;
+  color: var(--on-surface-variant);
+  font: var(--font-body-md);
+  pointer-events: none;
+  transform-origin: left top;
+  transition:
+    transform var(--duration-base) var(--easing-standard),
+    color var(--duration-base) var(--easing-standard);
+}
+
+.field--float.field--filled .field__label,
+.field--float:focus-within .field__label {
+  transform: translateY(-10px) scale(0.75);
+  color: var(--brand-primary);
+}
+
+.field--float .field__error,
+.field--float .field__helper {
+  margin-top: var(--space-2);
+}
+
+/**
+ * The error summary.
+ *
+ * `role="alert"` so it is announced when it appears, and it is the first
+ * thing in the form so a screen reader reaches it before the fields.
+ */
+.error-summary {
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+  border: 1px solid var(--semantic-error);
+  border-radius: var(--radius-md);
+  background: var(--semantic-error-soft);
+  color: var(--on-background);
+}
+
+.error-summary__heading {
+  font: var(--font-title-md);
+  margin-bottom: var(--space-2);
+}
+
+.error-summary__list {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Surfaces                                                                    */
+/* -------------------------------------------------------------------------- */
+
+.card {
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--elevation-1);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Landing page — the BMAD mockup's `public/01-landing.html`                     */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * **The landing page is a full-bleed surface; every other page sits in
+ * `.page`.** The mockup's hero and its "How FindBack works" section each
+ * carry their own container (`max-width: 1024px` plus the page margin), so
+ * the landing route opts out of `.page`'s padding rather than fighting it.
+ * The shell renders `<main class="page">` around every route, so the
+ * landing page pulls its own padding back out here.
+ */
+.landing {
+  margin: calc(-1 * var(--space-8)) calc(-1 * var(--page-margin))
+    calc(-1 * var(--space-16));
+  padding-bottom: var(--space-16);
+}
+
+@media (min-width: 1024px) {
+  .landing {
+    margin-top: calc(-1 * var(--space-12));
+  }
+}
+
+/**
+ * The hero.
+ *
+ * **A two-column grid — the copy on the left, the brand mark on the
+ * right.** The mockup's ratio is `1.2fr 1fr`, so the copy column is the
+ * wider of the two, and the mark sits in a raised panel beside it.
+ */
+.landing__hero {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--space-16) var(--page-margin) var(--space-12);
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .landing__hero {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+    padding-top: var(--space-10);
+  }
+}
+
+/**
+ * The eyebrow.
+ *
+ * **`label-caps` in a soft pill.** The evergreen secondary on its own soft
+ * fill is the one place the second brand colour appears above the fold.
+ */
+.landing__eyebrow {
+  display: inline-block;
+  font: var(--font-label-caps);
+  letter-spacing: var(--tracking-label-caps);
+  text-transform: uppercase;
+  color: var(--brand-secondary);
+  background: var(--landing-secondary-soft);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  margin-bottom: var(--space-4);
+}
+
+/**
+ * The hero title.
+ *
+ * **It scales with the viewport** — `clamp(32px, 5vw, 44px)` — so the
+ * display size is the desktop ceiling and the mobile floor is the
+ * `display-lg` token's own mobile size (32 px).
+ */
+.landing__title {
+  font-size: clamp(32px, 5vw, 44px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: var(--tracking-display);
+  margin: 0 0 var(--space-5);
+  color: var(--on-background);
+}
+
+/**
+ * The hero lede.
+ *
+ * **The one paragraph that carries the value proposition.** §9.1 asks for
+ * a single paragraph, and the mockup gives it a `max-width` of 540 px so
+ * it keeps a comfortable measure on a wide screen.
+ */
+.landing__lede {
+  font: var(--font-body-lg);
+  line-height: 1.55;
+  color: var(--on-surface-variant);
+  margin: 0 0 var(--space-8);
+  max-width: 540px;
+}
+
+/** The two hero calls to action. */
+.landing__cta-row {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+
+/**
+ * The hero's large buttons.
+ *
+ * **48 px tall, 20 px of horizontal padding, 16 px type** — the `lg`
+ * button. The mockup's primary CTA is also `font-weight: 700` at that
+ * size, so the two hero buttons do not read as equally weighted.
+ */
+.landing__cta {
+  height: var(--button-height-lg);
+  padding: 0 var(--button-padding-lg);
+  font-size: 16px;
+}
+
+.landing__cta--primary {
+  font-weight: 700;
+}
+
+/**
+ * The browse link.
+ *
+ * **A text link, not a button** — it is the lower-commitment path, and
+ * §9.1 puts it below the fold so a visitor sees what FindBack is before
+ * they are asked to commit to an account.
+ *
+ * **It is the evergreen, not the terracotta.** The mockup's browse link
+ * wears `--fb-link` (the evergreen) while the app's own `--link` token is
+ * the terracotta, so the landing page names the colour explicitly rather
+ * than inheriting a token that points somewhere else.
+ */
+.landing__browse {
+  font-size: 14px;
+  color: var(--brand-secondary);
+  text-decoration: none;
+}
+
+.landing__browse:hover {
+  color: var(--landing-link-hover);
+  text-decoration: underline;
+}
+
+/**
+ * The hero art panel.
+ *
+ * **A raised card holding the brand mark.** The 4:3 aspect ratio is the
+ * mockup's, and the mark is 60% of the panel's width — capped at 220 px
+ * so it does not swell on a wide screen.
+ */
+.landing__art {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--landing-radius-xl);
+  padding: var(--space-8);
+  box-shadow: var(--elevation-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+}
+
+.landing__art img {
+  width: 60%;
+  max-width: 220px;
+  height: auto;
+}
+
+/**
+ * The brand mark's theme variants.
+ *
+ * **Two `<img>` elements, one shown and one hidden.** The mark is a
+ * hard-coded-colour SVG, so `currentColor` does not reach into it — the
+ * light and dark variants are separate files and CSS chooses between
+ * them. The mockup does exactly this, and it is why the toggle is a
+ * `display` swap rather than an opacity fade.
+ */
+.landing__art img[data-theme-variant='dark'],
+.brand-mark img[data-theme-variant='dark'],
+.auth-card__logo img[data-theme-variant='dark'] {
+  display: none;
+}
+
+[data-theme='dark'] .landing__art img[data-theme-variant='light'],
+[data-theme='dark'] .brand-mark img[data-theme-variant='light'],
+[data-theme='dark'] .auth-card__logo img[data-theme-variant='light'] {
+  display: none;
+}
+
+[data-theme='dark'] .landing__art img[data-theme-variant='dark'],
+[data-theme='dark'] .brand-mark img[data-theme-variant='dark'],
+[data-theme='dark'] .auth-card__logo img[data-theme-variant='dark'] {
+  display: block;
+}
+
+/**
+ * The "How FindBack works" section.
+ *
+ * **A centred heading over a three-up grid of steps.** It collapses to
+ * one column below 768 px.
+ */
+.landing__how {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--space-12) var(--page-margin);
+}
+
+.landing__how-title {
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  margin: 0 0 var(--space-8);
+}
+
+.landing__how-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .landing__how-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+}
+
+/**
+ * One step.
+ *
+ * **A card with a numbered disc at the top.** The disc carries the step
+ * number in the brand's soft fill, so the eye runs down the three cards
+ * in order.
+ */
+.landing__step {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.landing__step-num {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.landing__step-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.landing__step-body {
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Listings                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The listing.
+ *
+ * **A list, not a table.** The listing is a set of summary cards on
+ * desktop and a stack on mobile (§5.6), and a list is the structure that
+ * reflows without a second layout.
+ */
+.listing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/**
+ * The listing row.
+ *
+ * **A button, because activating a row routes rather than opens a
+ * bookmarkable page.** The row is the whole summary card: the name, the
+ * type badge, the category, the date, the campus area, and the status.
+ *
+ * **The hover lift is a visual lift only** — §5.6 says explicitly: *"On
+ * hover/focus, lifts to `{elevation.2}` (a visual lift only; do not move
+ * the layout)."* The `transform` is not applied, so the layout does not
+ * move.
+ */
+.listing__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--elevation-1);
+  color: var(--on-surface);
+  font: var(--font-body-md);
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow var(--duration-base) var(--easing-standard);
+}
+
+.listing__row:hover {
+  box-shadow: var(--elevation-2);
+}
+
+.listing__name {
+  font: var(--font-title-md);
+  color: var(--on-surface);
+}
+
+.listing__meta {
+  color: var(--on-surface-variant);
+  font: var(--font-body-sm);
+}
+
+.listings-page__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.listings-page__head .hero__title {
+  margin: 0;
+}
+
+.listings-page__meta {
+  margin: 0;
+  color: var(--on-surface-variant);
+  font: var(--font-helper);
+}
+
+.listings {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: var(--space-6);
+}
+
+@media (max-width: 900px) {
+  .listings {
+    grid-template-columns: 1fr;
+  }
+}
+
+.filter-card {
+  position: sticky;
+  top: calc(var(--topbar-height) + var(--space-4));
+  align-self: start;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--elevation-1);
+}
+
+.filter-card h2 {
+  margin: 0 0 var(--space-3);
+  font: 600 13px/1.3 system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+
+.filter-card .field {
+  margin-bottom: var(--space-3);
+}
+
+.filter-card .field:last-child {
+  margin-bottom: 0;
+}
+
+.filter-card .field__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+
+.listings__results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.listings__empty {
+  padding: var(--space-12);
+  text-align: center;
+  background: var(--surface);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-lg);
+  color: var(--on-surface-variant);
+}
+
+.item-card {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--elevation-1);
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow var(--duration-base) var(--easing-standard);
+}
+
+.item-card:hover {
+  box-shadow: var(--elevation-2);
+  text-decoration: none;
+}
+
+.item-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2);
+}
+
+.item-card__title {
+  margin: 0;
+  flex: 1;
+  font: 600 16px/1.3 system-ui, sans-serif;
+  color: var(--on-surface);
+}
+
+.item-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.item-card__invite {
+  margin: 0 0 var(--space-2);
+  color: var(--on-surface-variant);
+  font-size: 14px;
+}
+
+.item-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+  font-size: 13px;
+  color: var(--on-surface-variant);
+}
+
+.home-view-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  padding: var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--elevation-1);
+  color: inherit;
+  text-decoration: none;
+}
+
+.home-view-card:hover {
+  box-shadow: var(--elevation-2);
+  text-decoration: none;
+}
+
+.home-view-card__title {
+  margin: 0;
+  font: var(--font-title-md);
+  color: var(--on-surface);
+}
+
+.home-view-card__body {
+  margin: 0;
+  color: var(--on-surface-variant);
+  font: var(--font-body-sm);
+}
+
+.home-view-card__cta {
+  margin-top: var(--space-2);
+  color: var(--brand-primary);
+  font: var(--font-label);
+}
+
+.member-welcome {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  color: var(--brand-on-primary);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-6);
+  box-shadow: var(--elevation-1);
+}
+
+.member-welcome__greeting {
+  margin: 0 0 var(--space-1);
+  font: 700 28px/1.2 var(--font-family);
+  letter-spacing: -0.01em;
+}
+
+.member-welcome__sub {
+  margin: 0;
+  font: var(--font-body-md);
+  opacity: 0.9;
+}
+
+.member-stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .member-stat-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .member-stat-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.member-stat {
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.member-stat__num {
+  margin: 0 0 var(--space-2);
+  font: var(--font-headline-sm);
+  font-weight: 700;
+}
+
+.member-stat__label {
+  margin: 0;
+  color: var(--on-surface-variant);
+  font: var(--font-caption);
+}
+
+.member-stat--accent .member-stat__num {
+  color: var(--brand-primary);
+}
+
+.member-stat--link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.member-stat--link:hover {
+  border-color: var(--brand-primary);
+}
+
+.review-responses__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.review-responses__card {
+  padding: var(--space-4);
+}
+
+.review-responses__card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.review-responses__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.member-home__section {
+  margin-bottom: var(--space-8);
+}
+
+.member-home__heading {
+  margin: 0 0 var(--space-4);
+  font: var(--font-headline-sm);
+  color: var(--on-surface);
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 768px) {
+  .action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.action-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-1);
+}
+
+.action-card--link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.action-card--link:hover {
+  box-shadow: var(--elevation-2);
+  text-decoration: none;
+}
+
+.action-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: var(--space-1);
+  border-radius: var(--radius-md);
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+.action-card--found .action-card__icon {
+  background: var(--landing-secondary-soft);
+  color: var(--brand-secondary);
+}
+
+.action-card__title {
+  margin: 0;
+  font: 600 18px/1.3 var(--font-family);
+  color: var(--on-surface);
+}
+
+.action-card__body {
+  margin: 0;
+  flex: 1;
+  color: var(--on-surface-variant);
+  font: var(--font-body-md);
+}
+
+.action-card__cta {
+  margin-top: var(--space-2);
+}
+
+.action-card__open {
+  margin-top: var(--space-2);
+  color: var(--brand-primary);
+  font: var(--font-label);
+}
+
+/**
+ * The pagination control.
+ *
+ * **Below the listing**, per §5.12. The URL carries the page number, so a
+ * deep link works.
+ */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.pagination__status {
+  color: var(--on-surface-variant);
+  font: var(--font-body-sm);
+}
+
+/**
+ * The banner.
+ *
+ * The body text renders in `on-background` on the soft fill, not in the
+ * saturated semantic foreground — the rule that keeps AA on every variant.
+ */
+.banner {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--semantic-warning-soft);
+  color: var(--on-background);
+}
+
+.banner--info {
+  background: var(--semantic-info-soft);
+}
+
+.banner__heading {
+  font: var(--font-title-md);
+}
+
+/**
+ * The status badge.
+ *
+ * **Colour is never the sole carrier of meaning** — the badge always pairs
+ * a colour with a text label and an icon.
+ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font: var(--font-status-text);
+  white-space: nowrap;
+}
+
+.badge__icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+/**
+ * The status badges.
+ *
+ * **Every badge pairs a colour with a text label and an icon** — colour is
+ * never the sole carrier of meaning (PRD NFR accessibility, §5.8).
+ *
+ * The values are transcribed from DESIGN.md's status palette, and the same
+ * values live in `src/ui/tokens.ts` as `statusColors`. The `--status-*`
+ * custom properties here are the CSS half of that pair; `tokens.test.ts`
+ * asserts the two agree.
+ */
+.badge--pending {
+  background: var(--semantic-warning-soft);
+  color: var(--on-background);
+}
+
+.badge--active {
+  background: var(--semantic-success-soft);
+  color: var(--on-background);
+}
+
+.badge--rejected,
+.badge--deactivated {
+  background: var(--semantic-error-soft);
+  color: var(--on-background);
+}
+
+.badge--neutral {
+  background: var(--surface-container-high);
+  color: var(--on-background);
+}
+
+/* The surface a footer sits on. */
+.footer {
+  padding: var(--space-8) var(--page-margin);
+  border-top: 1px solid var(--border-subtle);
+  color: var(--on-surface-variant);
+  font: var(--font-body-sm);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Reduced motion                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Reduced motion.
+ *
+ * DESIGN.md names what must be disabled: toast entry/exit, modal
+ * entry/exit, dropdown entry/exit, card hover lift, and the image-upload
+ * drag-active border change — plus *"status changes remain instant"*.
+ *
+ * The blanket rule below collapses every duration to ~0, which covers all
+ * of them. The **card hover lift** is declared here too, because a shadow
+ * transition is the one a component's own `transition` declaration would
+ * otherwise keep alive against the blanket rule.
+ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -113,4 +2475,1283 @@ a {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  .card,
+  .button,
+  .icon-button {
+    transition: none !important;
+  }
+
+  .card:hover {
+    box-shadow: var(--elevation-1) !important;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Administrator surfaces — §15.1–§15.5, §17.2                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A row of actions.
+ *
+ * §5.14: the error state carries `'Try again' as primary, 'Go back' as
+ * secondary`. The two sit side by side, with the primary first, so the
+ * order is the same in the markup and on the screen.
+ */
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/**
+ * The administrator nav layer.
+ *
+ * §3.2: the admin section is **visually delineated from member actions**
+ * "e.g., a divider + label" — so the list carries a left border that
+ * separates it from the member nav beside it.
+ */
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-nav .topbar__link[aria-current='page'] {
+  color: var(--brand-primary);
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+/**
+ * The dashboard's four tiles.
+ *
+ * §15.1 puts them "at the top", each linking to its queue. The grid is
+ * **one column by default and four columns at the desktop breakpoint** —
+ * the count is the tile's headline, so a narrow screen stacks them.
+ */
+.page:has(.admin-console) {
+  max-width: none;
+  padding: 0;
+}
+
+.admin-console {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--page-margin) var(--space-16);
+}
+
+.admin-console__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.admin-console__head .hero__title {
+  margin-bottom: 0;
+}
+
+.admin-console__meta {
+  margin: 0;
+  font: var(--font-helper);
+  color: var(--on-surface-variant);
+}
+
+.admin-console__section {
+  margin: var(--space-2) 0 var(--space-3);
+  font: var(--font-headline-sm);
+  color: var(--on-surface);
+}
+
+.admin-welcome {
+  position: relative;
+  background: var(--surface-container-low);
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--brand-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  margin-bottom: var(--space-6);
+  box-shadow: var(--elevation-1);
+  overflow: hidden;
+}
+
+.admin-welcome__accent {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: var(--brand-primary-soft);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.admin-welcome__inner {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.admin-welcome__main {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.admin-welcome__eyebrow {
+  display: inline-block;
+  margin: 0 0 var(--space-2);
+  font: 600 11px/1.4 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-secondary);
+}
+
+.admin-welcome__greeting {
+  margin: 0 0 var(--space-1);
+  font: 700 26px/1.2 system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  color: var(--on-surface);
+}
+
+.admin-welcome__greeting em {
+  font-style: normal;
+  color: var(--brand-primary);
+}
+
+.admin-welcome__meta {
+  margin: 0;
+  font-size: 14px;
+  color: var(--on-surface-variant);
+}
+
+.admin-welcome__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--brand-secondary-soft, #d6ebe5);
+  color: var(--brand-secondary);
+  font: 600 12px/1.4 system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.admin-welcome__badge::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand-secondary);
+}
+
+.admin-welcome__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: var(--space-4);
+}
+
+.admin-welcome__kpis {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.admin-welcome__kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-welcome__kpi-num {
+  font: 700 22px/1.1 system-ui, sans-serif;
+  color: var(--on-surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-welcome__kpi-num--alert {
+  color: var(--semantic-warning);
+}
+
+.admin-welcome__kpi-label {
+  font: 500 12px/1.4 system-ui, sans-serif;
+  color: var(--on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 720px) {
+  .admin-welcome {
+    padding: var(--space-4);
+  }
+
+  .admin-welcome__greeting {
+    font-size: 22px;
+  }
+
+  .admin-welcome__kpis {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+
+  .admin-welcome__kpi {
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+
+  .admin-welcome__kpi-num {
+    font-size: 18px;
+  }
+
+  .admin-welcome__badge {
+    order: -1;
+  }
+}
+
+.admin-tiles {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 900px) {
+  .admin-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/**
+ * One tile.
+ *
+ * **The tile is a link,** so it carries the link's affordances: a
+ * hoverable surface and a focus ring. The count is the tile's headline.
+ */
+.admin-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--elevation-1);
+  color: inherit;
+  text-decoration: none;
+  transition: box-shadow var(--duration-base) var(--easing-standard);
+}
+
+.admin-tile:hover {
+  box-shadow: var(--elevation-2);
+}
+
+/**
+ * The tile's label.
+ *
+ * **Uppercase with positive tracking** — the label is a category, and the
+ * count below it is the number.
+ */
+.admin-tile__label {
+  margin: var(--space-1) 0 0;
+  color: var(--on-surface);
+  font: var(--font-headline-sm);
+}
+
+/**
+ * The tile's count.
+ *
+ * **Tabular figures,** so the counts align across the four tiles — the
+ * story's criterion: *"it uses tabular figures so counts align across
+ * tiles."*
+ */
+.admin-tile__count {
+  color: var(--brand-primary);
+  font: 700 32px/1 system-ui, sans-serif;
+}
+
+.admin-tile__hint {
+  margin-top: var(--space-2);
+  color: var(--on-surface-variant);
+  font: var(--font-body-sm);
+}
+
+.admin-tile__count--tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/**
+ * The empty tile's copy and its check icon.
+ *
+ * **The icon rides with the copy, and only with the copy.** A tile with
+ * work shows no check, so the check means exactly one thing.
+ */
+.admin-tile__empty {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--semantic-success);
+  font: var(--font-body-sm);
+}
+
+.admin-tile__check {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+/**
+ * The skeleton's bar.
+ *
+ * **A bar, never a number.** A skeleton that rendered `0` would be
+ * indistinguishable from a real zero, and a zero is a *fact* about the
+ * queue — "there is no work" — not a placeholder.
+ */
+.admin-tile__skeleton-bar,
+.admin-queue__skeleton-bar,
+.audit-trail__skeleton-bar {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: var(--surface-container-high);
+  animation: admin-skeleton-pulse 1400ms var(--easing-standard) infinite;
+}
+
+.admin-tile__skeleton-bar {
+  height: 18px;
+}
+
+.admin-tile--skeleton .admin-tile__label {
+  width: 70%;
+}
+
+.admin-tile--skeleton .admin-tile__count {
+  width: 30%;
+  height: 28px;
+}
+
+@keyframes admin-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/**
+ * The queue grid.
+ *
+ * **A grid, not a table.** The ARIA grid pattern (§5.7, §20.1) is
+ * `role="grid"` / `row` / `gridcell`, and the cells are laid out with
+ * CSS grid so the row and the cell structure stay distinct for the
+ * accessibility tree.
+ */
+.admin-queue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow-x: auto;
+}
+
+/**
+ * The queue's heading row.
+ */
+.admin-queue__head {
+  display: grid;
+  grid-template-columns: var(--admin-queue-columns, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 2px solid var(--border-default);
+}
+
+/**
+ * One queue row.
+ */
+.admin-queue__row {
+  display: grid;
+  grid-template-columns: var(--admin-queue-columns, 1fr);
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-1);
+}
+
+/**
+ * The focused row.
+ *
+ * **The roving `tabindex`'s visible counterpart.** The row that carries
+ * the focus is the one the arrow keys are on, so it must show it.
+ */
+.admin-queue__row:focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+/**
+ * One cell.
+ */
+.admin-queue__cell {
+  min-width: 0;
+  color: var(--on-surface);
+  font: var(--font-body-sm);
+  overflow-wrap: anywhere;
+}
+
+/**
+ * A heading cell.
+ */
+.admin-queue__cell--head {
+  color: var(--on-surface-variant);
+  font: var(--font-label-caps);
+  letter-spacing: var(--tracking-label-caps);
+  text-transform: uppercase;
+}
+
+/**
+ * The action cell.
+ *
+ * **Right-aligned** — §5.7: the action column is right-aligned, and the
+ * action is the row's last cell.
+ */
+.admin-queue__cell--action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/**
+ * The sortable heading's button.
+ *
+ * **The button is the action and the `aria-sort` on the cell is the
+ * direction** — so the button is styled as text rather than as a chunky
+ * button, and the cell keeps the column's alignment.
+ */
+.admin-queue__sort {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+
+  /*
+   * **The button is the action and the `aria-sort` on the cell is the
+   * direction** — so it is styled as text rather than as a chunky button,
+   * and the cell keeps the column's alignment. It still has to meet the
+   * 44px target floor (§20.4), so the floor is given through the box and
+   * the visible text stays flush with the column.
+   */
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+}
+
+.admin-queue__sort:hover {
+  color: var(--on-surface);
+  text-decoration: underline;
+}
+
+/**
+ * The queue's empty state.
+ */
+.admin-queue__empty {
+  padding: var(--space-8) var(--space-4);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--surface-container-low);
+  text-align: center;
+}
+
+/**
+ * The audit trail's table.
+ *
+ * **A real table,** so the column headers are announced when a screen
+ * reader moves between cells.
+ */
+.audit-trail {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--font-body-sm);
+}
+
+.audit-trail th {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 2px solid var(--border-default);
+  color: var(--on-surface-variant);
+  font: var(--font-label-caps);
+  letter-spacing: var(--tracking-label-caps);
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.audit-trail__row {
+  border-bottom: 1px solid var(--border-subtle);
+  /* The left-border accent — §17.4's status colour for the event class. */
+  border-left: 3px solid var(--border-default);
+}
+
+.audit-trail__cell {
+  padding: var(--space-3);
+  color: var(--on-surface);
+  vertical-align: top;
+}
+
+/**
+ * The action cell's verb and label.
+ *
+ * **The verb is the cell's headline and the label is its detail.** The
+ * numbered workflow events and the non-numbered records are told apart by
+ * their labels.
+ */
+.audit-trail__action {
+  display: block;
+  font: var(--font-title-md);
+}
+
+.audit-trail__label {
+  display: block;
+  color: var(--on-surface-variant);
+  font: var(--font-body-sm);
+}
+
+/**
+ * The disclosure's button.
+ */
+.audit-trail__disclosure {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--link);
+  font: var(--font-body-sm);
+  cursor: pointer;
+  text-decoration: underline;
+
+  /*
+   * **A text-styled button still has to be big enough to hit.** The
+   * disclosure reads as an underlined word, but the target it presents is
+   * the 44px floor (§20.4). The floor is given through the box, so the
+   * word's own typography is untouched.
+   */
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+}
+
+/**
+ * The disclosure's expanded content.
+ */
+.audit-trail__details {
+  margin-top: var(--space-2);
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--border-subtle);
+}
+
+.audit-trail__detail {
+  color: var(--on-surface-variant);
+  font: var(--font-body-sm);
+}
+
+/**
+ * The accent colours — §17.4's table.
+ *
+ * **The accent is a left border in the status colour of the event's
+ * class,** so Riley can scan by event class without reading.
+ */
+.admin-queue__row[data-accent='status-report.open'],
+.audit-trail__row[data-accent='status-report.open'] {
+  border-left-color: var(--status-report-open);
+}
+
+.audit-trail__row[data-accent='status-report.closed'] {
+  border-left-color: var(--status-report-closed);
+}
+
+.audit-trail__row[data-accent='status-report.returned'] {
+  border-left-color: var(--status-report-returned);
+}
+
+.audit-trail__row[data-accent='status-claim.pending'] {
+  border-left-color: var(--status-claim-pending);
+}
+
+.audit-trail__row[data-accent='status-claim.approved'] {
+  border-left-color: var(--status-claim-approved);
+}
+
+.audit-trail__row[data-accent='status-claim.rejected'] {
+  border-left-color: var(--status-claim-rejected);
+}
+
+.audit-trail__row[data-accent='status-rr.submitted'] {
+  border-left-color: var(--status-rr-submitted);
+}
+
+.audit-trail__row[data-accent='status-rr.selected'] {
+  border-left-color: var(--status-rr-selected);
+}
+
+.audit-trail__row[data-accent='status-rr.matchConfirmed'] {
+  border-left-color: var(--status-rr-match-confirmed);
+}
+
+.audit-trail__row[data-accent='status-rr.notAMatch'] {
+  border-left-color: var(--status-rr-not-a-match);
+}
+
+.audit-trail__row[data-accent='status-rr.completed'] {
+  border-left-color: var(--status-rr-completed);
+}
+
+.audit-trail__row[data-accent='status-rr.resolvedReturned'] {
+  border-left-color: var(--status-rr-resolved-returned);
+}
+
+.audit-trail__row[data-accent='status-rr.resolvedClosed'] {
+  border-left-color: var(--status-rr-resolved-closed);
+}
+
+.audit-trail__row[data-accent='status-rr.withdrawn'] {
+  border-left-color: var(--status-rr-withdrawn);
+}
+
+.audit-trail__row[data-accent='status-account.active'] {
+  border-left-color: var(--status-account-active);
+}
+
+.audit-trail__row[data-accent='status-account.rejected'] {
+  border-left-color: var(--status-account-rejected);
+}
+
+.audit-trail__row[data-accent='status-account.deactivated'] {
+  border-left-color: var(--status-account-deactivated);
+}
+
+/**
+ * Visually hidden, still announced.
+ *
+ * **The class that carries an accessible name without a visual
+ * counterpart** — used for the audit row's full accessible name.
+ */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/**
+ * The queue's columns below the small breakpoint.
+ *
+ * **The grid collapses to a single column** below 640 px — a five-column
+ * queue on a phone is unreadable, and the ARIA grid pattern still holds
+ * because the roles are unchanged.
+ */
+@media (max-width: 639px) {
+  .admin-queue__head {
+    display: none;
+  }
+
+  .admin-queue__row {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+  }
+
+  .admin-queue__cell--action {
+    justify-content: flex-start;
+  }
+
+  .admin-queue__cell--head {
+    display: none;
+  }
+
+  .audit-trail,
+  .audit-trail tbody,
+  .audit-trail tr,
+  .audit-trail td {
+    display: block;
+    width: 100%;
+  }
+
+  .audit-trail thead {
+    display: none;
+  }
+
+  .audit-trail__row {
+    margin-bottom: var(--space-3);
+    border: 1px solid var(--border-subtle);
+    border-left-width: 3px;
+    border-radius: var(--radius-md);
+  }
+
+  .audit-trail__cell {
+    padding: var(--space-2) var(--space-3);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Member surfaces — §3.2, §9.4, §10, §11, §12, §13                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The member nav.
+ *
+ * §3.2: the four authoritative views sit side by side in the top nav, so
+ * the list is a flat row of links — the same shape as the administrator's
+ * nav layer, but without the divider, because the member nav is the
+ * *primary* layer and the admin layer is the delineated one.
+ */
+.member-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/**
+ * A disclosure menu.
+ *
+ * §5.11's dropdown: the trigger sits in the header and the panel hangs
+ * beneath it. The wrapper is `position: relative` so the panel can be
+ * positioned against the trigger without a wrapper of its own in the
+ * markup.
+ */
+.menu {
+  position: relative;
+}
+
+/**
+ * The disclosure's trigger.
+ *
+ * **The trigger is a button, not a link** — it opens a panel, it does not
+ * navigate. It carries the topbar link's typography so the header reads as
+ * one row of peer entries.
+ */
+.menu__trigger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+
+  /*
+   * **The trigger is a button that opens a panel, so it carries the target
+   * floor** (§20.4) even though it reads as a text link in the header row.
+   */
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+}
+
+/**
+ * The disclosure's panel.
+ *
+ * **A raised surface with a shadow,** so it reads as floating above the
+ * page rather than as part of the header's flow. The list is unstyled as
+ * a list — no markers — because the entries are actions, not a sequence
+ * to be counted.
+ */
+.menu__panel {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  min-width: 220px;
+  margin: 0;
+  padding: var(--space-2);
+  list-style: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--elevation-3);
+}
+
+/**
+ * A menu entry.
+ *
+ * **The same height as a button** — §20's 44 × 44 target — so a menu
+ * entry is as reachable as a button is.
+ */
+.menu__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  font: var(--font-label);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.menu__item:hover {
+  background: var(--surface-container);
+}
+
+/**
+ * The detail page's section.
+ *
+ * §11.3 composes the page of "stacked sections", so each section is a
+ * block with its own heading and a rule beneath it. The rule is what
+ * makes the stack read as a stack rather than as one long column.
+ */
+.detail-section {
+  padding: var(--space-5) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.detail-section:last-of-type {
+  border-bottom: none;
+}
+
+/**
+ * A detail section's heading.
+ *
+ * **The heading renders even when the section's content is withheld** —
+ * §11.4 says the `Hidden from other members` label appears "next to the
+ * section heading", so the heading is the anchor the label sits beside.
+ */
+.detail-section__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+  font: var(--font-title-md);
+}
+
+/**
+ * The `Hidden from other members` label.
+ *
+ * **A quiet marker, not an error.** The field is withheld by design, and
+ * the label says so without alarming the reader — §11.4's "the UX
+ * reinforces that sensitive fields are protected by design".
+ */
+.hidden-note {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+  font: var(--font-caption);
+}
+
+/**
+ * The `Sensitive` inline marker.
+ *
+ * **The same quiet treatment as the hidden note,** because it says the
+ * same thing one step earlier: this field is not shown to other members.
+ */
+.sensitive-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--on-surface-variant);
+  font: var(--font-caption);
+}
+
+/**
+ * A detail section's definition list.
+ *
+ * **A `<dl>`,** because a detail section is a set of labelled values and
+ * the association between a label and its value is the content.
+ */
+.detail-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+@media (min-width: 640px) {
+  .detail-list {
+    grid-template-columns: minmax(140px, 200px) 1fr;
+  }
+}
+
+.detail-list__term {
+  color: var(--on-surface-variant);
+  font: var(--font-label);
+}
+
+.detail-list__value {
+  margin: 0;
+  font: var(--font-body-md);
+}
+
+/**
+ * The toolbar beside the item's heading.
+ *
+ * §9.4 calls it the "your Found report toolbar" — a short line that says
+ * which relationship the member holds to the item.
+ */
+.detail-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
+  font: var(--font-label);
+}
+
+/**
+ * The member dashboard's two paired primary buttons.
+ *
+ * §9.4 and §5.1's member-dashboard exception: the two report CTAs are
+ * **paired primaries** — equal weight, side by side, because neither is
+ * the more important one.
+ */
+.home-ctas {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .home-ctas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.home-cta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  padding: var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--elevation-1);
+  color: inherit;
+  font: var(--font-title-md);
+  text-decoration: none;
+}
+
+.home-cta:hover {
+  box-shadow: var(--elevation-2);
+}
+
+/**
+ * The dashboard's entry-point links.
+ *
+ * §9.4 puts these **below the fold**, so they sit in their own section
+ * rather than competing with the two primary CTAs above.
+ */
+.home-views {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 640px) {
+  .home-views {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/**
+ * A view's tab strip.
+ *
+ * §9.4 gives each of the four views a tab set — `Lost`/`Found`/`Closed`
+ * for My Reports, `Pending`/`Approved`/`Rejected` for My Claims, and the
+ * canonical statuses for My Recovery Responses. The tabs are links, so
+ * they are keyboard reachable and each one has a real destination.
+ */
+.view-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  list-style: none;
+}
+
+.view-tabs__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-pill);
+  color: inherit;
+  font: var(--font-label);
+  text-decoration: none;
+}
+
+.view-tabs__link:hover {
+  background: var(--surface-container);
+}
+
+.view-tabs__link[aria-current='page'] {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+
+/**
+ * The empty view.
+ *
+ * §5.14 and story 003's criterion: a friendly headline, a one-sentence
+ * body, and a **single** next-action button. No illustration — the
+ * criterion forbids one.
+ */
+.empty-view {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.empty-view__heading {
+  margin: 0;
+  font: var(--font-headline-sm);
+}
+
+.empty-view__body {
+  margin: 0;
+  color: var(--on-surface-variant);
+  font: var(--font-body-md);
+}
+
+/**
+ * The breadcrumb trail.
+ *
+ * §9.4: the trail is keyboard-navigable. It is a `<nav>` with an ordered
+ * list, and the current page is the last item — marked `aria-current`.
+ */
+.breadcrumbs {
+  margin-bottom: var(--space-5);
+}
+
+.breadcrumbs--compact {
+  margin-bottom: var(--space-3);
+  color: var(--on-surface-variant);
+  font: var(--font-helper);
+}
+
+.breadcrumbs--compact .breadcrumbs__list {
+  font: inherit;
+}
+
+.breadcrumbs--compact .breadcrumbs__item + .breadcrumbs__item::before {
+  content: '›';
+}
+
+.breadcrumbs--compact .breadcrumbs__item a {
+  min-height: unset;
+  padding: 0;
+}
+
+.breadcrumbs__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: var(--font-body-sm);
+}
+
+.breadcrumbs__item + .breadcrumbs__item::before {
+  content: '/';
+  margin-right: var(--space-2);
+  color: var(--on-surface-variant);
+}
+
+/**
+ * A breadcrumb's link.
+ *
+ * **The trail's links are targets like any other** (§20.4), so each link
+ * carries the 44px floor through its box. The trail is a flex list, so the
+ * link fills its item's height rather than sitting as an inline word.
+ */
+.breadcrumbs__item a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+}
+
+/**
+ * The thread.
+ *
+ * §13.2: a vertical list of messages, **oldest at top and newest at
+ * bottom**. The list is `aria-live="polite"` so a newly arrived message
+ * is announced without stealing focus.
+ */
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.thread__message {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.thread__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.thread__author {
+  font: var(--font-label);
+}
+
+.thread__role {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+  font: var(--font-caption);
+}
+
+.thread__timestamp {
+  color: var(--on-surface-variant);
+  font: var(--font-caption);
+}
+
+/**
+ * A message's body.
+ *
+ * **The line breaks are preserved** — §13.2 says the body "preserves line
+ * breaks, no formatting" — and the text is **plain**, so no markup is
+ * interpreted.
+ */
+.thread__body {
+  margin: 0;
+  font: var(--font-body-md);
+  white-space: pre-wrap;
+}
+
+/**
+ * The thread's composer.
+ *
+ * **A plain textarea.** §13.3: no attachments, no rich text, no images,
+ * no markdown — so the composer has exactly one control.
+ */
+.thread__composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.thread__composer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/**
+ * The live character counter.
+ *
+ * **`aria-live="polite"`** so the count is announced as it changes
+ * without interrupting. At 90 % of the maximum the counter takes the
+ * warning foreground, so the member sees the limit approaching.
+ */
+.char-counter {
+  color: var(--on-surface-variant);
+  font: var(--font-helper);
+  font-variant-numeric: tabular-nums;
+}
+
+.char-counter--warning {
+  color: var(--semantic-warning);
+}
+
+/**
+ * The confirmation modal's backdrop.
+ *
+ * §5.10: the dialog is a modal, so the backdrop covers the page and the
+ * dialog is centred over it.
+ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: var(--surface-overlay);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 480px;
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--elevation-4);
+}
+
+.modal__heading {
+  margin: 0;
+  font: var(--font-headline-sm);
+}
+
+.modal__body {
+  margin: 0;
+  font: var(--font-body-md);
 }

@@ -15,3 +15,9 @@ for (const file of ['.env.local', '.env']) {
     process.loadEnvFile(file);
   }
 }
+
+// Tests wipe identity and listing tables. Point them at the isolated
+// test database so `npm test` cannot delete local app users or reports.
+if (process.env.DATABASE_URL_TEST) {
+  process.env.DATABASE_URL = process.env.DATABASE_URL_TEST;
+}

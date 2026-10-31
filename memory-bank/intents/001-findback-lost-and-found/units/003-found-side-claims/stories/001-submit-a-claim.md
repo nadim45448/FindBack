@@ -2,11 +2,11 @@
 id: 001-submit-a-claim
 unit: 003-found-side-claims
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:46:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 013-claim-submit
+implemented: true
 traces_to: [FR-15]
 ---
 
@@ -20,19 +20,19 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** an `Active` member viewing a Found report, **When** they submit a claim with a reason of 20-1000 characters, identifying details of 10-500 characters, and a date lost, **Then** a Claim is created in `Pending` status linked to that Found report
-- [ ] **Given** a date lost more than 365 days before today, **When** the claim is submitted, **Then** submission is refused with a validation error and no Claim is created
-- [ ] **Given** a date lost in the future, **When** the claim is submitted, **Then** submission is refused with a validation error and no Claim is created
-- [ ] **Given** a reason shorter than 20 characters or longer than 1000 characters, **When** the claim is submitted, **Then** submission is refused with a validation error and no Claim is created
-- [ ] **Given** identifying details shorter than 10 characters or longer than 500 characters, **When** the claim is submitted, **Then** submission is refused with a validation error and no Claim is created
-- [ ] **Given** the member already has a `Pending` claim on the same item, **When** they submit another claim, **Then** submission is refused and the existing `Pending` claim is left unchanged
-- [ ] **Given** the member's previous claim on the same item is `Rejected`, **When** they submit a new claim, **Then** a new `Pending` claim is created alongside the retained history
-- [ ] **Given** a member attempting to claim a Found report they authored, **When** they submit the claim, **Then** the request returns HTTP 403 and no Claim is created
-- [ ] **Given** an actor whose account is not `Active`, **When** they attempt to submit a claim, **Then** the request returns HTTP 403 with a clear message and no Claim is created
-- [ ] **Given** a successful claim submission, **When** the transaction commits, **Then** an audit event records the actor (claimant), claim ID, item ID, reason, identifying details, date lost, and timestamp
-- [ ] **Given** a successful claim submission on a Found report whose status is `Open`, **When** the transaction commits, **Then** the Found report lifecycle status becomes `Claim Requested`
-- [ ] **Given** a successful claim submission, **When** the transaction commits, **Then** the FR-28 new-claim email is dispatched to the reporter (finder) of that Found report
-- [ ] **Given** claim submissions exceeding the configured rate limit, **When** a further claim is submitted, **Then** submission is refused and no Claim is created
+- [x] **Given** an `Active` member viewing a Found report, **When** they submit a claim with a reason of 20-1000 characters, identifying details of 10-500 characters, and a date lost, **Then** a Claim is created in `Pending` status linked to that Found report
+- [x] **Given** a date lost more than 365 days before today, **When** the claim is submitted, **Then** submission is refused with a validation error and no Claim is created
+- [x] **Given** a date lost in the future, **When** the claim is submitted, **Then** submission is refused with a validation error and no Claim is created
+- [x] **Given** a reason shorter than 20 characters or longer than 1000 characters, **When** the claim is submitted, **Then** submission is refused with a validation error and no Claim is created
+- [x] **Given** identifying details shorter than 10 characters or longer than 500 characters, **When** the claim is submitted, **Then** submission is refused with a validation error and no Claim is created
+- [x] **Given** the member already has a `Pending` claim on the same item, **When** they submit another claim, **Then** submission is refused and the existing `Pending` claim is left unchanged
+- [x] **Given** the member's previous claim on the same item is `Rejected`, **When** they submit a new claim, **Then** a new `Pending` claim is created alongside the retained history
+- [x] **Given** a member attempting to claim a Found report they authored, **When** they submit the claim, **Then** the request returns HTTP 403 and no Claim is created
+- [x] **Given** an actor whose account is not `Active`, **When** they attempt to submit a claim, **Then** the request returns HTTP 403 with a clear message and no Claim is created
+- [x] **Given** a successful claim submission, **When** the transaction commits, **Then** an audit event records the actor (claimant), claim ID, item ID, reason, identifying details, date lost, and timestamp
+- [x] **Given** a successful claim submission on a Found report whose status is `Open`, **When** the transaction commits, **Then** the Found report lifecycle status becomes `Claim Requested`
+- [x] **Given** a successful claim submission, **When** the transaction commits, **Then** the FR-28 new-claim email is dispatched to the reporter (finder) of that Found report
+- [x] **Given** claim submissions exceeding the configured rate limit, **When** a further claim is submitted, **Then** submission is refused and no Claim is created
 
 Technical Notes
 

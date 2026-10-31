@@ -31,6 +31,7 @@ describe('the empty filter', () => {
       dateRange: null,
       type: null,
       statuses: null,
+      participationStatuses: null,
     });
   });
 });

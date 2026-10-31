@@ -27,7 +27,7 @@ export async function GET(): Promise<NextResponse> {
     const token = await readSessionCookie();
     const actor = token ? await stack.resolver.resolve(token) : null;
 
-    if (!actor) {
+    if (!actor || !token) {
       return NextResponse.json({ actor: null });
     }
 
@@ -39,6 +39,7 @@ export async function GET(): Promise<NextResponse> {
         displayName: actor.displayName,
         capability: actor.capability,
       },
+      csrfToken: stack.csrf.computeToken(stack.tokens.hashToken(token)),
     });
   } catch (error) {
     return errorResponse(error, requestId);

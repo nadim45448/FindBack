@@ -47,6 +47,12 @@ export interface SmtpConfig {
   /** Whether to connect over TLS directly (implicit TLS). */
   readonly secure: boolean;
   /**
+   * Whether to upgrade a plaintext connection with STARTTLS.
+   *
+   * Local Mailpit on port 1025 has no TLS. Production relays on 587 do.
+   */
+  readonly startTls: boolean;
+  /**
    * The certificate authority that signs the relay's certificate.
    *
    * `undefined` means the platform's trusted roots. A **path** to a PEM file
@@ -72,15 +78,23 @@ export function readSmtpConfig(
   }
 
   const port = Number(env.SMTP_PORT ?? 587);
+  const resolvedPort = Number.isInteger(port) && port > 0 ? port : 587;
+  const startTlsExplicit = env.SMTP_STARTTLS;
 
   return {
     host,
-    port: Number.isInteger(port) && port > 0 ? port : 587,
+    port: resolvedPort,
     user: env.SMTP_USER ?? null,
     password: env.SMTP_PASSWORD ?? null,
     from: env.EMAIL_FROM ?? 'FindBack <no-reply@example.org>',
-    // Port 465 is implicit TLS; 587 is STARTTLS.
-    secure: port === 465,
+    // Port 465 is implicit TLS; 587 is STARTTLS; 1025 is local Mailpit.
+    secure: resolvedPort === 465,
+    startTls:
+      startTlsExplicit === 'false'
+        ? false
+        : startTlsExplicit === 'true'
+          ? true
+          : resolvedPort !== 1025,
     ca: env.SMTP_TLS_CA ?? undefined,
   };
 }
@@ -117,7 +131,25 @@ export class SmtpEmailSender implements EmailSender {
       return this.openSecure();
     }
 
+    if (!this.config.startTls) {
+      return this.openPlaintext();
+    }
+
     return this.openWithStartTls();
+  }
+
+  /**
+   * Plain SMTP — local Mailpit, no TLS.
+   */
+  private async openPlaintext(): Promise<SmtpSession> {
+    const socket = await this.connectPlaintext();
+    const session = new SmtpSession(socket, this.config.host);
+
+    await session.expect(220);
+    await session.command('EHLO findback', 250);
+    await session.authenticate(this.config.user, this.config.password);
+
+    return session;
   }
 
   /** The implicit-TLS path (port 465). */

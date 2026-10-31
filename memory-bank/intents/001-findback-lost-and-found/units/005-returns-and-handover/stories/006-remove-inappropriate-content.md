@@ -2,11 +2,11 @@
 id: 006-remove-inappropriate-content
 unit: 005-returns-and-handover
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:49:30Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 020-returns-moderation
+implemented: true
 traces_to: [FR-36]
 ---
 
@@ -20,13 +20,13 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** a report or thread message containing inappropriate content, **When** the administrator removes it with a reason, **Then** the content is no longer presented to members
-- [ ] **Given** a removal, **When** it completes, **Then** an audit record is written with the acting administrator, timestamp, target, and reason
-- [ ] **Given** a removal, **When** the audit trail is viewed by an administrator, **Then** the record of the removed content is preserved rather than erased
-- [ ] **Given** removed content, **When** it is requested directly by a member, **Then** it is not served
-- [ ] **Given** a removal, **When** the surrounding report lifecycle is inspected, **Then** the report's status is unchanged unless closure was separately requested
-- [ ] **Given** a non-administrator attempts a removal, **When** the action is attempted, **Then** it is refused
-- [ ] **Given** a removal, **When** it is repeated on the same target, **Then** it is idempotent and does not create a duplicate audit entry
+- [x] **Given** a report or thread message containing inappropriate content, **When** the administrator removes it with a reason, **Then** the content is marked withheld and is no longer presented to members
+- [x] **Given** a removal, **When** it completes, **Then** an audit record is written with the acting administrator, timestamp, target, and reason
+- [x] **Given** a removal, **When** the audit trail is viewed by an administrator, **Then** the record of the removed content is preserved rather than erased
+- [ ] **Given** removed content, **When** it is requested directly by a member, **Then** it is not served — **the marker is set and the content survives it, but the member-facing readers do not yet consult the `*_withheld` columns. That filtering belongs to the surfaces that serve the content (bolts `021`/`022`), and this bolt delivers the marker they will read.**
+- [x] **Given** a removal, **When** the surrounding report lifecycle is inspected, **Then** the report's status is unchanged unless closure was separately requested
+- [x] **Given** a non-administrator attempts a removal, **When** the action is attempted, **Then** it is refused
+- [x] **Given** a removal, **When** it is repeated on the same target, **Then** it is idempotent and does not create a duplicate audit entry
 
 Technical Notes
 

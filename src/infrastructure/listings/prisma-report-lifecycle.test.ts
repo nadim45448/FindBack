@@ -110,7 +110,9 @@ describeWithDatabase('the report lifecycle adapters (database)', () => {
 
   /** Write a report inside a transaction. */
   async function write(report = aValidatedReport()) {
-    return prisma.$transaction(async (tx) => repository.create(report, { transaction: tx }));
+    return prisma.$transaction(async (tx) =>
+      repository.create(crypto.randomUUID(), report, { transaction: tx }),
+    );
   }
 
   describe('the read', () => {

@@ -45,6 +45,13 @@ export class PrismaReportInteractionResolver implements ReportInteractionResolve
    * **The statement is one `UPDATE … RETURNING`.** Every Pending Claim on
    * the report is rejected, and the rows it affected are returned — so the
    * notification set and the resolved set cannot disagree.
+   *
+   * **The decision time is written with the rejection.** Bolt `016`'s
+   * `claims_decision_fields_check` requires a decided Claim to carry a
+   * decision time — the row records *that* it was decided and *when*, and
+   * the trail records why and by whose action. The decider is left null,
+   * because a withdrawal's auto-rejection was caused by a *member* and has
+   * no administrator to name.
    */
   async rejectPendingClaims(
     reportId: string,
@@ -59,6 +66,7 @@ export class PrismaReportInteractionResolver implements ReportInteractionResolve
       UPDATE "claims" AS c
       SET "status" = ${CLAIM_REJECTED_STATUS},
           "rejection_reason" = ${reason},
+          "decided_at" = CURRENT_TIMESTAMP,
           "updated_at" = CURRENT_TIMESTAMP
       FROM "accounts" AS a
       WHERE c."report_id" = ${reportId}::uuid

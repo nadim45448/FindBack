@@ -1,11 +1,12 @@
 /**
  * The Prisma implementation of the report repository.
  *
- * **The id is minted here, once.** The repository is the only thing that
- * knows how a report's id is produced, and it produces it inside the
- * `INSERT` — so a caller cannot supply one, and the domain cannot invent
- * one. The `ValidatedReport` that arrives has no `id`; the
- * `PersistedReport` that leaves has one.
+ * **The id arrives with the report and is written as given.** The
+ * `ValidatedReport` that arrives has no `id`; the `PersistedReport` that
+ * leaves has one. The id is minted by the application layer, *before* the
+ * blob is uploaded, so that the blob's path can be namespaced by the entity
+ * id (`reports/{entityId}/`, image-handling §4) — the upload happens before
+ * the row exists, and the path needs the id at upload time.
  *
  * **The write is inside the caller's transaction.** The port takes a
  * `TransactionHandle` as a required parameter, so a report and its audit
@@ -104,9 +105,15 @@ export class PrismaReportRepository {
 
   /**
    * Insert a report inside the caller's transaction and return it with its
-   * minted id.
+   * id.
+   *
+   * **The id is written, not defaulted.** The column still has a database
+   * default, but this insert supplies the id explicitly — the caller minted
+   * it before the blob was uploaded, so that the blob's path could be
+   * namespaced by the entity id (image-handling §4).
    */
   async create(
+    reportId: string,
     report: ValidatedReport,
     transaction: TransactionHandle,
   ): Promise<PersistedReport> {
@@ -114,6 +121,7 @@ export class PrismaReportRepository {
 
     const created = await client.report.create({
       data: {
+        id: reportId,
         type: report.type,
         status: report.status,
         name: report.name.value,

@@ -5,12 +5,13 @@
  *
  * ```text
  * 1.  validate → ValidatedReport | FieldValidationError   (domain, pure)
- * 2.  upload the blob → ImageRef                          (outside any transaction)
- * 3.  BEGIN
- * 4.    INSERT reports
- * 5.    INSERT audit_events (event 1)
- * 6.  COMMIT
- * 7.  raise ReportCreated (after the commit)
+ * 2.  mint the report's id
+ * 3.  upload the blob → ImageRef                          (outside any transaction)
+ * 4.  BEGIN
+ * 5.    INSERT reports
+ * 6.    INSERT audit_events (event 1)
+ * 7.  COMMIT
+ * 8.  raise ReportCreated (after the commit)
  * ```
  *
  * **Why the image is uploaded before the row is written.** image-handling §5:
@@ -18,6 +19,13 @@
  * follow-up."* The report row is written **last**, so a blob failure means no
  * report exists — there is no "report without image" intermediate state to
  * clean up.
+ *
+ * **Why the id is minted before the upload.** The blob's path is namespaced
+ * by the owning entity's id — `reports/{entityId}/` (image-handling §4) — so
+ * that storage usage is attributable per entity. The upload precedes the row
+ * write, so the id has to exist before the row does; minting it up front is
+ * what makes the entity-scoped prefix possible without amending the
+ * standard.
  *
  * **Why the blob upload is outside the transaction.** A blob store cannot
  * join a PostgreSQL transaction. Pretending otherwise would be a lie about
@@ -155,8 +163,17 @@ export class ReportCreationService {
       imageRef: null,
     });
 
-    // ── 2. Store the blob, outside the transaction ────────────────────────
+    // ── 2. Mint the report's id, then store the blob ─────────────────────
     //
+    // **The id is minted here, before the upload.** The blob's path is
+    // namespaced by the owning entity's id (`reports/{entityId}/`,
+    // image-handling §4) so that storage usage is attributable per entity.
+    // The upload happens *before* the row is written — so the id has to
+    // exist before the row does, and the only way to have that is to mint it
+    // up front. The id is never supplied by the member: it is produced here,
+    // from `crypto.randomUUID()`.
+    const reportId = crypto.randomUUID();
+
     // The upload is part of the write, not a follow-up. A failure here means
     // **no report is created**.
     let imageRef: ImageRef | null = null;
@@ -173,7 +190,7 @@ export class ReportCreationService {
       // upgrade is performed (ADR-4).
       await this.assertQuotaAllows(request.image);
 
-      const stored = await this.images.store(request.image, 'reports');
+      const stored = await this.images.store(request.image, `reports/${reportId}`);
       imageRef = createImageRef(stored.path);
     }
 
@@ -188,7 +205,7 @@ export class ReportCreationService {
 
     try {
       created = await this.transactions.run((transaction) =>
-        this.writeReportAndAudit(report, transaction),
+        this.writeReportAndAudit(reportId, report, transaction),
       );
     } catch (error) {
       // ── 4. Compensate: delete the blob ──────────────────────────────────
@@ -220,10 +237,11 @@ export class ReportCreationService {
    * cannot carry a field the frozen catalog does not name (ADR-9).
    */
   private async writeReportAndAudit(
+    reportId: string,
     report: ValidatedReport,
     transaction: Parameters<Parameters<TransactionFactory['run']>[0]>[0],
   ): Promise<PersistedReport> {
-    const created = await this.reports.create(report, transaction);
+    const created = await this.reports.create(reportId, report, transaction);
 
     await this.audit.record(
       {

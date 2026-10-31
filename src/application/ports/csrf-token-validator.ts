@@ -34,4 +34,17 @@ export interface CSRFTokenValidator {
    * is an expected outcome — a refusal, not a failure.
    */
   validate(sessionTokenHash: string | null, csrfToken: string | null): CsrfValidationResult;
+
+  /**
+   * Compute the token for a session's token hash.
+   *
+   * **The minting half of the same rule.** A validator that could only
+   * validate would leave every caller to re-implement the derivation, and
+   * one of them would eventually disagree with the validator about what the
+   * token is — which is a CSRF bypass.
+   *
+   * The token is derived, not stored, so this is deterministic: the same
+   * hash always yields the same token.
+   */
+  computeToken(sessionTokenHash: string): string;
 }

@@ -3,10 +3,9 @@
  *
  * FR-3: an administrator approves or rejects a pending registration.
  *
- * **Only approval sends an email** (FR-1, FR-27). Rejection sends none.
- * The rule is enforced here, where the decision is made, rather than in a
- * notification module that would have to be told which transition happened
- * (ADR-14).
+ * **Approval and rejection both send an email after the commit.** The
+ * use case returns the recipient; the caller sends once the transaction
+ * has returned. A failed send never rolls the decision back.
  *
  * **The email is sent after the transaction commits**, never inside it
  * (ADR-3, decision 4; PRD §10's "email send failures are logged; the
@@ -32,12 +31,13 @@ export type RegistrationDecision = 'approve' | 'reject';
 export interface RegistrationReviewOutcome {
   readonly account: Account;
   /**
-   * The address the approval email must go to — **only** for an approval.
-   *
-   * `null` for a rejection, because a rejection sends no email of any kind
-   * (FR-1, FR-3, story 007).
+   * The address the approval email must go to, or `null` on a rejection.
    */
   readonly approvalEmailRecipient: string | null;
+  /**
+   * The address the rejection email must go to, or `null` on an approval.
+   */
+  readonly rejectionEmailRecipient: string | null;
 }
 
 /** The registration-review use case. */
@@ -96,15 +96,19 @@ export class ReviewRegistration {
       transaction,
     );
 
-    return { account: saved, approvalEmailRecipient: saved.email.value };
+    return {
+      account: saved,
+      approvalEmailRecipient: saved.email.value,
+      rejectionEmailRecipient: null,
+    };
   }
 
   /**
-   * Reject. The account becomes `Rejected` and **no email is sent**.
+   * Reject. The account becomes `Rejected` and a rejection email is due.
    *
    * The reason is recorded on the account row *and* in the audit event, in
    * the same transaction, so the two cannot disagree (design decision 16).
-   * It is never returned to the member.
+   * The API never returns the reason to the member; the email does.
    */
   private async reject(
     account: Account,
@@ -132,6 +136,10 @@ export class ReviewRegistration {
       transaction,
     );
 
-    return { account: saved, approvalEmailRecipient: null };
+    return {
+      account: saved,
+      approvalEmailRecipient: null,
+      rejectionEmailRecipient: saved.email.value,
+    };
   }
 }

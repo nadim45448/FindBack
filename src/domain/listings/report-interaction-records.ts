@@ -22,8 +22,18 @@
  * Pure — no I/O, no framework imports.
  */
 
-/** A Claim's status. The PRD's literals, verbatim. */
-export type ClaimStatus = 'Pending' | 'Approved' | 'Rejected' | 'Returned';
+/**
+ * A Claim's status. The PRD's literals, verbatim.
+ *
+ * **Re-exported from `claim-status.ts`,** which owns the vocabulary. This
+ * module reasons about a Claim's status to decide what a report withdrawal
+ * must resolve, and the Claim aggregate states a Claim's own status — so
+ * there is one vocabulary, not two. The same reasoning the Recovery Response
+ * status gets two lines below.
+ */
+export type { ClaimStatus } from './claim-status';
+
+import type { ClaimStatus } from './claim-status';
 
 /**
  * A Recovery Response's status. The PRD's literals, verbatim (FR-41).
@@ -106,8 +116,13 @@ export function isResolvedByReportWithdrawal(
 /** The audit reason FR-11 records for a Claim auto-rejected by withdrawal. */
 export const WITHDRAWAL_CLAIM_REJECTION_REASON = 'report withdrawn by reporter';
 
-/** The status a Claim takes when a withdrawal rejects it. */
-export const CLAIM_REJECTED_STATUS: ClaimStatus = 'Rejected';
+/**
+ * The status a Claim takes when a withdrawal rejects it.
+ *
+ * **Re-exported from `claim-status.ts`,** which owns the vocabulary, for the
+ * same reason the type above is.
+ */
+export { CLAIM_REJECTED_STATUS } from './claim-status';
 
 /** The status a Recovery Response takes when a withdrawal resolves it. */
 export const RECOVERY_RESPONSE_RESOLVED_CLOSED_STATUS: RecoveryResponseStatus =

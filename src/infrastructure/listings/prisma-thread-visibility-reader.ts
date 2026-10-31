@@ -59,18 +59,29 @@ export class PrismaThreadVisibilityReader implements ThreadVisibilityReader {
       .map((column) => `t.${physical(column, PHYSICAL.thread)}`)
       .join(', ');
 
-    // The parent filter is a disjunction over the two parent kinds. A
-    // `parent_id` is scoped **within** its parent kind, so a Claim id can
-    // never match a Recovery Response thread by accident.
-    const parentFilter = Prisma.sql`
-      (
-        (t.${Prisma.raw(quoteName(PHYSICAL.thread.parentType))} = 'claim'
-         AND t.${Prisma.raw(quoteName(PHYSICAL.thread.parentId))} IN (${Prisma.join(claimIds.length > 0 ? claimIds : ['__none__'])}))
-        OR
-        (t.${Prisma.raw(quoteName(PHYSICAL.thread.parentType))} = 'recovery_response'
-         AND t.${Prisma.raw(quoteName(PHYSICAL.thread.parentId))} IN (${Prisma.join(responseIds.length > 0 ? responseIds : ['__none__'])}))
-      )
-    `;
+    // The parent filter is a disjunction over the two parent kinds that are
+    // actually in scope. Empty id lists omit their branch entirely — a
+    // placeholder value would be cast to uuid in Postgres and fail.
+    const parentTypeCol = Prisma.raw(quoteName(PHYSICAL.thread.parentType));
+    const parentIdCol = Prisma.raw(quoteName(PHYSICAL.thread.parentId));
+    const parentClauses: Prisma.Sql[] = [];
+
+    if (claimIds.length > 0) {
+      parentClauses.push(
+        Prisma.sql`(t.${parentTypeCol} = 'claim' AND t.${parentIdCol} IN (${Prisma.join(claimIds)}))`,
+      );
+    }
+
+    if (responseIds.length > 0) {
+      parentClauses.push(
+        Prisma.sql`(t.${parentTypeCol} = 'recovery_response' AND t.${parentIdCol} IN (${Prisma.join(responseIds)}))`,
+      );
+    }
+
+    const parentFilter =
+      parentClauses.length === 1
+        ? parentClauses[0]!
+        : Prisma.sql`(${Prisma.join(parentClauses, ' OR ')})`;
 
     const rows = await this.client.$queryRaw<ThreadQueryRow[]>(
       Prisma.sql`

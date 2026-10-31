@@ -117,7 +117,9 @@ describeWithDatabase('the report repository (database)', () => {
 
   /** Write a report inside a transaction. */
   async function write(report: ValidatedReport) {
-    return prisma.$transaction(async (tx) => repository.create(report, { transaction: tx }));
+    return prisma.$transaction(async (tx) =>
+      repository.create(crypto.randomUUID(), report, { transaction: tx }),
+    );
   }
 
   describe('the insert', () => {
@@ -131,16 +133,26 @@ describeWithDatabase('the report repository (database)', () => {
       expect(rows).toHaveLength(1);
     });
 
-    it('mints an id the caller cannot supply', async () => {
-      // The validated report has **no** id — the repository is the only
-      // thing that knows how one is produced.
+    it('writes the id it was given', async () => {
+      // **The id is minted by the caller, not by the database.** The blob's
+      // path is namespaced by the entity id (image-handling §4), and the
+      // upload happens before the row exists — so the id has to be in hand
+      // before the insert, and the insert writes it rather than defaulting.
       const report = aValidatedReport();
+      const reportId = crypto.randomUUID();
 
+      // The validated report still carries **no** id of its own.
       expect('id' in report).toBe(false);
 
-      const created = await write(report);
+      const created = await prisma.$transaction(async (tx) =>
+        repository.create(reportId, report, { transaction: tx }),
+      );
 
-      expect(created.id).toBeTruthy();
+      expect(created.id).toBe(reportId);
+
+      const [row] = await reportRows();
+
+      expect(row?.id).toBe(reportId);
     });
 
     it('writes every field it was given', async () => {
@@ -202,9 +214,9 @@ describeWithDatabase('the report repository (database)', () => {
     it('refuses a handle that carries no usable transaction', async () => {
       // Falling back to the root client would let a report commit without
       // its audit event — and the audit trail has no correction path.
-      await expect(repository.create(aValidatedReport(), { transaction: {} })).rejects.toThrow(
-        /transaction/,
-      );
+      await expect(
+        repository.create(crypto.randomUUID(), aValidatedReport(), { transaction: {} }),
+      ).rejects.toThrow(/transaction/);
     });
   });
 
@@ -299,11 +311,14 @@ describeWithDatabase('the report repository (database)', () => {
       }
     });
 
-    it('carries no column beyond the fourteen the design names', async () => {
+    it('carries no column beyond the sixteen the design names', async () => {
       const columns = await reportColumnNames();
 
-      // Exactly the fourteen: the eleven the projection names, plus
-      // `created_at` and `updated_at`.
+      // Exactly the sixteen: the eleven the projection names, plus
+      // `created_at` and `updated_at`, plus `description_withheld` and
+      // `image_withheld` — which FR-36's content removal added, and which
+      // record that the report's description and image have been
+      // withdrawn rather than deleted.
       expect([...columns].sort()).toEqual(
         [
           'campus_area',
@@ -311,10 +326,12 @@ describeWithDatabase('the report repository (database)', () => {
           'created_at',
           'date',
           'description',
+          'description_withheld',
           'exact_place',
           'id',
           'identifying_details',
           'image_ref',
+          'image_withheld',
           'name',
           'reporter_id',
           'status',

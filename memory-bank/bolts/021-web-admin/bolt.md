@@ -3,17 +3,17 @@ id: 021-web-admin
 unit: 007-web-surfaces
 intent: 001-findback-lost-and-found
 type: simple-construction-bolt
-status: planned
+status: complete
 stories:
   - 007-administrator-dashboard
   - 008-administrator-queues
   - 009-no-other-notifications
   - 010-contextual-audit-views
 created: 2026-10-23T13:15:00Z
-started: null
-completed: null
-current_stage: null
-stages_completed: []
+started: 2026-10-30T16:00:00Z
+completed: 2026-10-30T17:05:00Z
+current_stage: test
+stages_completed: [implement, test]
 
 requires_bolts:
   - 002-audit-reads
@@ -62,9 +62,9 @@ used exactly as the spine prescribes.
 
 ## Stages
 
-- [ ] **1. design**: Pending → `implementation-plan.md`
-- [ ] **2. implement**: Pending → source
-- [ ] **3. test**: Pending → `simple-03-test-report.md`
+- [~] **1. design**: Skipped by owner direction
+- [x] **2. implement**: Complete → source
+- [x] **3. test**: Complete → `simple-03-test-report.md`
 
 ## Dependencies
 
@@ -81,13 +81,13 @@ used exactly as the spine prescribes.
 
 ## Success Criteria
 
-- [ ] The dashboard shows entry points only and contains no `Recent activity` section
-- [ ] All four queues render and link to their work
-- [ ] No `/admin/audit` route exists
-- [ ] No notification bell, notification centre, or background-event toast exists
-- [ ] The audit view is reachable only from a report context
-- [ ] Owner-determines / administrator-records wording matches `EXPERIENCE.md` §4.7 exactly
-- [ ] Administrator report edit exposes exactly the eight permitted fields
+- [x] The dashboard shows entry points only and contains no `Recent activity` section
+- [x] All four queues render and link to their work
+- [x] No `/admin/audit` route exists
+- [x] No notification bell, notification centre, or background-event toast exists
+- [x] The audit view is reachable only from a report context
+- [x] Owner-determines / administrator-records wording matches `EXPERIENCE.md` §4.7 exactly
+- [ ] Administrator report edit exposes exactly the eight permitted fields — **not delivered by this bolt**; the administrator edit surface belongs to bolt `022-web-audit-accessibility`
 
 ## Notes
 

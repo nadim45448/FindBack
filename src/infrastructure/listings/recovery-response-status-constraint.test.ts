@@ -68,15 +68,49 @@ describeWithDatabase('the Recovery Response status constraint (database)', () =>
     return rows[0]!.id;
   }
 
-  /** Attempt to write a response with the given status. */
-  async function attemptStatus(status: string): Promise<void> {
+  /**
+   * Attempt to write a response with the given status.
+   *
+   * **A `Submitted` Response carries the submission fields,** because bolt
+   * `015`'s `recovery_responses_submitted_fields_check` requires them of one
+   * — and this test is about the *status* constraint, so the row it writes
+   * has to be legal in every other respect.
+   *
+   * **The responder is a parameter, because bolt `015`'s uniqueness index
+   * refuses a second *live* response from the same responder on the same
+   * report.** Writing all eight live statuses from one responder would trip
+   * that index rather than the status constraint this suite is about — so
+   * each live status gets its own responder.
+   */
+  async function attemptStatus(status: string, responder = responderId): Promise<void> {
     await prisma.$executeRawUnsafe(
-      `INSERT INTO "recovery_responses" ("report_id", "responder_id", "status")
-       VALUES ($1, $2, $3)`,
+      `INSERT INTO "recovery_responses" ("report_id", "responder_id", "status",
+                                          "campus_area", "where_found_exact_place",
+                                          "observed_identifying_details", "date_found",
+                                          "submitted_at", "created_at", "updated_at")
+       VALUES ($1, $2, $3,
+               CASE WHEN $3 = 'Submitted' THEN 'library' ELSE NULL END,
+               CASE WHEN $3 = 'Submitted' THEN 'On a bench.' ELSE NULL END,
+               CASE WHEN $3 = 'Submitted' THEN 'Brown leather, zip closure.' ELSE NULL END,
+               CASE WHEN $3 = 'Submitted' THEN DATE '2026-10-28' ELSE NULL END,
+               CASE WHEN $3 = 'Submitted' THEN NOW() ELSE NULL END,
+               NOW(), NOW())`,
       reportId,
-      responderId,
+      responder,
       status,
     );
+  }
+
+  /**
+   * A responder id derived from the status.
+   *
+   * **A distinct responder per status,** so the uniqueness index does not
+   * interfere with a suite that is about the *status* constraint.
+   */
+  function responderFor(status: (typeof RECOVERY_RESPONSE_STATUSES)[number]): string {
+    const index = RECOVERY_RESPONSE_STATUSES.indexOf(status);
+
+    return `00000000-0000-4000-8000-${String(900 + index).padStart(12, '0')}`;
   }
 
   /** The responses currently on the report. */
@@ -109,6 +143,12 @@ describeWithDatabase('the Recovery Response status constraint (database)', () =>
       'DELETE FROM "accounts" WHERE "id" IN ($1, $2)',
       ownerId,
       responderId,
+    );
+    // **The per-status responders** the "accepts each of the eight canonical
+    // statuses" case creates. They are deleted by their id range so this
+    // suite's footprint stays its own.
+    await prisma.$executeRawUnsafe(
+      `DELETE FROM "accounts" WHERE "id"::text LIKE '00000000-0000-4000-8000-0000000009%'`,
     );
     await prisma.$disconnect();
   });
@@ -166,8 +206,16 @@ describeWithDatabase('the Recovery Response status constraint (database)', () =>
 
   describe('the writes the database accepts', () => {
     it('accepts each of the eight canonical statuses', async () => {
+      // **Each status gets its own responder.** Bolt `015`'s uniqueness index
+      // refuses a second *live* response from the same responder on the same
+      // report, so writing all eight live statuses from one responder would
+      // trip that index rather than the status constraint this suite is
+      // about.
       for (const status of RECOVERY_RESPONSE_STATUSES) {
-        await attemptStatus(status);
+        const responder = responderFor(status);
+
+        await anAccount(responder, `rr-status-${responderFor(status)}@example.test`);
+        await attemptStatus(status, responder);
       }
 
       expect((await storedStatuses()).sort()).toEqual(

@@ -26,6 +26,7 @@ interface RecoveryResponseQueryRow {
   responder_id: string;
   status: string;
   submitted_at: Date;
+  campus_area?: string | null;
   where_found_exact_place?: string | null;
   observed_identifying_details?: string | null;
   date_found?: Date | null;
@@ -80,6 +81,7 @@ export class PrismaRecoveryResponseVisibilityReader implements RecoveryResponseV
         responderId: string;
         status: string;
         submittedAt: string;
+        campusArea?: string | null;
         whereFoundExactPlace?: string | null;
         observedIdentifyingDetails?: string | null;
         dateFound?: string | null;
@@ -91,6 +93,12 @@ export class PrismaRecoveryResponseVisibilityReader implements RecoveryResponseV
         status: row.status,
         submittedAt: row.submitted_at.toISOString(),
       };
+
+      // **The campus area is a base column,** so it is present in every
+      // response the scope admits.
+      if (row.campus_area !== undefined) {
+        projected.campusArea = row.campus_area;
+      }
 
       if (row.where_found_exact_place !== undefined) {
         projected.whereFoundExactPlace = row.where_found_exact_place;

@@ -159,7 +159,8 @@ describeWithDatabase('the report image reader (database)', () => {
       await prisma.$executeRawUnsafe(
         `INSERT INTO "claims" ("report_id", "claimant_id", "status", "submitted_at",
                                "reason", "identifying_details", "date_lost")
-         VALUES ($1, $2, 'Pending', NOW(), 'It is mine.', 'A silver locket.', DATE '2026-10-25')`,
+         VALUES ($1, $2, 'Pending', NOW(), 'It is my silver locket.',
+                 'A silver locket with a small crack.', DATE '2026-10-25')`,
         reportId,
         claimantId,
       );
@@ -173,9 +174,10 @@ describeWithDatabase('the report image reader (database)', () => {
     it('returns a row for a recovery responder', async () => {
       await prisma.$executeRawUnsafe(
         `INSERT INTO "recovery_responses" ("report_id", "responder_id", "status",
-                                            "submitted_at", "where_found_exact_place",
+                                            "campus_area", "submitted_at",
+                                            "where_found_exact_place",
                                             "observed_identifying_details", "date_found")
-         VALUES ($1, $2, 'Submitted', NOW(), 'Library entrance.', 'A silver locket.', DATE '2026-10-26')`,
+         VALUES ($1, $2, 'Submitted', 'library', NOW(), 'Library entrance.', 'A silver locket.', DATE '2026-10-26')`,
         reportId,
         responderId,
       );

@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { createDisplayName, MAX_DISPLAY_NAME_LENGTH } from './display-name';
 import { createEmailAddress, isPlausibleEmailShape, normalizeEmail } from './email-address';
 import { createGenericInactiveMessage, GENERIC_INACTIVE_MESSAGE } from './generic-inactive-message';
+import { createInvalidCredentialsMessage, INVALID_CREDENTIALS_MESSAGE } from './invalid-credentials-message';
 import {
   assertPasswordPolicy,
   evaluatePasswordPolicy,
@@ -86,6 +87,13 @@ describe('the generic inactive message', () => {
 
   it('says the account is not active', () => {
     expect(createGenericInactiveMessage().value).toContain('not active');
+  });
+});
+
+describe('the invalid-credentials message', () => {
+  it('is Invalid email or password', () => {
+    expect(createInvalidCredentialsMessage().value).toBe(INVALID_CREDENTIALS_MESSAGE);
+    expect(INVALID_CREDENTIALS_MESSAGE).toBe('Invalid email or password');
   });
 });
 

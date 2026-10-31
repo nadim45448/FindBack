@@ -30,6 +30,15 @@ export interface RecoveryResponseRow {
   readonly responderId: string;
   readonly status: string;
   readonly submittedAt: string;
+  /**
+   * The campus area the responder says the item was found in.
+   *
+   * **FR-44's required where-found field.** It is **not** a Sensitive Field
+   * — it is a deployment's campus-area enum, the same enumeration the
+   * report's own campus area uses — so it is granted with the response
+   * rather than behind the sensitive grant.
+   */
+  readonly campusArea?: string | null;
   readonly whereFoundExactPlace?: string | null;
   readonly observedIdentifyingDetails?: string | null;
   readonly dateFound?: string | null;
@@ -65,6 +74,7 @@ export function projectRecoveryResponses(
       responseId: string;
       status: string;
       submittedAt: string;
+      campusArea?: string;
       whereFoundExactPlace?: string;
       observedIdentifyingDetails?: string;
       dateFound?: string;
@@ -76,6 +86,13 @@ export function projectRecoveryResponses(
       submittedAt: row.submittedAt,
       isOwn,
     };
+
+    // **The campus area is granted with the response, not behind the
+    // sensitive grant.** It is a deployment's campus-area enum — the same
+    // enumeration the report's own campus area uses — and §9.6 lists it
+    // beside the exact place as one of the response's two where-found
+    // fields. It is not one of FR-37's Sensitive Fields.
+    assign(projected, 'campusArea', row.campusArea);
 
     // The responder-supplied fields are FR-37 Sensitive Fields. The
     // responder sees their own; the Lost-report owner sees every response on

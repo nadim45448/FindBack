@@ -56,7 +56,7 @@ export class RegisterAccount {
    * Register an account.
    *
    * @throws {ValidationError} when a field fails its policy.
-   * @throws {DuplicateEmailError} when the email is already registered.
+   * @throws {DuplicateEmailError} when a live account already uses the email.
    */
   async execute(
     command: RegisterAccountCommand,

@@ -2,11 +2,11 @@
 id: 002-confirm-returned-substitute-receiver
 unit: 005-returns-and-handover
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:47:30Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 019-returns-closeout
+implemented: true
 traces_to: [FR-24]
 ---
 
@@ -20,13 +20,13 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** the default receiver did not physically receive the item, **When** the administrator confirms Returned with a substitute, **Then** the substitute's name is recorded
-- [ ] **Given** a substitute receiver is recorded, **When** the confirmation is saved, **Then** the default receiver's authorization of that substitute is confirmed and recorded
-- [ ] **Given** a substitute receiver is recorded, **When** the confirmation is saved, **Then** the relationship is recorded as one of: Friend, Family Member, Colleague, Classmate, Other
-- [ ] **Given** the substitute IS the default receiver, **When** Returned is confirmed, **Then** authorization and relationship are not applicable and are not recorded
-- [ ] **Given** a substitute name is missing, **When** the confirmation is submitted, **Then** validation fails and Returned is not confirmed
-- [ ] **Given** a relationship outside the fixed set is supplied, **When** the confirmation is submitted, **Then** validation fails
-- [ ] **Given** a substitute confirmation, **When** it is audited, **Then** the record contains the substitute name and relationship but no recovery identifying details
+- [x] **Given** the default receiver did not physically receive the item, **When** the administrator confirms Returned with a substitute, **Then** the substitute's name is recorded
+- [x] **Given** a substitute receiver is recorded, **When** the confirmation is saved, **Then** the default receiver's authorization of that substitute is confirmed and recorded
+- [x] **Given** a substitute receiver is recorded, **When** the confirmation is saved, **Then** the relationship is recorded as one of: Friend, Family Member, Colleague, Classmate, Other
+- [x] **Given** the substitute IS the default receiver, **When** Returned is confirmed, **Then** authorization and relationship are not applicable and are not recorded
+- [x] **Given** a substitute name is missing, **When** the confirmation is submitted, **Then** validation fails and Returned is not confirmed
+- [x] **Given** a relationship outside the fixed set is supplied, **When** the confirmation is submitted, **Then** validation fails
+- [x] **Given** a substitute confirmation, **When** it is audited, **Then** the record contains the substitute name and relationship but no recovery identifying details
 
 Technical Notes
 

@@ -13,7 +13,7 @@ import { Logout } from './logout';
 import { RegisterAccount } from './register-account';
 import { ReviewRegistration } from './review-registration';
 
-import { GENERIC_INACTIVE_MESSAGE } from '@/domain/accounts';
+import { GENERIC_INACTIVE_MESSAGE, INVALID_CREDENTIALS_MESSAGE } from '@/domain/accounts';
 import { DuplicateEmailError } from '@/domain/accounts';
 import { ValidationError } from '@/lib/errors';
 
@@ -223,8 +223,8 @@ describe('ReviewRegistration', () => {
     );
 
     expect(outcome.account.status).toBe('Active');
-    // Only an approval has an email recipient.
     expect(outcome.approvalEmailRecipient).toBe('jane@example.org');
+    expect(outcome.rejectionEmailRecipient).toBeNull();
 
     expect(records[0]?.eventType).toBe('registration.approved');
   });
@@ -247,8 +247,8 @@ describe('ReviewRegistration', () => {
     );
 
     expect(outcome.account.status).toBe('Rejected');
-    // A rejection sends no email of any kind.
     expect(outcome.approvalEmailRecipient).toBeNull();
+    expect(outcome.rejectionEmailRecipient).toBe('jane@example.org');
 
     expect(records[0]?.eventType).toBe('registration.rejected');
   });
@@ -302,7 +302,7 @@ describe('Authenticate', () => {
     }
   });
 
-  it('returns the generic message for a wrong password', async () => {
+  it('returns Invalid email or password for a wrong password', async () => {
     const accounts = {
       findByEmail: vi.fn(async () => anAccount({ status: 'Active' })),
     } as unknown as AccountRepository;
@@ -312,11 +312,11 @@ describe('Authenticate', () => {
 
     expect(outcome.ok).toBe(false);
     if (!outcome.ok) {
-      expect(outcome.message.value).toBe(GENERIC_INACTIVE_MESSAGE);
+      expect(outcome.message.value).toBe(INVALID_CREDENTIALS_MESSAGE);
     }
   });
 
-  it('returns the generic message for an unknown email', async () => {
+  it('returns Invalid email or password for an unknown email', async () => {
     const accounts = {
       findByEmail: vi.fn(async () => null),
     } as unknown as AccountRepository;
@@ -326,7 +326,7 @@ describe('Authenticate', () => {
 
     expect(outcome.ok).toBe(false);
     if (!outcome.ok) {
-      expect(outcome.message.value).toBe(GENERIC_INACTIVE_MESSAGE);
+      expect(outcome.message.value).toBe(INVALID_CREDENTIALS_MESSAGE);
     }
   });
 

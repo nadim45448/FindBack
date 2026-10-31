@@ -2,11 +2,11 @@
 id: 008-claim-notification-emails
 unit: 003-found-side-claims
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:46:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 023-claim-threads-notifications
+implemented: true
 traces_to: [FR-28, FR-29]
 ---
 
@@ -20,19 +20,19 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** a `Pending` claim is created on a Found report, **When** the submission transaction commits, **Then** a new-claim email is sent to the reporter (finder) of that Found report
-- [ ] **Given** the new-claim email, **When** the recipient follows the link in it, **Then** the link requires login and resolves to that claim's detail page
-- [ ] **Given** a claim is approved, **When** the approval transaction commits, **Then** a claim decision email is sent to the approved claimant
-- [ ] **Given** the approval email, **When** it is read, **Then** it contains a link to the item detail page and a note that the item is awaiting physical hand-off
-- [ ] **Given** a claim is rejected by an administrator, **When** the rejection transaction commits, **Then** a claim decision email carrying the administrator-supplied reason is sent to the rejected claimant
-- [ ] **Given** a claim is auto-rejected by another claim being approved, **When** the approval transaction commits, **Then** a claim decision email is sent to that auto-rejected claimant
-- [ ] **Given** a claim is auto-rejected because the reporter withdrew the report, **When** the withdrawal transaction commits, **Then** a claim decision email carrying the reason "report withdrawn by reporter" is sent to that auto-rejected claimant
-- [ ] **Given** a claim is auto-rejected because an administrator closed the report, **When** the close transaction commits, **Then** a claim decision email carrying the reason "report closed by administrator" is sent to that auto-rejected claimant
-- [ ] **Given** an auto-rejection by another claim being approved, **When** the claimant reads the email, **Then** the visible copy is the softened wording and does not display "another claim was approved for this item" verbatim
-- [ ] **Given** any claim decision on an item, **When** the emails are dispatched, **Then** no claim decision email is sent to the finder (reporter) of that Found report
-- [ ] **Given** a claim approval with competing claims auto-rejected, **When** the emails are dispatched, **Then** exactly one decision email is sent per claim, one to each decided claimant, and no email naming the winning claimant is sent to a losing claimant
-- [ ] **Given** a committed claim or decision, **When** the email provider rejects or drops the send, **Then** the claim and the report status remain as committed and are neither rolled back nor blocked
-- [ ] **Given** a committed claim or decision, **When** the emails are dispatched, **Then** every email is dispatched only after the transaction has committed and never from inside it
+- [x] **Given** a `Pending` claim is created on a Found report, **When** the submission transaction commits, **Then** a new-claim email is sent to the reporter (finder) of that Found report
+- [x] **Given** the new-claim email, **When** the recipient follows the link in it, **Then** the link requires login and resolves to that claim's detail page
+- [x] **Given** a claim is approved, **When** the approval transaction commits, **Then** a claim decision email is sent to the approved claimant
+- [x] **Given** the approval email, **When** it is read, **Then** it contains a link to the item detail page and a note that the item is awaiting physical hand-off
+- [x] **Given** a claim is rejected by an administrator, **When** the rejection transaction commits, **Then** a claim decision email carrying the administrator-supplied reason is sent to the rejected claimant
+- [x] **Given** a claim is auto-rejected by another claim being approved, **When** the approval transaction commits, **Then** a claim decision email is sent to that auto-rejected claimant
+- [x] **Given** a claim is auto-rejected because the reporter withdrew the report, **When** the withdrawal transaction commits, **Then** a claim decision email carrying the reason "report withdrawn by reporter" is sent to that auto-rejected claimant
+- [x] **Given** a claim is auto-rejected because an administrator closed the report, **When** the close transaction commits, **Then** a claim decision email carrying the reason "report closed by administrator" is sent to that auto-rejected claimant
+- [x] **Given** an auto-rejection by another claim being approved, **When** the claimant reads the email, **Then** the visible copy is the softened wording and does not display "another claim was approved for this item" verbatim
+- [x] **Given** any claim decision on an item, **When** the emails are dispatched, **Then** no claim decision email is sent to the finder (reporter) of that Found report
+- [x] **Given** a claim approval with competing claims auto-rejected, **When** the emails are dispatched, **Then** exactly one decision email is sent per claim, one to each decided claimant, and no email naming the winning claimant is sent to a losing claimant
+- [x] **Given** a committed claim or decision, **When** the email provider rejects or drops the send, **Then** the claim and the report status remain as committed and are neither rolled back nor blocked
+- [x] **Given** a committed claim or decision, **When** the emails are dispatched, **Then** every email is dispatched only after the transaction has committed and never from inside it
 
 Technical Notes
 

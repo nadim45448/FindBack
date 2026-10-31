@@ -3,11 +3,11 @@
  *
  * FR-4: a member signs in with an email and a password.
  *
- * **The anti-enumeration rule, as an implementation.** There are exactly two
- * outcomes: an `AuthenticatedActor` or a `GenericInactiveMessage`. There is
- * no third shape for "wrong password" versus "unknown email" versus
- * "rejected" versus "deactivated" — so there is nothing to accidentally make
- * differ (FR-4, story 003 criterion 5, story 007 criterion 3).
+ * **Wrong email and wrong password share one sentence.** There is no
+ * separate shape for "unknown email" versus "wrong password", so the
+ * response cannot disclose whether the address is registered. A
+ * `Rejected` or `Deactivated` account that presented the right password
+ * still receives the generic inactive message.
  *
  * **The two refusals are indistinguishable in work, not only in wording.** An
  * unknown email and a wrong password both perform exactly one Argon2id
@@ -26,10 +26,10 @@ import {
   canAuthenticate,
   createActorContext,
   createGenericInactiveMessage,
+  createInvalidCredentialsMessage,
   normalizeEmail,
   type Account,
   type ActorContext,
-  type GenericInactiveMessage,
 } from '@/domain/accounts';
 
 import type { AccountRepository } from './ports/account-repository';
@@ -38,7 +38,7 @@ import type { PasswordHasher } from './ports/password-hasher';
 /** The outcome of an authentication attempt. */
 export type AuthenticationOutcome =
   | { readonly ok: true; readonly account: Account; readonly actor: ActorContext }
-  | { readonly ok: false; readonly message: GenericInactiveMessage };
+  | { readonly ok: false; readonly message: { readonly value: string } };
 
 /**
  * A hash used when the account does not exist.
@@ -60,8 +60,9 @@ export class Authenticate {
   /**
    * Authenticate a member.
    *
-   * Never throws for a business refusal — every refusal is the same
-   * `GenericInactiveMessage`.
+   * Never throws for a business refusal — a wrong email or password is
+   * `Invalid email or password`; an inactive account is the generic
+   * inactive message.
    */
   async execute(email: string, plaintext: string): Promise<AuthenticationOutcome> {
     const normalized = normalizeEmail(email);
@@ -72,12 +73,16 @@ export class Authenticate {
       // wrong password. The result is discarded.
       await this.hasher.verify(plaintext, { value: DUMMY_HASH });
 
-      return { ok: false, message: createGenericInactiveMessage() };
+      return { ok: false, message: createInvalidCredentialsMessage() };
     }
 
     const passwordMatches = await this.hasher.verify(plaintext, account.passwordHash);
 
-    if (!passwordMatches || !canAuthenticate(account)) {
+    if (!passwordMatches) {
+      return { ok: false, message: createInvalidCredentialsMessage() };
+    }
+
+    if (!canAuthenticate(account)) {
       return { ok: false, message: createGenericInactiveMessage() };
     }
 

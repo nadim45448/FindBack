@@ -2,11 +2,11 @@
 id: 008-recovery-response-audit-events
 unit: 004-lost-side-recovery
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:50:30Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 018-lost-threads
+implemented: true
 traces_to: [FR-48]
 ---
 
@@ -20,13 +20,13 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** any Recovery Response transition, **When** it commits, **Then** the corresponding FR-48 event is written inside the same transaction with actor and timestamp
-- [ ] **Given** events 18 or 19, **When** they are written, **Then** `determined_by` and `recorded_by` are stored as two distinct values
-- [ ] **Given** an audit record, **When** it is inspected, **Then** it contains no observed identifying details, no exact place, and no thread body
-- [ ] **Given** an audit reason string that is audit-significant, **When** it is stored, **Then** it is verbatim even where the user-facing copy for the same event is softened
-- [ ] **Given** a transition that does not commit, **When** the transaction rolls back, **Then** no audit record for that transition exists
-- [ ] **Given** the trail for a Lost report, **When** it is assembled, **Then** it answers the full path from response submission through to terminal resolution, including the resolution reason
-- [ ] **Given** a trail record, **When** an update or delete is attempted, **Then** the operation is refused because the trail is append-only
+- [x] **Given** any Recovery Response transition, **When** it commits, **Then** the corresponding FR-48 event is written inside the same transaction with actor and timestamp
+- [x] **Given** events 18 or 19, **When** they are written, **Then** `determined_by` and `recorded_by` are stored as two distinct values
+- [x] **Given** an audit record, **When** it is inspected, **Then** it contains no observed identifying details, no exact place, and no thread body
+- [x] **Given** an audit reason string that is audit-significant, **When** it is stored, **Then** it is verbatim even where the user-facing copy for the same event is softened
+- [x] **Given** a transition that does not commit, **When** the transaction rolls back, **Then** no audit record for that transition exists
+- [x] **Given** the trail for a Lost report, **When** it is assembled, **Then** it answers the full path from response submission through to terminal resolution, including the resolution reason
+- [x] **Given** a trail record, **When** an update or delete is attempted, **Then** the operation is refused because the trail is append-only
 
 Technical Notes
 

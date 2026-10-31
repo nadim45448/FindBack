@@ -121,10 +121,14 @@ class Harness {
   };
 
   readonly reports: ReportRepository = {
-    create: async (report: ValidatedReport, _transaction: TransactionHandle): Promise<PersistedReport> => {
+    create: async (
+      reportId: string,
+      report: ValidatedReport,
+      _transaction: TransactionHandle,
+    ): Promise<PersistedReport> => {
       this.calls.push('reports.create');
 
-      return { ...report, id: 'a-minted-id' };
+      return { ...report, id: reportId };
     },
     findById: async (): Promise<PersistedReport | null> => {
       this.calls.push('reports.findById');
@@ -157,6 +161,17 @@ class Harness {
   };
 
   readonly clock = { now: (): Date => NOW };
+
+  /**
+   * The index of the blob upload in the call order.
+   *
+   * **The prefix is entity-scoped** — `reports/{entityId}/` (image-handling
+   * §4) — and the id is minted per request, so the call is found by its
+   * shape rather than by an exact string.
+   */
+  storeCallIndex(): number {
+    return this.calls.findIndex((call) => /^images\.store:reports\//.test(call));
+  }
 
   readonly audit: AuditWriter = new AuditWriter({
     append: async (event: AuditEventRecord): Promise<AuditEvent> => {
@@ -234,7 +249,7 @@ describe('the quota on the creation path', () => {
     // would have to be enforced by deleting what was just stored, and
     // image-handling §4 forbids deleting an existing image to make room.
     expect(harness.calls.indexOf('quota.readUsage')).toBeLessThan(
-      harness.calls.indexOf('images.store:reports'),
+      harness.storeCallIndex(),
     );
   });
 
@@ -243,7 +258,7 @@ describe('the quota on the creation path', () => {
 
     await harness.creationService().create(aRequest(anImageOfSize(100)));
 
-    expect(harness.calls).toContain('images.store:reports');
+    expect(harness.storeCallIndex()).toBeGreaterThanOrEqual(0);
   });
 
   it('allows an upload that exactly fills the remaining space', async () => {
@@ -252,7 +267,7 @@ describe('the quota on the creation path', () => {
     // 1024 used of 2048 — 1024 bytes of headroom, and the upload is 1024.
     await harness.creationService().create(aRequest(anImageOfSize(1024)));
 
-    expect(harness.calls).toContain('images.store:reports');
+    expect(harness.storeCallIndex()).toBeGreaterThanOrEqual(0);
   });
 
   it('refuses an upload one byte over the remaining space', async () => {
@@ -273,7 +288,7 @@ describe('the quota on the creation path', () => {
     // **Nothing is stored.** No blob, no report, no audit event. A refusal
     // that left a blob behind would be a leak against the budget it was
     // supposed to enforce.
-    expect(harness.calls).not.toContain('images.store:reports');
+    expect(harness.calls.some((call) => call.startsWith('images.store'))).toBe(false);
     expect(harness.calls).not.toContain('reports.create');
     expect(harness.calls).not.toContain('audit.record');
   });
@@ -335,7 +350,7 @@ describe('the quota on the FR-53 replacement path', () => {
       .catch(() => undefined);
 
     expect(harness.calls.indexOf('quota.readUsage')).toBeLessThan(
-      harness.calls.indexOf('images.store:reports'),
+      harness.storeCallIndex(),
     );
   });
 
@@ -354,7 +369,7 @@ describe('the quota on the FR-53 replacement path', () => {
       harness.administratorEditService().edit(anEditWith(anImageOfSize(1025))),
     ).rejects.toBeInstanceOf(ValidationError);
 
-    expect(harness.calls).not.toContain('images.store:reports');
+    expect(harness.calls.some((call) => call.startsWith('images.store'))).toBe(false);
   });
 
   it('never deletes the replaced image to make room', async () => {
@@ -379,7 +394,7 @@ describe('the quota on the FR-53 replacement path', () => {
       .catch(() => undefined);
 
     // The quota did not refuse the upload, so the replacement was written.
-    expect(harness.calls).toContain('images.store:reports');
+    expect(harness.storeCallIndex()).toBeGreaterThanOrEqual(0);
   });
 
   it('deletes the replaced image only after the row is written', async () => {
@@ -395,7 +410,7 @@ describe('the quota on the FR-53 replacement path', () => {
       .edit(anEditWith(anImageOfSize(100)))
       .catch(() => undefined);
 
-    const stored = harness.calls.indexOf('images.store:reports');
+    const stored = harness.storeCallIndex();
     const written = harness.calls.indexOf('reports.update');
     const deleted = harness.calls.findIndex((call) => call.startsWith('images.delete'));
 
@@ -418,6 +433,10 @@ describe('the quota on the FR-53 replacement path', () => {
 
     // **Only the new blob is compensated away.** The old blob's delete is
     // issued after a successful commit, and there was no commit.
-    expect(deletes).toEqual(['images.delete:reports/stored-image.jpg']);
+    //
+    // The new blob's path is entity-scoped — `reports/{reportId}/` — so the
+    // delete is named by shape.
+    expect(deletes).toHaveLength(1);
+    expect(deletes[0]).toMatch(/^images\.delete:reports\/report-1\/stored-image\.jpg$/);
   });
 });

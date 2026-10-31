@@ -53,11 +53,28 @@ export interface ReportRepository {
   /**
    * Insert a report inside the caller's transaction.
    *
-   * The report arrives **without an id**: the id is minted here, once, so it
-   * cannot be supplied by a caller or invented by the domain. The returned
-   * report carries it.
+   * **The id is minted by the caller and passed in.** The report arrives
+   * **without an id**, and the repository writes the one it is given — it
+   * does not invent one and it does not let the database default one.
+   *
+   * **Why the id crosses the boundary.** The image is uploaded **before** the
+   * row is written (image-handling §5), and the blob's path is namespaced by
+   * the owning entity's id (`reports/{entityId}/`, image-handling §4) so
+   * storage usage is attributable per entity. The path therefore needs the
+   * id *before* the row exists — and the only way to have an id before the
+   * row exists is to mint it up front.
+   *
+   * **The caller mints it, once, and the domain never invents one.** The id
+   * still cannot be supplied by a member: it is produced inside the
+   * application layer, from `crypto.randomUUID()`, and the route never sees
+   * a way to pass one in. The repository's contract is that the id it is
+   * given is the id the row carries.
    */
-  create(report: ValidatedReport, transaction: TransactionHandle): Promise<PersistedReport>;
+  create(
+    reportId: string,
+    report: ValidatedReport,
+    transaction: TransactionHandle,
+  ): Promise<PersistedReport>;
 
   /**
    * Read a report by id.

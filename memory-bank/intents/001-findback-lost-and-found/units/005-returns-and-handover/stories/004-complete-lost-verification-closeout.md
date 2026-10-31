@@ -2,11 +2,11 @@
 id: 004-complete-lost-verification-closeout
 unit: 005-returns-and-handover
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:48:30Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 020-returns-moderation
+implemented: true
 traces_to: [FR-45]
 ---
 
@@ -20,14 +20,14 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** a Lost report with a selected response in `Match Confirmed`, **When** Returned is confirmed, **Then** in ONE transaction: the report becomes `Returned`, the matched response becomes `Completed — Report Returned`, and every other non-terminal response becomes `Resolved — Report Returned`
-- [ ] **Given** that same closeout, **When** it commits, **Then** every per-Recovery-Response thread on the report becomes read-only
-- [ ] **Given** that same closeout, **When** it commits, **Then** email events 7 (to the Lost-report owner) and 8 (to the matched responder) fire
-- [ ] **Given** the closeout, **When** any part fails, **Then** the entire transaction rolls back and no partial state exists
-- [ ] **Given** a response already in a terminal status before the closeout, **When** the closeout runs, **Then** that response is left as it was
-- [ ] **Given** a standby responder, **When** the closeout runs, **Then** they receive event 8 only if they are the matched responder; no other responder receives event 8
-- [ ] **Given** the Items Awaiting Return queue, **When** it is assembled, **Then** it lists reports whose Lost side is `Match Confirmed` and which have not yet been confirmed Returned
-- [ ] **Given** the confirm-returned form, **When** it is assembled for a Lost report, **Then** it shows the Lost-report owner as the default receiver and the matched response as context
+- [x] **Given** a Lost report with a selected response in `Match Confirmed`, **When** Returned is confirmed, **Then** in ONE transaction: the report becomes `Returned`, the matched response becomes `Completed — Report Returned`, and every other non-terminal response becomes `Resolved — Report Returned`
+- [x] **Given** that same closeout, **When** it commits, **Then** every per-Recovery-Response thread on the report becomes read-only
+- [x] **Given** that same closeout, **When** it commits, **Then** email events 7 (to the Lost-report owner) and 8 (to the matched responder) fire
+- [x] **Given** the closeout, **When** any part fails, **Then** the entire transaction rolls back and no partial state exists
+- [x] **Given** a response already in a terminal status before the closeout, **When** the closeout runs, **Then** that response is left as it was
+- [x] **Given** a standby responder, **When** the closeout runs, **Then** they receive event 8 only if they are the matched responder; no other responder receives event 8
+- [ ] **Given** the Items Awaiting Return queue, **When** it is assembled, **Then** it lists reports whose Lost side is `Match Confirmed` and which have not yet been confirmed Returned — **deferred to bolt `021` (Unit 007): the queue is a surface, and this bolt delivers the backend it reads**
+- [ ] **Given** the confirm-returned form, **When** it is assembled for a Lost report, **Then** it shows the Lost-report owner as the default receiver and the matched response as context — **deferred to bolt `021` (Unit 007): the form is a surface, and this bolt delivers the reader it reads**
 
 Technical Notes
 

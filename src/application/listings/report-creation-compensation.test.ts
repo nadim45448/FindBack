@@ -29,6 +29,7 @@ import {
 import {
   ImageStorageError,
   type ImageStore,
+  type ImageUpload,
 } from '@/application/listings/ports/image-store';
 import type { ReportRepository } from '@/application/listings/ports/report-repository';
 
@@ -81,14 +82,16 @@ function aService(options: {
   readonly calls: Call[];
 }): ReportCreationService {
   const images: ImageStore = {
-    store: async (): Promise<{ path: string }> => {
+    store: async (_image: ImageUpload, prefix: string): Promise<{ path: string }> => {
       options.calls.push('images.store');
 
       if (options.storeFails) {
         throw new ImageStorageError('The blob store did not respond.');
       }
 
-      return { path: 'reports/stored-image.jpg' };
+      // **The path is entity-scoped** (image-handling §4), so the fake echoes
+      // the prefix it was given rather than naming a fixed one.
+      return { path: `${prefix}/stored-image.jpg` };
     },
     delete: async (path: string): Promise<void> => {
       options.calls.push(`images.delete:${path}`);
@@ -100,14 +103,17 @@ function aService(options: {
   };
 
   const reports: ReportRepository = {
-    create: async (report: ValidatedReport): Promise<PersistedReport> => {
+    create: async (
+      reportId: string,
+      report: ValidatedReport,
+    ): Promise<PersistedReport> => {
       options.calls.push('reports.create');
 
       if (options.writeFails) {
         throw new Error('The row write failed.');
       }
 
-      return { ...report, id: 'a-minted-id' };
+      return { ...report, id: reportId };
     },
     // The bolt-8 lifecycle methods. **This suite exercises the create path
     // only**, so they are refusals — a test that reached one would be a test
@@ -181,13 +187,18 @@ describe('the compensating write', () => {
       'The row write failed.',
     );
 
-    // The delete happens **after** the rollback, not inside it.
-    expect(calls).toEqual([
+    // The delete happens **after** the rollback, not inside it. The blob's
+    // path is entity-scoped, and the id is minted per request — so the path
+    // is asserted by shape rather than by value.
+    expect(calls.slice(0, 3)).toEqual([
       'images.store',
       'transactions.run',
       'reports.create',
-      'images.delete:reports/stored-image.jpg',
     ]);
+
+    const deleteCall = calls.find((call) => call.startsWith('images.delete'));
+
+    expect(deleteCall).toMatch(/^images\.delete:reports\/[0-9a-f-]{36}\/stored-image\.jpg$/);
   });
 
   it('does not mask the original failure when the compensating delete fails', async () => {
@@ -210,7 +221,7 @@ describe('the compensating write', () => {
 
     // The delete was **attempted** — a failed delete is recorded for retry
     // rather than silently leaked.
-    expect(calls).toContain('images.delete:reports/stored-image.jpg');
+    expect(calls.some((call) => call.startsWith('images.delete:reports/'))).toBe(true);
   });
 
   it('does not delete anything when the write succeeds', async () => {

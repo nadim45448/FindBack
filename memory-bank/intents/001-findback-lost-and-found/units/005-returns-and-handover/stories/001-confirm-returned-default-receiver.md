@@ -2,11 +2,11 @@
 id: 001-confirm-returned-default-receiver
 unit: 005-returns-and-handover
 intent: 001-findback-lost-and-found
-status: draft
+status: complete
 priority: must
 created: 2026-10-23T12:47:00Z
-assigned_bolt: null
-implemented: false
+assigned_bolt: 019-returns-closeout
+implemented: true
 traces_to: [FR-23]
 ---
 
@@ -20,14 +20,14 @@ User Story
 
 Acceptance Criteria
 
-- [ ] **Given** a Found report with an `Approved` Claim, **When** the administrator confirms Returned with the approved claimant as receiver, **Then** the report becomes `Returned` and the confirmation records receiver, confirming administrator, and timestamp
-- [ ] **Given** a Lost report whose selected response is `Match Confirmed`, **When** the administrator confirms Returned with the Lost-report owner as receiver, **Then** the report becomes `Returned` and the confirmation records receiver, confirming administrator, and timestamp
-- [ ] **Given** a Found report, **When** the default receiver is derived, **Then** it is the approved claimant and not the finder
-- [ ] **Given** a Lost report, **When** the default receiver is derived, **Then** it is the Lost-report owner
-- [ ] **Given** any report, **When** Returned is confirmed by a non-administrator, **Then** the action is refused; only an administrator may confirm
-- [ ] **Given** a Lost report, **When** the owner attempts to confirm Returned on their own report, **Then** the action is refused
-- [ ] **Given** two administrators confirm Returned on the same report concurrently, **When** both are processed, **Then** exactly one commits and the other receives a conflict
-- [ ] **Given** a Returned confirmation, **When** it is audited, **Then** the record contains no identifying details from the recovery conversation
+- [x] **Given** a Found report with an `Approved` Claim, **When** the administrator confirms Returned with the approved claimant as receiver, **Then** the report becomes `Returned` and the confirmation records receiver, confirming administrator, and timestamp
+- [x] **Given** a Lost report whose selected response is `Match Confirmed`, **When** the administrator confirms Returned with the Lost-report owner as receiver, **Then** the report becomes `Returned` and the confirmation records receiver, confirming administrator, and timestamp
+- [x] **Given** a Found report, **When** the default receiver is derived, **Then** it is the approved claimant and not the finder
+- [x] **Given** a Lost report, **When** the default receiver is derived, **Then** it is the Lost-report owner
+- [x] **Given** any report, **When** Returned is confirmed by a non-administrator, **Then** the action is refused; only an administrator may confirm
+- [x] **Given** a Lost report, **When** the owner attempts to confirm Returned on their own report, **Then** the action is refused
+- [x] **Given** two administrators confirm Returned on the same report concurrently, **When** both are processed, **Then** exactly one commits and the other receives a conflict
+- [x] **Given** a Returned confirmation, **When** it is audited, **Then** the record contains no identifying details from the recovery conversation
 
 Technical Notes
 

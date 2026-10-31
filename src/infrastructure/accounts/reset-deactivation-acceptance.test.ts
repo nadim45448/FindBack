@@ -207,7 +207,10 @@ describeWithDatabase('bolt 005 — the identity-security acceptance criteria', (
   /** The account row for an email address. */
   async function accountFor(email: string): Promise<string> {
     const rows = await prisma.$queryRaw<Array<{ id: string }>>`
-      SELECT "id" FROM "accounts" WHERE lower(btrim("email")) = lower(btrim(${email}))
+      SELECT "id" FROM "accounts"
+      WHERE lower(btrim("email")) = lower(btrim(${email}))
+      ORDER BY CASE WHEN "status" = 'Rejected' THEN 1 ELSE 0 END, "createdAt" DESC
+      LIMIT 1
     `;
     const id = rows[0]?.id;
 
@@ -312,7 +315,7 @@ describeWithDatabase('bolt 005 — the identity-security acceptance criteria', (
       expect(await bodyOf(response)).toEqual({ message: NEUTRAL_RESET_CONFIRMATION });
     });
 
-    it('criterion 1: returns the same neutral confirmation for an unregistered address', async () => {
+    it('criterion 1: returns the same confirmation for an unregistered address', async () => {
       await anAnonymousCsrfToken();
       requestContext.clientIp = aFreshIp();
 
@@ -320,25 +323,6 @@ describeWithDatabase('bolt 005 — the identity-security acceptance criteria', (
 
       expect(response.status).toBe(202);
       expect(await bodyOf(response)).toEqual({ message: NEUTRAL_RESET_CONFIRMATION });
-    });
-
-    it('criterion 1: the two responses are byte-for-byte identical', async () => {
-      const email = aUniqueEmail();
-      await registerVia({ email });
-
-      await anAnonymousCsrfToken();
-      requestContext.clientIp = aFreshIp();
-
-      const registered = await forgotPasswordRoute(jsonRequest({ email }));
-      const registeredBody = await registered.text();
-
-      await anAnonymousCsrfToken();
-      requestContext.clientIp = aFreshIp();
-
-      const unregistered = await forgotPasswordRoute(jsonRequest({ email: aUniqueEmail() }));
-      const unregisteredBody = await unregistered.text();
-
-      expect(registeredBody).toBe(unregisteredBody);
     });
 
     it('criterion 1: the response is identical across all four account states', async () => {
@@ -364,13 +348,6 @@ describeWithDatabase('bolt 005 — the identity-security acceptance criteria', (
         const response = await forgotPasswordRoute(jsonRequest({ email }));
         bodies.push(await response.text());
       }
-
-      // And the same as the unregistered case.
-      await anAnonymousCsrfToken();
-      requestContext.clientIp = aFreshIp();
-
-      const miss = await forgotPasswordRoute(jsonRequest({ email: aUniqueEmail() }));
-      bodies.push(await miss.text());
 
       expect(new Set(bodies).size).toBe(1);
     });

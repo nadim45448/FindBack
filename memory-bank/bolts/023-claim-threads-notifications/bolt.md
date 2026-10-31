@@ -3,15 +3,15 @@ id: 023-claim-threads-notifications
 unit: 003-found-side-claims
 intent: 001-findback-lost-and-found
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 007-per-claim-message-thread
   - 008-claim-notification-emails
 created: 2026-10-23T13:16:00Z
-started: null
-completed: null
-current_stage: null
-stages_completed: []
+started: 2026-10-30T11:30:00Z
+completed: 2026-10-30T12:55:00Z
+current_stage: test
+stages_completed: [implement, test]
 
 requires_bolts:
   - 016-claim-decisions
@@ -50,10 +50,10 @@ the finder a claim arrived and the claimant their claim was decided.
 
 ## Stages
 
-- [ ] **1. model**: Pending → `ddd-01-domain-model.md`
-- [ ] **2. design**: Pending → `ddd-02-technical-design.md`
-- [ ] **3. implement**: Pending → source
-- [ ] **4. test**: Pending → `ddd-03-test-report.md`
+- [ ] **1. model**: Skipped by owner direction → `ddd-01-domain-model.md`
+- [ ] **2. design**: Skipped by owner direction → `ddd-02-technical-design.md`
+- [x] **3. implement**: Complete → source
+- [x] **4. test**: Complete → `ddd-03-test-report.md`
 
 ## Dependencies
 
@@ -65,14 +65,14 @@ the finder a claim arrived and the claimant their claim was decided.
 
 ## Success Criteria
 
-- [ ] There is exactly one thread per Claim
-- [ ] The thread is writable while the Claim is `Pending`
-- [ ] The thread is read-only once the Claim is `Approved` or `Rejected`, or the report is `Returned` or `Closed`
-- [ ] Messages are never deleted; a locked thread keeps its full history
-- [ ] The finder never sees the claimant's reason or identifying details
-- [ ] FR-28 reaches the finder when a claim is submitted
-- [ ] FR-29 reaches the claimant only — the finder receives no claim-decision email
-- [ ] Email is sent after commit; a send failure never rolls back or blocks a decision
+- [x] There is exactly one thread per Claim
+- [x] The thread is writable while the Claim is `Pending`
+- [x] The thread is read-only once the Claim is `Approved` or `Rejected`, or the report is `Returned` or `Closed`
+- [x] Messages are never deleted; a locked thread keeps its full history
+- [x] The finder never sees the claimant's reason or identifying details
+- [x] FR-28 reaches the finder when a claim is submitted
+- [x] FR-29 reaches the claimant only — the finder receives no claim-decision email
+- [x] Email is sent after commit; a send failure never rolls back or blocks a decision
 
 ## Notes
 

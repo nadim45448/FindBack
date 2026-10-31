@@ -145,10 +145,20 @@ describeWithDatabase('the visibility readers (database)', () => {
       // The projection names eleven columns; the table carries those plus
       // the two timestamps. A column beyond that would be a column no
       // reader selects — a column that could be read by something else.
+      //
+      // **`description_withheld` and `image_withheld` are the two columns
+      // the projection does not name.** They are FR-36's moderation
+      // flags — they record that the report's description and image have
+      // been withdrawn — and they are deliberately *not* projection
+      // columns: they are read by the content-removal repository, not by
+      // the visibility readers, so they never reach a viewer through the
+      // projection.
       const expected = [
         ...Object.values(PHYSICAL.report),
         'created_at',
         'updated_at',
+        'description_withheld',
+        'image_withheld',
       ];
 
       expect([...columns].sort()).toEqual([...expected].sort());
@@ -292,10 +302,17 @@ describeWithDatabase('the visibility readers (database)', () => {
       // ones the readers already select"* — is discharged here: the tables
       // exist, and the readers' columns resolve against them.
       //
-      // The Thread table belongs to a later unit and is still absent.
+      // **The Thread table belongs to a later unit — and that unit has
+      // arrived.** Bolt `014` created `thread_messages`, so the table is
+      // now present. The assertion used to be that it was *absent*, which
+      // was a statement about the schema's state at the time and became
+      // false the moment the next unit landed. What is durable is the
+      // reader's obligation — that the table the Thread reader selects
+      // against is the one the schema carries — so the assertion is now
+      // that it is *present*.
       expect(tables).toContain(TABLES.claim);
       expect(tables).toContain(TABLES.response);
-      expect(tables).not.toContain(TABLES.thread);
+      expect(tables).toContain(TABLES.thread);
     });
 
     it('names the columns each of them will need', () => {
@@ -356,8 +373,8 @@ describeWithDatabase('the visibility readers (database)', () => {
       expect(tables).toContain(TABLES.claim);
       expect(tables).toContain(TABLES.response);
 
-      // The one it also joins that does not.
-      expect(tables).not.toContain(TABLES.thread);
+      // **The Thread table now exists too** — bolt `014` created it.
+      expect(tables).toContain(TABLES.thread);
 
       expect(TABLES.claim).toBe('claims');
       expect(TABLES.response).toBe('recovery_responses');

@@ -77,6 +77,8 @@ vi.mock('@/infrastructure/listings/listings-stack', () => ({
 
 const { GET: IMAGE } = await import('./[id]/image/route');
 
+const { buildListingsStack } = await import('@/infrastructure/listings/listings-stack');
+
 const { NotFoundError } = await import('@/lib/errors');
 const { ImageNotFoundError, ImageReadError } = await import(
   '@/application/listings/ports/image-reader'
@@ -165,6 +167,24 @@ describe('the image delivery route', () => {
       await IMAGE(imageRequest(), context());
 
       expect(receivedRequest).toEqual({ actor: null, reportId: 'report-1' });
+    });
+
+    it('never reads the blob itself', async () => {
+      // **The route has no blob read of its own.** image-handling §2
+      // requires the authorisation to run "immediately adjacent to the blob
+      // read", and forbids delegating the check to middleware or the CDN —
+      // so there must be exactly one read, and it is inside the use case
+      // that made the decision. A second read in the route would be a
+      // read with no check beside it.
+      withSession();
+      actor = aMember();
+
+      await IMAGE(imageRequest(), context());
+
+      // **The route's only seam is the use case.** The stack mock exposes
+      // `imageDelivery` and nothing else — there is no blob reader for the
+      // route to reach for, so a read here could only be an addition.
+      expect(Object.keys(buildListingsStack())).toEqual(['imageDelivery']);
     });
   });
 

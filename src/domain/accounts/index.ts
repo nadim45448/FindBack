@@ -18,6 +18,8 @@ export * from './display-name';
 export * from './email-address';
 export * from './errors';
 export * from './generic-inactive-message';
+export * from './invalid-credentials-message';
+export * from './unknown-reset-email-message';
 export * from './neutral-reset-confirmation';
 export * from './password-policy';
 export * from './password-reset-token';

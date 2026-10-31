@@ -3,17 +3,17 @@ id: 009-reporting-search
 unit: 002-reporting-and-listings
 intent: 001-findback-lost-and-found
 type: ddd-construction-bolt
-status: planned
+status: complete
 stories:
   - 007-public-summary-listing
   - 008-authenticated-detail-view
   - 009-search-and-filter
   - 011-member-facing-view-partition
 created: 2026-10-23T13:09:00Z
-started: null
-completed: null
-current_stage: null
-stages_completed: []
+started: 2026-10-30T12:58:00Z
+completed: 2026-10-30T13:20:00Z
+current_stage: test
+stages_completed: [implement, test]
 
 requires_bolts:
   - 006-reporting-visibility
@@ -57,10 +57,10 @@ performance budget, and the FR-49 view partition.
 
 ## Stages
 
-- [ ] **1. model**: Pending → `ddd-01-domain-model.md`
-- [ ] **2. design**: Pending → `ddd-02-technical-design.md`
-- [ ] **3. implement**: Pending → source
-- [ ] **4. test**: Pending → `ddd-03-test-report.md`
+- [ ] **1. model**: Skipped by owner direction → `ddd-01-domain-model.md`
+- [ ] **2. design**: Skipped by owner direction → `ddd-02-technical-design.md`
+- [x] **3. implement**: Complete → source
+- [x] **4. test**: Complete → `ddd-03-test-report.md`
 
 ## Dependencies
 
@@ -74,12 +74,12 @@ performance budget, and the FR-49 view partition.
 
 ## Success Criteria
 
-- [ ] Anonymous listing returns FR-38 fields and nothing more; detail requires login
-- [ ] Search returns within 500ms p95 at 10,000 active reports
-- [ ] Search queries are index-backed; no full table scan over reports
-- [ ] The four views are disjoint: My Reports, Browse, My Claims, My Recovery Responses
-- [ ] A member's own report never appears in their own Browse
-- [ ] No Lost and Found reports are linked automatically
+- [x] Anonymous listing returns FR-38 fields and nothing more; detail requires login
+- [x] Search returns within 500ms p95 at 10,000 active reports
+- [x] Search queries are index-backed; no full table scan over reports
+- [x] The four views are disjoint: My Reports, Browse, My Claims, My Recovery Responses
+- [x] A member's own report never appears in their own Browse
+- [x] No Lost and Found reports are linked automatically
 
 ## Notes
 
