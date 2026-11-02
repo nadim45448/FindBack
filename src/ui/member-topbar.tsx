@@ -19,17 +19,19 @@
  *
  * ## Account is initials chrome, not a profile photo
  *
- * The generated mockup's Account trigger is a 28px initials circle, the
- * first name, and a caret. EXPERIENCE.md §9.4a forbids a profile photo;
- * the circle is header chrome only. The menu still has exactly two
- * entries — Profile (FR-52) and Logout. Theme is **not** here — §19
- * makes Theme a separate topbar icon control.
+ * The generated mockup's Account trigger is a 28px initials circle and the
+ * first name. EXPERIENCE.md §9.4a forbids a profile photo; the circle is
+ * header chrome only. The menu still has exactly two entries — Profile
+ * (FR-52) and Logout. Theme is **not** here — §19 makes Theme a separate
+ * topbar icon control.
  *
  * ## The disclosures are real buttons
  *
- * A `▾` menu is a disclosure widget, so the trigger is a `<button>` with
- * `aria-expanded` and `aria-controls`, and the panel is toggled by state.
- * The trigger is **not** a link: it opens a panel, it does not navigate.
+ * The Account menu is a disclosure widget, so the trigger is a `<button>`
+ * with `aria-expanded` and `aria-controls`, and the panel is toggled by
+ * state. The trigger is **not** a link: it opens a panel, it does not
+ * navigate. **It carries no disclosure triangle** — the button's expanded
+ * state is already announced, so a caret would only echo it visually.
  *
  * ## No bell, no badge, no unread count
  *
@@ -111,7 +113,6 @@ export function MemberTopbar({ displayName, onSignOut }: MemberTopbarProps): Rea
               <span className="account-menu__name">
                 {firstName === 'there' ? 'Account' : firstName}
               </span>
-              <span className="account-menu__caret" aria-hidden="true" />
             </>
           }
           header={

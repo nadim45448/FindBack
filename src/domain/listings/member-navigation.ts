@@ -142,11 +142,13 @@ export const ACCOUNT_MENU_ENTRIES: readonly TopbarEntry[] = Object.freeze([
 export const REPORT_MENU_LABEL = 'Report ▾';
 
 /**
- * The `Account ▾` menu's label.
+ * The `Account` menu's label.
  *
- * §3.2 names it with the disclosure triangle.
+ * **The disclosure triangle has been removed.** The trigger is already a
+ * button that opens a panel, so it carries `aria-expanded` and
+ * `aria-haspopup`; the caret was a redundant visual echo of that state.
  */
-export const ACCOUNT_MENU_LABEL = 'Account ▾';
+export const ACCOUNT_MENU_LABEL = 'Account';
 
 /**
  * The label of the member nav's landmark.

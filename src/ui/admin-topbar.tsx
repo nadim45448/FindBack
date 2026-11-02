@@ -30,11 +30,15 @@
  * Each queue is a route, so each is an `<a>` — not a click handler on a
  * non-interactive element.
  *
- * ## `Account ▾` has Profile and Logout
+ * ## `Account` has Profile and Logout
  *
  * §5.2: on administrator pages *"Logout is not a standalone topbar
  * control — it lives inside `Account ▾`"*. The sign-out is a POST, so the
  * parent supplies the handler.
+ *
+ * **The trigger carries no disclosure triangle** — the menu is a disclosure
+ * button, so its state is announced by `aria-expanded`; a caret would only
+ * echo it visually.
  */
 
 import Link from 'next/link';
@@ -141,7 +145,6 @@ export function AdminTopbar({ displayName, onSignOut }: AdminTopbarProps): React
               <span className="account-menu__name">
                 {firstName === 'there' ? 'Account' : firstName}
               </span>
-              <span className="account-menu__caret" aria-hidden="true" />
             </>
           }
           header={

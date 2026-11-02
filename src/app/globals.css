@@ -1190,10 +1190,13 @@ p {
 }
 
 /**
- * The Account menu trigger — initials circle, first name, caret.
+ * The Account menu trigger — initials circle and first name.
  *
  * **This is header chrome, not a profile photo.** EXPERIENCE.md §9.4a
  * forbids an avatar upload; the circle shows initials only.
+ *
+ * **There is no caret.** The trigger is a disclosure button, so its state is
+ * announced by `aria-expanded`; the triangle was a redundant visual echo.
  */
 .account-menu__trigger {
   display: inline-flex;
@@ -1236,15 +1239,6 @@ p {
 
 .account-menu__name {
   white-space: nowrap;
-}
-
-.account-menu__caret {
-  width: 10px;
-  height: 10px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg) translate(-2px, -2px);
-  opacity: 0.7;
 }
 
 .account-menu__header {

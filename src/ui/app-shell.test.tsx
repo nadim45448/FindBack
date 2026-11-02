@@ -519,10 +519,12 @@ describe('the shell’s topbar', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Account ▾' })).toBeTruthy();
+      expect(
+        screen.getByRole('button', { name: 'Account menu for The Administrator' }),
+      ).toBeTruthy();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Account ▾' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Account menu for The Administrator' }));
     fireEvent.click(screen.getByRole('button', { name: 'Log out' }));
 
     await waitFor(() => {
