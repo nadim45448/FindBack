@@ -4,3 +4,9 @@ export interface ReportClaimSummary {
   readonly pending: number;
   readonly rejected: number;
 }
+
+/** Recovery-response counts for one Lost report on the My reports table. */
+export interface ReportRecoverySummary {
+  readonly submitted: number;
+  readonly inProgress: number;
+}

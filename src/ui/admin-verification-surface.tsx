@@ -22,12 +22,18 @@
  * ends the report. **`Match Confirmed` is not terminal** — the report stays
  * `Verification Pending` until the item is physically returned and the
  * administrator confirms the return. So confirming a match is a step, not
- * an ending, and the surface says so.
+ * an ending, and the surface says so — then offers **Confirm Returned**.
  */
 
-import { useState } from 'react';
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import {
+  CONFIRM_RETURNED,
+  LOST_RETURN_SUBSTITUTE_LINK,
+  VERIFICATION_MATCH_CONFIRMED_LEDE,
+} from './admin-copy';
 import { csrfHeaders } from './csrf';
 import { CANCEL } from './member-copy';
 
@@ -62,6 +68,14 @@ export interface AdminVerificationSurfaceProps {
   readonly afterHref: string;
 }
 
+function initialSelected(candidates: readonly VerificationCandidate[]): string | null {
+  const awaitingDetermination = candidates.find(
+    (candidate) => candidate.status === 'Selected for Verification',
+  );
+
+  return awaitingDetermination?.responseId ?? null;
+}
+
 /**
  * The administrator's Lost-side verification surface.
  */
@@ -75,15 +89,62 @@ export function AdminVerificationSurface({
 }: AdminVerificationSurfaceProps): React.JSX.Element {
   const router = useRouter();
 
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(() => initialSelected(candidates));
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const returnHref = `/admin/lost/${reportId}/return`;
+
+  const matchConfirmed = useMemo(
+    () => candidates.some((candidate) => candidate.status === 'Match Confirmed'),
+    [candidates],
+  );
+
+  const selectedCandidate =
+    selected === null ? null : (candidates.find((c) => c.responseId === selected) ?? null);
+
+  const canDetermine = selectedCandidate?.status === 'Selected for Verification';
 
   /**
    * Record a determination on the selected candidate.
    */
+  async function confirmReturned(): Promise<void> {
+    if (!matchConfirmed || submitting) {
+      return;
+    }
+
+    setSubmitting(true);
+    setFormError(null);
+
+    try {
+      const response = await fetch(`/api/admin/reports/${reportId}/confirm-returned`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...csrfHeaders(),
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+
+        setFormError(payload.error ?? 'Something went wrong on our side. Try again.');
+        setSubmitting(false);
+
+        return;
+      }
+
+      router.push(afterHref);
+      router.refresh();
+    } catch {
+      setFormError('Something went wrong on our side. Try again, or come back in a moment.');
+      setSubmitting(false);
+    }
+  }
+
   async function determine(outcome: 'match_confirmed' | 'not_a_match'): Promise<void> {
-    if (submitting || selected === null) {
+    if (submitting || selected === null || !canDetermine) {
       return;
     }
 
@@ -112,8 +173,12 @@ export function AdminVerificationSurface({
         return;
       }
 
-      router.push(afterHref);
+      if (outcome === 'not_a_match') {
+        router.push(afterHref);
+      }
+
       router.refresh();
+      setSubmitting(false);
     } catch {
       setFormError('Something went wrong on our side. Try again, or come back in a moment.');
       setSubmitting(false);
@@ -125,6 +190,12 @@ export function AdminVerificationSurface({
       <h1 className="hero__title">{heading}</h1>
 
       <p className="hero__lede">{reportName}</p>
+
+      {matchConfirmed ? (
+        <div className="banner banner--info" role="status">
+          <p>{VERIFICATION_MATCH_CONFIRMED_LEDE}</p>
+        </div>
+      ) : null}
 
       {formError ? (
         <div className="error-summary" role="alert" tabIndex={-1} id="error-summary">
@@ -158,7 +229,7 @@ export function AdminVerificationSurface({
         </fieldset>
       )}
 
-      {selected !== null ? (
+      {canDetermine ? (
         <div className="button-row">
           <button
             type="button"
@@ -177,6 +248,23 @@ export function AdminVerificationSurface({
           >
             Not a match
           </button>
+        </div>
+      ) : null}
+
+      {matchConfirmed ? (
+        <div className="button-row">
+          <button
+            type="button"
+            className="button button--primary"
+            disabled={submitting}
+            onClick={() => void confirmReturned()}
+          >
+            {CONFIRM_RETURNED}
+          </button>
+
+          <Link className="button button--tertiary" href={returnHref}>
+            {LOST_RETURN_SUBSTITUTE_LINK}
+          </Link>
         </div>
       ) : null}
 

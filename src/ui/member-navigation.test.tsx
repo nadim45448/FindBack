@@ -167,6 +167,8 @@ describe('the member dashboard', () => {
           pendingClaims: 1,
           approvedClaims: 0,
           returnedItems: 3,
+          returnedAuthoredReports: 3,
+          returnedReceivedClaims: 0,
         }}
       />,
     );
@@ -177,6 +179,9 @@ describe('the member dashboard', () => {
     expect(screen.getByText('My open reports')).toBeTruthy();
     expect(screen.getByText('Pending claims')).toBeTruthy();
     expect(screen.getByText('Returned items')).toBeTruthy();
+    expect(screen.getByRole('link', { name: /Responses to review/i }).getAttribute('href')).toBe(
+      '/my/reports?needsReview=1',
+    );
   });
 
   it('carries no aggregate activity feed', () => {
@@ -187,6 +192,8 @@ describe('the member dashboard', () => {
           pendingClaims: 0,
           approvedClaims: 0,
           returnedItems: 0,
+          returnedAuthoredReports: 0,
+          returnedReceivedClaims: 0,
           responsesToReview: 0,
         }}
       />,

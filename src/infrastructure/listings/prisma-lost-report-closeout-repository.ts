@@ -46,6 +46,8 @@ import {
   type RecoveryResponseStatus,
 } from '@/domain/recovery';
 
+import { ConflictError } from '@/lib/errors';
+
 /**
  * Extract the transaction client from a handle.
  *
@@ -139,8 +141,8 @@ export class PrismaLostReportCloseoutRepository implements LostReportCloseoutRep
       // **The matched response is not completable.** The domain refuses this
       // case before the write, so reaching here means the response changed
       // between the read and the write. Nothing else is written.
-      throw new Error(
-        'The matched Recovery Response is no longer at "Match Confirmed". This is a conflict.',
+      throw new ConflictError(
+        'Record the owner\'s match confirmation before confirming the item was returned.',
       );
     }
 

@@ -6,6 +6,7 @@ import { MY_REPORTS_PAGE_TITLE } from '@/ui/member-copy';
 
 import { resolveMemberAccess } from '../../_member-page';
 import { readReportDetailForMember } from '../_report-detail-reading';
+import { readRecoveryResponseSummariesForReports } from '../_recovery-response-summaries';
 
 /**
  * The reporter's item detail — §9.4 `/my/reports/:id`.
@@ -35,6 +36,15 @@ export default async function MyReportDetailPage({
 
   const title = reading.projection.report.name ?? 'My report';
 
+  const recoverySummaries =
+    reading.projection.report.type === 'Lost'
+      ? await readRecoveryResponseSummariesForReports([id])
+      : {};
+
+  const recoverySummary = recoverySummaries[id];
+  const recoveryResponseCount =
+    (recoverySummary?.submitted ?? 0) + (recoverySummary?.inProgress ?? 0);
+
   return (
     <ItemDetailPageLayout
       reportId={id}
@@ -45,7 +55,12 @@ export default async function MyReportDetailPage({
         { label: title, href: null },
       ]}
     >
-      <ItemDetailSurface projection={reading.projection} />
+      <ItemDetailSurface
+        projection={reading.projection}
+        recoveryResponseCount={
+          reading.projection.report.type === 'Lost' ? recoveryResponseCount : undefined
+        }
+      />
     </ItemDetailPageLayout>
   );
 }

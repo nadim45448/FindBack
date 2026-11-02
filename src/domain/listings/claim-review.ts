@@ -76,6 +76,8 @@ export interface ReviewItemDetails {
  */
 export interface ClaimReviewScreen {
   readonly claimId: string;
+  readonly claimantDisplayName: string;
+  readonly claimantEmail: string;
   readonly claimStatus: ClaimStatus;
   /** The claimant's reason. An FR-37 Sensitive Field. */
   readonly reason: string;
@@ -111,6 +113,8 @@ export interface ClaimReviewScreen {
  */
 export interface ClaimReviewFacts {
   readonly claimId: string;
+  readonly claimantDisplayName: string;
+  readonly claimantEmail: string;
   readonly claimStatus: ClaimStatus;
   readonly reason: string;
   readonly identifyingDetails: string;
@@ -132,6 +136,8 @@ export interface ClaimReviewFacts {
 export function assembleClaimReview(facts: ClaimReviewFacts): ClaimReviewScreen {
   return {
     claimId: facts.claimId,
+    claimantDisplayName: facts.claimantDisplayName,
+    claimantEmail: facts.claimantEmail,
     claimStatus: facts.claimStatus,
     reason: facts.reason,
     identifyingDetails: facts.identifyingDetails,

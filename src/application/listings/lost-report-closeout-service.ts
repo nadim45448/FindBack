@@ -208,7 +208,9 @@ export class LostReportCloseoutService {
       throw new ConflictError(
         plan.reason === 'NoMatchedResponse'
           ? 'This report has no matched recovery response to complete.'
-          : 'This report cannot be completed as returned.',
+          : plan.reason === 'MatchedResponseNotCompletable'
+            ? 'Record the owner\'s match confirmation before confirming the item was returned.'
+            : 'This report cannot be completed as returned.',
       );
     }
 

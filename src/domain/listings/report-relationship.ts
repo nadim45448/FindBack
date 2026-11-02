@@ -49,6 +49,14 @@ export interface ReportRelationship {
   readonly hasRecoveryResponse: boolean;
   /** The viewer's own Claim id, if any. */
   readonly claimId: string | null;
+  /**
+   * Every Claim id the viewer submitted on this report, pending first.
+   *
+   * A member may hold more than one Claim over time — for example a
+   * `Rejected` Claim and a later `Pending` one — and the projection must
+   * include them all so `/my/claims/:id` cannot disagree with the queue.
+   */
+  readonly claimIds: readonly string[];
   /** The viewer's own Recovery Response id, if any. */
   readonly recoveryResponseId: string | null;
 }
@@ -60,6 +68,7 @@ export interface ReportRelationshipParams {
   readonly reporterId: string;
   readonly viewerId: string | null;
   readonly claimId?: string | null;
+  readonly claimIds?: readonly string[] | null;
   readonly recoveryResponseId?: string | null;
 }
 
@@ -73,15 +82,20 @@ export interface ReportRelationshipParams {
 export function createReportRelationship(params: ReportRelationshipParams): ReportRelationship {
   const viewerId = params.viewerId;
 
+  const claimIds =
+    params.claimIds ??
+    (params.claimId != null && params.claimId !== '' ? [params.claimId] : []);
+
   return {
     reportId: params.reportId,
     reportType: params.reportType,
     reporterId: params.reporterId,
     viewerId,
     isReporter: viewerId !== null && viewerId === params.reporterId,
-    hasClaim: viewerId !== null && params.claimId != null,
+    hasClaim: viewerId !== null && claimIds.length > 0,
     hasRecoveryResponse: viewerId !== null && params.recoveryResponseId != null,
-    claimId: params.claimId ?? null,
+    claimId: claimIds[0] ?? params.claimId ?? null,
+    claimIds,
     recoveryResponseId: params.recoveryResponseId ?? null,
   };
 }

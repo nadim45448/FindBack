@@ -12,6 +12,7 @@ import {
   ownerColumnFor,
   planSectionsForProjection,
   rendersHiddenNotice,
+  type ProjectedClaim,
   type VisibilityProjection,
 } from '@/domain/listings';
 
@@ -26,9 +27,19 @@ import {
   IDENTIFYING_DETAILS_SECTION,
   LOCATION_SECTION,
   QUICK_FACTS_HEADING,
+  CLAIM_DETAIL_APPROVED_ALERT,
+  CLAIM_DETAIL_PENDING_ALERT,
+  CLAIM_DETAIL_REJECTED_ALERT,
+  CLAIM_DETAIL_VIEW_LINK,
+  FOUND_OWNER_CLAIMS_APPROVED_BODY,
+  FOUND_OWNER_CLAIMS_HEADING,
+  FOUND_OWNER_CLAIMS_PENDING_BODY,
+  FOUND_OWNER_CLAIMS_REOPENED_BODY,
+  FOUND_OWNER_CLAIM_THREAD_LINK,
   LOST_OWNER_RECOVERY_BODY,
   LOST_OWNER_RECOVERY_HEADING,
   LOST_OWNER_RECOVERY_NONE,
+  REPORT_STATUS_HELPERS,
   REVIEW_RECOVERY_RESPONSES,
   RECOVERY_CTA_HEADING,
   REPORT_DATE_FOUND_LABEL,
@@ -40,9 +51,19 @@ import {
 
 export interface ItemDetailSurfaceProps {
   readonly projection: VisibilityProjection;
+  /**
+   * Recovery responses on this Lost report (from the owner’s listing read).
+   *
+   * **Fills in when the FR-39 projection carried no responses** so the owner
+   * still sees the review entry point on My Reports detail.
+   */
+  readonly recoveryResponseCount?: number | undefined;
 }
 
-export function ItemDetailSurface({ projection }: ItemDetailSurfaceProps): React.JSX.Element {
+export function ItemDetailSurface({
+  projection,
+  recoveryResponseCount,
+}: ItemDetailSurfaceProps): React.JSX.Element {
   const report = projection.report;
   const plan = planSectionsForProjection(projection);
   const isVisible = (section: string): boolean =>
@@ -102,7 +123,19 @@ export function ItemDetailSurface({ projection }: ItemDetailSurfaceProps): React
             <HiddenCard heading={LOCATION_SECTION} />
           ) : null}
 
-          <LostOwnerRecoverySection projection={projection} />
+          <ClaimantStatusAlerts projection={projection} />
+
+          <LostReportOwnerLifecycleBanner
+            projection={projection}
+            recoveryResponseCount={recoveryResponseCount}
+          />
+
+          <LostOwnerRecoverySection
+            projection={projection}
+            recoveryResponseCount={recoveryResponseCount}
+          />
+
+          <FoundOwnerClaimsSection projection={projection} />
 
           <ParticipationSections projection={projection} />
 
@@ -199,10 +232,118 @@ function HiddenCard({ heading }: { readonly heading: string }): React.JSX.Elemen
   );
 }
 
-function LostOwnerRecoverySection({
+function ClaimantStatusAlerts({
   projection,
 }: {
   readonly projection: VisibilityProjection;
+}): React.JSX.Element | null {
+  const ownClaim = preferredOwnClaim(projection.claims);
+
+  if (!ownClaim) {
+    return null;
+  }
+
+  const href = `/my/claims/${ownClaim.claimId}`;
+  let message: string;
+
+  if (ownClaim.status === 'Pending') {
+    message = CLAIM_DETAIL_PENDING_ALERT;
+  } else if (ownClaim.status === 'Approved') {
+    message = CLAIM_DETAIL_APPROVED_ALERT;
+  } else if (ownClaim.status === 'Rejected' || ownClaim.status === 'Rejected — auto') {
+    message = CLAIM_DETAIL_REJECTED_ALERT;
+  } else {
+    return null;
+  }
+
+  return (
+    <div className="banner banner--info" role="status">
+      <p>
+        <strong>{message}</strong>
+        {' '}
+        <Link href={href}>{CLAIM_DETAIL_VIEW_LINK}</Link>
+      </p>
+    </div>
+  );
+}
+
+function FoundOwnerClaimsSection({
+  projection,
+}: {
+  readonly projection: VisibilityProjection;
+}): React.JSX.Element | null {
+  const report = projection.report;
+
+  if (report.type !== 'Found' || !projection.columns.includes('foundReportOwner')) {
+    return null;
+  }
+
+  const claims = projection.claims;
+
+  if (claims.length === 0) {
+    return null;
+  }
+
+  const pending = claims.filter((claim) => claim.status === 'Pending');
+  const approved = claims.filter((claim) => claim.status === 'Approved');
+  const reportId = projection.reportId;
+
+  return (
+    <DetailCard heading={FOUND_OWNER_CLAIMS_HEADING}>
+      {pending.length > 0 ? (
+        <div className="banner banner--info" role="status">
+          <p>
+            <strong>
+              {pending.length}
+              {pending.length === 1 ? ' pending claim' : ' pending claims'}
+            </strong>
+          </p>
+          <p className="detail-section__body">{FOUND_OWNER_CLAIMS_PENDING_BODY}</p>
+        </div>
+      ) : null}
+
+      {approved.length > 0 ? (
+        <div className="banner banner--info" role="status">
+          <p>
+            <strong>{approved.length === 1 ? '1 approved claim' : `${approved.length} approved claims`}</strong>
+          </p>
+          <p className="detail-section__body">{FOUND_OWNER_CLAIMS_APPROVED_BODY}</p>
+        </div>
+      ) : null}
+
+      {pending.length === 0 &&
+      approved.length === 0 &&
+      report.status === 'Open' &&
+      claims.some((claim) => claim.status === 'Rejected' || claim.status === 'Rejected — auto') ? (
+        <div className="banner banner--info" role="status">
+          <p>{FOUND_OWNER_CLAIMS_REOPENED_BODY}</p>
+        </div>
+      ) : null}
+
+      <ul className="detail-list detail-list--stacked">
+        {claims.map((claim) => (
+          <li key={claim.claimId} className="detail-list__row">
+            <div className="detail-list__term tabular">{claim.submittedAt}</div>
+            <div className="detail-list__value">
+              <StatusBadge status={claim.status} kind="Status" />
+              {' · '}
+              <Link href={`/my/reports/${reportId}/claims/${claim.claimId}`}>
+                {FOUND_OWNER_CLAIM_THREAD_LINK}
+              </Link>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </DetailCard>
+  );
+}
+
+function LostReportOwnerLifecycleBanner({
+  projection,
+  recoveryResponseCount,
+}: {
+  readonly projection: VisibilityProjection;
+  readonly recoveryResponseCount?: number | undefined;
 }): React.JSX.Element | null {
   const report = projection.report;
 
@@ -210,15 +351,62 @@ function LostOwnerRecoverySection({
     return null;
   }
 
-  const count = projection.recoveryResponses.length;
+  const responseCount = Math.max(
+    projection.recoveryResponses.length,
+    recoveryResponseCount ?? 0,
+  );
+
+  const matchConfirmed = projection.recoveryResponses.some(
+    (response) => response.status === 'Match Confirmed',
+  );
+
+  let message: string | undefined;
+
+  if (report.status === 'Open' && responseCount > 0) {
+    message = REPORT_STATUS_HELPERS.Lost.OpenWithResponses;
+  } else if (report.status === 'Verification Pending' && matchConfirmed) {
+    message = REPORT_STATUS_HELPERS.Lost.VerificationPendingMatchConfirmed;
+  } else {
+    message = REPORT_STATUS_HELPERS.Lost[report.status];
+  }
+
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <div className="banner banner--info" role="status">
+      <p className="detail-section__body">{message}</p>
+    </div>
+  );
+}
+
+function LostOwnerRecoverySection({
+  projection,
+  recoveryResponseCount,
+}: {
+  readonly projection: VisibilityProjection;
+  readonly recoveryResponseCount?: number | undefined;
+}): React.JSX.Element | null {
+  const report = projection.report;
+
+  if (report.type !== 'Lost' || !projection.columns.includes('lostReportOwner')) {
+    return null;
+  }
+
+  const count = Math.max(projection.recoveryResponses.length, recoveryResponseCount ?? 0);
   const reviewHref = `/my/reports/${projection.reportId}/review-responses`;
+
+  if (count === 0) {
+    return null;
+  }
 
   return (
     <DetailCard heading={LOST_OWNER_RECOVERY_HEADING}>
       <p className="detail-section__body">{LOST_OWNER_RECOVERY_BODY}</p>
 
       <p className="detail-section__body">
-        {count === 0 ? LOST_OWNER_RECOVERY_NONE : `${count} response${count === 1 ? '' : 's'} so far.`}
+        {`${count} response${count === 1 ? '' : 's'} so far.`}
       </p>
 
       <div className="detail-section__actions">
@@ -239,10 +427,11 @@ function ParticipationSections({
   const isFound = report.type === 'Found';
   const isReporter = projection.columns.includes(ownerColumnFor(report.type));
 
-  const ownClaim = projection.claims.find((claim) => claim.isOwn);
+  const ownClaims = projection.claims.filter((claim) => claim.isOwn);
+  const ownClaim = preferredOwnClaim(projection.claims);
   const ownResponse = projection.recoveryResponses.find((response) => response.isOwn);
 
-  const hasPendingClaim = ownClaim !== undefined && ownClaim.status === 'Pending';
+  const hasPendingClaim = ownClaims.some((claim) => claim.status === 'Pending');
   const hasPendingResponse = ownResponse !== undefined && ownResponse.status === 'Submitted';
 
   const claimEligible =
@@ -315,6 +504,26 @@ function ParticipationSections({
         </div>
       ) : null}
     </>
+  );
+}
+
+/**
+ * The member's own Claim to link to when more than one exists on a report.
+ *
+ * Pending and Approved claims take precedence over an older Rejected one, so
+ * the alert and the "Your claim" button agree with My Claims.
+ */
+function preferredOwnClaim(claims: readonly ProjectedClaim[]): ProjectedClaim | undefined {
+  const own = claims.filter((claim) => claim.isOwn);
+
+  if (own.length === 0) {
+    return undefined;
+  }
+
+  return (
+    own.find((claim) => claim.status === 'Pending') ??
+    own.find((claim) => claim.status === 'Approved') ??
+    own[0]
   );
 }
 

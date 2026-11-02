@@ -132,6 +132,13 @@ export const CONFIRM_RETURNED = 'Confirm Returned';
 /** The Items in Verification queue's action. */
 export const MANAGE_VERIFICATION = 'Manage verification';
 
+/** Shown after the owner’s match is recorded — the next step is physical return. */
+export const VERIFICATION_MATCH_CONFIRMED_LEDE =
+  'The owner confirmed a match. Confirm returned when the physical handoff is complete.';
+
+/** Link to the substitute-receiver return form (FR-24). */
+export const LOST_RETURN_SUBSTITUTE_LINK = 'Someone else received the item';
+
 /**
  * The registration rejection's reason label.
  *
@@ -155,6 +162,82 @@ export const REJECTION_REASON_HINT = 'Give at least 5 characters of reason.';
  * administrator is not refused without an explanation.
  */
 export const REJECTION_REASON_TOO_SHORT = 'The reason must be at least 5 characters.';
+
+/* -------------------------------------------------------------------------- */
+/* Registration review — BMAD mockups 03 / 04                                 */
+/* -------------------------------------------------------------------------- */
+
+export const REGISTRATION_BREADCRUMB_QUEUE = 'Pending registrations';
+
+export const REGISTRATION_APPROVE_HEADING = 'Approve registration';
+
+export const REGISTRATION_REJECT_HEADING = 'Reject registration';
+
+export const REGISTRATION_APPROVE_ACCOUNT = 'Approve account';
+
+export const REGISTRATION_REJECT_ACCOUNT = 'Reject account';
+
+export const REGISTRATION_ALREADY_REVIEWED =
+  'This application was already reviewed or is no longer pending.';
+
+export const REGISTRATION_APPROVE_INFO_HEADING = 'Approving will:';
+
+export function REGISTRATION_APPROVE_INFO_AUDIT(administratorName: string): string {
+  return `Record this action in the audit trail (actor: ${administratorName})`;
+}
+
+export const REGISTRATION_REJECT_REASON_LABEL = 'Rejection reason';
+
+export const REGISTRATION_REJECT_REASON_PLACEHOLDER =
+  'At least 5 characters. Recorded in the audit trail but not shown to the rejected user.';
+
+export const REGISTRATION_REJECT_REASON_HELP =
+  'The user sees a generic "your account is not active" message. They don\'t see this reason.';
+
+export const REGISTRATION_REJECT_REASON_REQUIRED = 'Rejection reason is required.';
+
+/* -------------------------------------------------------------------------- */
+/* Claim review — BMAD mockups 06 / 08                                         */
+/* -------------------------------------------------------------------------- */
+
+export const CLAIM_BREADCRUMB_QUEUE = 'Pending claims';
+
+export const CLAIM_REVIEW_HEADING = 'Review claim';
+
+export const CLAIM_APPROVE_HEADING = 'Approve this claim';
+
+export const CLAIM_REJECT_HEADING = 'Reject this claim';
+
+export const CLAIM_APPROVE_CONFIRM = 'Confirm approval';
+
+export const CLAIM_REJECT_CONFIRM = 'Confirm rejection';
+
+export const CLAIM_APPROVE_THIS = 'Approve this claim';
+
+export const CLAIM_REJECT_THIS = 'Reject this claim';
+
+export const CLAIM_NO_LONGER_PENDING = 'This claim is no longer pending.';
+
+export const CLAIM_REJECT_REASON_LABEL = 'Rejection reason';
+
+export const CLAIM_REJECT_REASON_PLACEHOLDER =
+  '10–500 characters. The claimant will see this in their rejection email.';
+
+export const CLAIM_REJECT_REASON_HELP =
+  'Visible to the claimant in the rejection email and recorded in the audit trail.';
+
+export const CLAIM_REJECT_REASON_REQUIRED = 'Rejection reason is required.';
+
+export const CLAIM_REJECT_REASON_TOO_SHORT =
+  'Rejection reason must be at least 10 characters.';
+
+export const CLAIM_REJECT_REASON_TOO_LONG =
+  'Rejection reason must be at most 500 characters.';
+
+export const CLAIM_COMPETING_NONE =
+  'No competing claims. Approving will move the item to Claim Approved.';
+
+export const CLAIM_APPROVE_INFO_HEADING = 'This approval will:';
 
 /* -------------------------------------------------------------------------- */
 /* Column headings — §15.2–§15.5, §5.7                                        */

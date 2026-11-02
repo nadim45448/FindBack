@@ -35,6 +35,8 @@ export interface ReviewClaimEvidence {
   readonly claimId: string;
   readonly status: ClaimStatus;
   readonly reportId: string;
+  readonly claimantDisplayName: string;
+  readonly claimantEmail: string;
   readonly reason: string;
   readonly identifyingDetails: string;
   /** The calendar day the item went missing, as `YYYY-MM-DD`. */

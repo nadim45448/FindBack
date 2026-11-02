@@ -144,7 +144,7 @@ export class ReportVisibilityService {
       : [];
 
     const scopedClaimIds = grants.claims
-      ? visibleClaimIds(claimRows, columns, relationship.claimId)
+      ? visibleClaimIds(claimRows, columns, claimantClaimIds(columns, relationship))
       : [];
 
     const scopedResponseIds = grants.recoveryResponses
@@ -172,7 +172,7 @@ export class ReportVisibilityService {
       columns,
       reportFields: reportFieldsFor(columns),
       report: projectReport(report, columns),
-      claims: projectClaims(claimRows, columns, relationship.claimId),
+      claims: projectClaims(claimRows, columns, claimantClaimIds(columns, relationship)),
       recoveryResponses: projectRecoveryResponses(
         responseRows,
         columns,
@@ -208,8 +208,8 @@ export class ReportVisibilityService {
       return null;
     }
 
-    if (columns.includes('claimant') && relationship.claimId !== null) {
-      return [relationship.claimId];
+    if (columns.includes('claimant') && relationship.claimIds.length > 0) {
+      return relationship.claimIds;
     }
 
     return [];
@@ -237,6 +237,20 @@ export class ReportVisibilityService {
 
     return [];
   }
+}
+
+/**
+ * The Claim ids that mark a row as the viewer's own in the projection.
+ */
+function claimantClaimIds(
+  columns: readonly ProjectionColumn[],
+  relationship: ReportRelationship,
+): readonly string[] | null {
+  if (!columns.includes('claimant') || relationship.claimIds.length === 0) {
+    return null;
+  }
+
+  return relationship.claimIds;
 }
 
 export type { ClaimRow, RecoveryResponseRow, ReportRow, ThreadMessageRow };

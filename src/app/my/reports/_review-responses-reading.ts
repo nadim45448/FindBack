@@ -2,6 +2,8 @@ import type { ActorContext } from '@/domain/accounts';
 
 import { ownerColumnFor } from '@/domain/listings';
 
+import { prisma } from '@/infrastructure/db/prisma';
+
 import {
   decideSelection,
   deriveDisplayStatus,
@@ -9,6 +11,7 @@ import {
 } from '@/domain/recovery';
 
 import { readReportDetailForMember } from './_report-detail-reading';
+import { loadRecoveryResponsesForOwnerReview } from './_recovery-responses-for-review';
 
 export interface ReviewResponseRow {
   readonly responseId: string;
@@ -35,37 +38,49 @@ export async function readReviewResponses(
   reportId: string,
 ): Promise<ReviewResponsesReading | null> {
   const reading = await readReportDetailForMember(actor, reportId);
+  const projection = reading?.projection;
 
-  if (!reading || reading.plan === null) {
+  const ownsViaProjection =
+    projection?.report.type === 'Lost' &&
+    projection.columns.includes(ownerColumnFor('Lost'));
+
+  const ownedReport =
+    ownsViaProjection
+      ? null
+      : await prisma.report.findFirst({
+          where: { id: reportId, type: 'Lost', reporterId: actor.actorId },
+          select: { name: true, status: true },
+        });
+
+  if (!ownsViaProjection && !ownedReport) {
     return null;
   }
 
-  const { projection } = reading;
+  const reportStatus = projection?.report.status ?? ownedReport!.status;
+  const reportName = projection?.report.name ?? ownedReport!.name ?? 'Lost report';
 
-  if (projection.report.type !== 'Lost') {
-    return null;
-  }
+  const projected = projection?.recoveryResponses ?? [];
+  const fallback =
+    projected.length === 0 ? await loadRecoveryResponsesForOwnerReview(reportId) : [];
 
-  if (!projection.columns.includes(ownerColumnFor('Lost'))) {
-    return null;
-  }
+  const sources =
+    projected.length > 0
+      ? projected.map((response) => ({
+          responseId: response.responseId,
+          status: response.status,
+          submittedAt: response.submittedAt,
+          campusArea: response.campusArea ?? null,
+        }))
+      : fallback;
 
-  const ownerId = projection.viewerId;
+  const hasMatchConfirmed = sources.some((response) => response.status === 'Match Confirmed');
 
-  if (ownerId === null) {
-    return null;
-  }
-
-  const hasMatchConfirmed = projection.recoveryResponses.some(
-    (response) => response.status === 'Match Confirmed',
-  );
-
-  const siblings = projection.recoveryResponses.map((response) => ({
+  const siblings = sources.map((response) => ({
     id: response.responseId,
     status: response.status as RecoveryResponseStatus,
   }));
 
-  const rows = projection.recoveryResponses.map((response) => {
+  const rows = sources.map((response) => {
     const canonicalStatus = response.status as RecoveryResponseStatus;
     const displayStatus = deriveDisplayStatus(
       response.responseId,
@@ -74,9 +89,9 @@ export async function readReviewResponses(
     );
 
     const decision = decideSelection({
-      actorId: ownerId,
-      reportOwnerId: ownerId,
-      reportStatus: projection.report.status,
+      actorId: actor.actorId,
+      reportOwnerId: actor.actorId,
+      reportStatus,
       responseStatus: canonicalStatus,
       hasMatchConfirmed,
     });
@@ -86,7 +101,7 @@ export async function readReviewResponses(
       displayStatus,
       canonicalStatus,
       submittedAt: response.submittedAt,
-      campusArea: response.campusArea ?? null,
+      campusArea: response.campusArea,
       canSelect: decision.kind === 'Permitted',
       detailHref: `/my/reports/${reportId}/responses/${response.responseId}`,
     };
@@ -94,8 +109,8 @@ export async function readReviewResponses(
 
   return {
     reportId,
-    reportName: projection.report.name ?? 'Lost report',
-    reportStatus: projection.report.status,
+    reportName,
+    reportStatus,
     rows,
   };
 }

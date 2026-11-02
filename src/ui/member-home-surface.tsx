@@ -49,7 +49,16 @@ export function MemberHomeSurface({
   const pendingClaims = stats?.pendingClaims ?? 0;
   const approvedClaims = stats?.approvedClaims ?? 0;
   const returnedItems = stats?.returnedItems ?? 0;
+  const returnedAuthoredReports = stats?.returnedAuthoredReports ?? 0;
+  const returnedReceivedClaims = stats?.returnedReceivedClaims ?? 0;
   const responsesToReview = stats?.responsesToReview ?? 0;
+
+  const returnedItemsHref =
+    returnedItems === 0
+      ? '/my/reports'
+      : returnedReceivedClaims > 0 && returnedAuthoredReports === 0
+        ? '/my/claims'
+        : '/my/reports?status=Returned';
 
   return (
     <section className="member-home">
@@ -67,27 +76,39 @@ export function MemberHomeSurface({
       ) : null}
 
       <div className="member-stat-row" aria-label="Your summary">
-        <div className="member-stat">
+        <Link
+          href={openReports > 0 ? '/my/reports?status=Open' : '/my/reports'}
+          className="member-stat member-stat--link"
+        >
           <p className="member-stat__num tabular">{openReports}</p>
           <p className="member-stat__label">{HOME_STAT_OPEN_REPORTS}</p>
-        </div>
+        </Link>
 
-        <div className="member-stat member-stat--accent">
+        <Link
+          href={pendingClaims > 0 ? '/my/claims?status=Pending' : '/my/claims'}
+          className="member-stat member-stat--link member-stat--accent"
+        >
           <p className="member-stat__num tabular">{pendingClaims}</p>
           <p className="member-stat__label">{HOME_STAT_PENDING_CLAIMS}</p>
-        </div>
+        </Link>
 
-        <div className="member-stat">
+        <Link
+          href={approvedClaims > 0 ? '/my/claims?status=Approved' : '/my/claims'}
+          className="member-stat member-stat--link"
+        >
           <p className="member-stat__num tabular">{approvedClaims}</p>
           <p className="member-stat__label">{HOME_STAT_APPROVED_CLAIMS}</p>
-        </div>
+        </Link>
 
-        <div className="member-stat">
+        <Link href={returnedItemsHref} className="member-stat member-stat--link">
           <p className="member-stat__num tabular">{returnedItems}</p>
           <p className="member-stat__label">{HOME_STAT_RETURNED_ITEMS}</p>
-        </div>
+        </Link>
 
-        <Link href="/my/reports" className="member-stat member-stat--link">
+        <Link
+          href={responsesToReview > 0 ? '/my/reports?needsReview=1' : '/my/reports'}
+          className="member-stat member-stat--link"
+        >
           <p className="member-stat__num tabular">{responsesToReview}</p>
           <p className="member-stat__label">{HOME_STAT_RESPONSES_TO_REVIEW}</p>
         </Link>

@@ -46,7 +46,7 @@ export interface ClaimRow {
 export function projectClaims(
   rows: readonly ClaimRow[],
   columns: readonly ProjectionColumn[],
-  ownClaimId: string | null,
+  ownClaimIds: readonly string[] | null,
 ): readonly ProjectedClaim[] {
   if (!columns.includes('claimant') && !columns.includes('foundReportOwner') && !columns.includes('administrator')) {
     return [];
@@ -55,8 +55,11 @@ export function projectClaims(
   const isAdministrator = columns.includes('administrator');
   const isClaimant = columns.includes('claimant');
 
+  const ownClaimIdSet =
+    ownClaimIds !== null && ownClaimIds.length > 0 ? new Set(ownClaimIds) : null;
+
   return rows.map((row) => {
-    const isOwn = ownClaimId !== null && row.id === ownClaimId;
+    const isOwn = ownClaimIdSet !== null && ownClaimIdSet.has(row.id);
 
     const projected: {
       claimId: string;
@@ -111,14 +114,16 @@ export function projectClaims(
 export function visibleClaimIds(
   rows: readonly ClaimRow[],
   columns: readonly ProjectionColumn[],
-  ownClaimId: string | null,
+  ownClaimIds: readonly string[] | null,
 ): readonly string[] {
   if (columns.includes('administrator') || columns.includes('foundReportOwner')) {
     return rows.map((row) => row.id);
   }
 
-  if (columns.includes('claimant') && ownClaimId !== null) {
-    return rows.filter((row) => row.id === ownClaimId).map((row) => row.id);
+  if (columns.includes('claimant') && ownClaimIds !== null && ownClaimIds.length > 0) {
+    const allowed = new Set(ownClaimIds);
+
+    return rows.filter((row) => allowed.has(row.id)).map((row) => row.id);
   }
 
   return [];

@@ -65,25 +65,54 @@ const COUNTS: DashboardCounts = Object.freeze({
   verifications: 5,
 });
 
-/** A queue's columns. */
+/** A queue's columns — Pending Registrations uses cards, not this grid. */
 const COLUMNS: readonly QueueColumn[] = Object.freeze([
   { heading: 'Name' },
   { heading: 'Email' },
 ]);
 
-/** A queue's rows. */
-const ROWS: readonly QueueRowView[] = Object.freeze([
+/** Pending Registrations queue rows (card layout). */
+const REGISTRATION_ROWS: readonly QueueRowView[] = Object.freeze([
   {
     key: 'row-1',
-    cells: ['Riley Chen', 'riley@example.edu'],
+    cells: ['Riley Chen', 'riley@example.edu', 'Student', 'Jan 1, 2026, 9:00 AM'],
     actionLabel: 'Approve',
-    actionHref: '/admin/registrations/aaaaaaaa-0000-0000-0000-000000000001',
+    actionHref: '/admin/registrations/aaaaaaaa-0000-0000-0000-000000000001?decision=approve',
+    actionVariant: 'success',
+    secondaryActionLabel: 'Reject',
+    secondaryActionHref: '/admin/registrations/aaaaaaaa-0000-0000-0000-000000000001?decision=reject',
+    secondaryActionVariant: 'danger',
   },
   {
     key: 'row-2',
-    cells: ['Sam Okafor', 'sam@example.edu'],
+    cells: ['Sam Okafor', 'sam@example.edu', 'Employee', 'Jan 2, 2026, 10:00 AM'],
     actionLabel: 'Approve',
-    actionHref: '/admin/registrations/bbbbbbbb-0000-0000-0000-000000000002',
+    actionHref: '/admin/registrations/bbbbbbbb-0000-0000-0000-000000000002?decision=approve',
+    actionVariant: 'success',
+    secondaryActionLabel: 'Reject',
+    secondaryActionHref: '/admin/registrations/bbbbbbbb-0000-0000-0000-000000000002?decision=reject',
+    secondaryActionVariant: 'danger',
+  },
+]);
+
+/** Pending Claims grid fixture for the ARIA grid behaviour tests. */
+const GRID_COLUMNS: readonly QueueColumn[] = Object.freeze([
+  { heading: 'Claim ID', sortable: true },
+  { heading: 'Item' },
+]);
+
+const GRID_ROWS: readonly QueueRowView[] = Object.freeze([
+  {
+    key: 'claim-1',
+    cells: ['claim-001', 'Blue backpack'],
+    actionLabel: 'Review',
+    actionHref: '/admin/claims/claim-001',
+  },
+  {
+    key: 'claim-2',
+    cells: ['claim-002', 'Water bottle'],
+    actionLabel: 'Review',
+    actionHref: '/admin/claims/claim-002',
   },
 ]);
 
@@ -269,30 +298,30 @@ describe('the administrator access screen', () => {
 describe('the administrator queue surface', () => {
   it('renders the ARIA grid pattern', () => {
     const { container } = render(
-      <AdminQueueSurface queue="pending-registrations" columns={COLUMNS} rows={ROWS} />,
+      <AdminQueueSurface queue="pending-claims" columns={GRID_COLUMNS} rows={GRID_ROWS} />,
     );
 
     expect(container.querySelector('[role="grid"]')).not.toBeNull();
     expect(container.querySelectorAll('[role="row"]').length).toBeGreaterThan(0);
     expect(container.querySelectorAll('[role="gridcell"]').length).toBeGreaterThan(0);
-    expect(container.querySelectorAll('[role="columnheader"]').length).toBe(COLUMNS.length);
+    expect(container.querySelectorAll('[role="columnheader"]').length).toBe(GRID_COLUMNS.length);
   });
 
   it('puts exactly one row in the tab order', () => {
     const { container } = render(
-      <AdminQueueSurface queue="pending-registrations" columns={COLUMNS} rows={ROWS} />,
+      <AdminQueueSurface queue="pending-claims" columns={GRID_COLUMNS} rows={GRID_ROWS} />,
     );
 
     const tabbable = container.querySelectorAll('[role="row"][tabindex="0"]');
 
     // **The roving `tabindex` means exactly one row is in the tab order.**
     expect(tabbable).toHaveLength(1);
-    expect(container.querySelectorAll('[role="row"][tabindex="-1"]')).toHaveLength(ROWS.length - 1);
+    expect(container.querySelectorAll('[role="row"][tabindex="-1"]')).toHaveLength(GRID_ROWS.length - 1);
   });
 
   it('moves the focus down with the Down arrow', () => {
     const { container } = render(
-      <AdminQueueSurface queue="pending-registrations" columns={COLUMNS} rows={ROWS} />,
+      <AdminQueueSurface queue="pending-claims" columns={GRID_COLUMNS} rows={GRID_ROWS} />,
     );
 
     const rows = container.querySelectorAll<HTMLElement>('[role="row"][tabindex]');
@@ -307,7 +336,7 @@ describe('the administrator queue surface', () => {
 
   it('moves the focus up with the Up arrow', () => {
     const { container } = render(
-      <AdminQueueSurface queue="pending-registrations" columns={COLUMNS} rows={ROWS} />,
+      <AdminQueueSurface queue="pending-claims" columns={GRID_COLUMNS} rows={GRID_ROWS} />,
     );
 
     const rows = container.querySelectorAll<HTMLElement>('[role="row"][tabindex]');
@@ -320,7 +349,7 @@ describe('the administrator queue surface', () => {
 
   it('jumps to the ends with Home and End', () => {
     const { container } = render(
-      <AdminQueueSurface queue="pending-registrations" columns={COLUMNS} rows={ROWS} />,
+      <AdminQueueSurface queue="pending-claims" columns={GRID_COLUMNS} rows={GRID_ROWS} />,
     );
 
     const rows = container.querySelectorAll<HTMLElement>('[role="row"][tabindex]');
@@ -334,7 +363,7 @@ describe('the administrator queue surface', () => {
 
   it('clamps the focus rather than wrapping it', () => {
     const { container } = render(
-      <AdminQueueSurface queue="pending-registrations" columns={COLUMNS} rows={ROWS} />,
+      <AdminQueueSurface queue="pending-claims" columns={GRID_COLUMNS} rows={GRID_ROWS} />,
     );
 
     const rows = container.querySelectorAll<HTMLElement>('[role="row"][tabindex]');
@@ -348,14 +377,39 @@ describe('the administrator queue surface', () => {
     expect(document.activeElement).toBe(rows[rows.length - 1]);
   });
 
-  it('renders the action as a link that reaches the work item', () => {
-    render(<AdminQueueSurface queue="pending-registrations" columns={COLUMNS} rows={ROWS} />);
-
-    const action = screen.getAllByRole('link', { name: 'Approve' })[0];
-
-    expect(action?.getAttribute('href')).toBe(
-      '/admin/registrations/aaaaaaaa-0000-0000-0000-000000000001',
+  it('renders the Pending Registrations queue as review cards', () => {
+    const { container } = render(
+      <AdminQueueSurface queue="pending-registrations" columns={COLUMNS} rows={REGISTRATION_ROWS} />,
     );
+
+    expect(container.querySelector('.registration-queue')).not.toBeNull();
+    expect(container.querySelector('[role="grid"]')).toBeNull();
+  });
+
+  it('renders separate success Approve and danger Reject links on each registration', () => {
+    render(
+      <AdminQueueSurface queue="pending-registrations" columns={COLUMNS} rows={REGISTRATION_ROWS} />,
+    );
+
+    const approve = screen.getAllByRole('link', { name: 'Approve' })[0];
+    const reject = screen.getAllByRole('link', { name: 'Reject' })[0];
+
+    expect(approve?.getAttribute('href')).toBe(
+      '/admin/registrations/aaaaaaaa-0000-0000-0000-000000000001?decision=approve',
+    );
+    expect(approve?.className).toContain('button--success');
+    expect(reject?.getAttribute('href')).toBe(
+      '/admin/registrations/aaaaaaaa-0000-0000-0000-000000000001?decision=reject',
+    );
+    expect(reject?.className).toContain('button--danger');
+  });
+
+  it('renders the action as a link that reaches the work item', () => {
+    render(<AdminQueueSurface queue="pending-claims" columns={GRID_COLUMNS} rows={GRID_ROWS} />);
+
+    const action = screen.getAllByRole('link', { name: 'Review' })[0];
+
+    expect(action?.getAttribute('href')).toBe('/admin/claims/claim-001');
   });
 
   it('renders the Pending Registrations empty state with its note', () => {
@@ -393,21 +447,21 @@ describe('the administrator queue surface', () => {
   it('renders a sortable heading as a button with aria-sort', () => {
     const { container } = render(
       <AdminQueueSurface
-        queue="pending-registrations"
-        columns={[{ heading: 'Registered', sortable: true }]}
-        rows={ROWS}
+        queue="pending-claims"
+        columns={[{ heading: 'Submitted', sortable: true }]}
+        rows={GRID_ROWS}
       />,
     );
 
     const header = container.querySelector('[role="columnheader"]');
 
     expect(header?.getAttribute('aria-sort')).toBe('ascending');
-    expect(screen.getByRole('button', { name: 'Sort by Registered' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Sort by Submitted' })).toBeTruthy();
   });
 
   it('renders no notification surface', () => {
     const { container } = render(
-      <AdminQueueSurface queue="pending-registrations" columns={COLUMNS} rows={ROWS} />,
+      <AdminQueueSurface queue="pending-registrations" columns={COLUMNS} rows={REGISTRATION_ROWS} />,
     );
 
     expectNoNotificationSurface(container);
@@ -436,13 +490,12 @@ describe('the administrator queue surface', () => {
     expect(screen.getByRole('link', { name: 'Go back' })).toBeTruthy();
   });
 
-  it('renders a skeleton table while loading', () => {
+  it('renders a skeleton while loading', () => {
     const { container } = render(
       <AdminQueueSurface queue="pending-registrations" columns={COLUMNS} rows={[]} loading />,
     );
 
-    // **§15.6: "Each queue renders a skeleton table."** The skeleton's
-    // shape is the table's shape, so the layout does not jump.
+    expect(container.querySelector('.registration-queue')).not.toBeNull();
     expect(container.querySelector('.admin-queue__skeleton-bar')).not.toBeNull();
   });
 });

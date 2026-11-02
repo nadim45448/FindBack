@@ -161,12 +161,36 @@ export const OPERATIONAL_QUEUE_EMPTY_COPY: Readonly<Record<OperationalQueueId, s
 export const PENDING_REGISTRATIONS_EMPTY_NOTE = 'When someone new registers, they appear here.';
 
 /**
+ * The note under the Items in Verification queue's empty state.
+ *
+ * Lost owners choose a candidate first; the report moves to Verification
+ * Pending and then appears here for administrator recording.
+ */
+export const VERIFICATIONS_EMPTY_NOTE =
+  'When a lost-item owner selects a recovery response for verification, the report appears here.';
+
+export const AWAITING_RETURN_EMPTY_NOTE =
+  'When an administrator approves a claim, the found item appears here until the physical return is recorded.';
+
+/**
  * The empty-state note for a queue.
  *
  * `null` for the three queues §15.2–§15.5 give no note to.
  */
 export function emptyStateNoteFor(queue: OperationalQueueId): string | null {
-  return queue === 'pending-registrations' ? PENDING_REGISTRATIONS_EMPTY_NOTE : null;
+  if (queue === 'pending-registrations') {
+    return PENDING_REGISTRATIONS_EMPTY_NOTE;
+  }
+
+  if (queue === 'verifications') {
+    return VERIFICATIONS_EMPTY_NOTE;
+  }
+
+  if (queue === 'awaiting-return') {
+    return AWAITING_RETURN_EMPTY_NOTE;
+  }
+
+  return null;
 }
 
 /**

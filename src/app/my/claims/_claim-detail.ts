@@ -36,6 +36,7 @@ import {
   type ReportStatus,
 } from '@/domain/listings';
 
+import { prisma } from '@/infrastructure/db/prisma';
 import { buildListingsStack } from '@/infrastructure/listings/listings-stack';
 
 import type { ThreadMessageView } from '@/ui/thread-surface';
@@ -91,26 +92,40 @@ export async function readClaimDetail(
   // Claim — the projection carries only the Claims they may see.
   const projection = await stack.details.show(actor, reportId).catch(() => null);
 
-  if (!projection) {
+  const ownClaim =
+    projection?.claims.find((claim) => claimIdsMatch(claim.claimId, claimId)) ?? null;
+
+  let ownedRow =
+    ownClaim === null
+      ? await readOwnedClaimRow(claimId, actor.actorId, reportId)
+      : null;
+
+  if (ownClaim === null && ownedRow === null) {
     return null;
   }
 
-  const ownClaim = projection.claims.find((claim) => claim.claimId === claimId);
-
-  if (!ownClaim) {
-    return null;
+  if (
+    ownClaim !== null &&
+    (ownClaim.reason === undefined ||
+      ownClaim.identifyingDetails === undefined ||
+      ownClaim.dateLost === undefined)
+  ) {
+    ownedRow ??= await readOwnedClaimRow(claimId, actor.actorId, reportId);
   }
+
+  const status = ownClaim?.status ?? ownedRow?.status ?? '';
+  const submittedAt = ownClaim?.submittedAt ?? ownedRow?.submittedAt ?? '';
 
   const base = {
     claimId,
-    reportId: projection.reportId,
-    reportName: projection.report.name ?? '',
-    claimStatus: ownClaim.status,
-    reason: ownClaim.reason ?? null,
-    identifyingDetails: ownClaim.identifyingDetails ?? null,
-    dateLost: ownClaim.dateLost ?? null,
-    submittedAt: ownClaim.submittedAt,
-    autoRejected: ownClaim.status === 'Rejected — auto',
+    reportId,
+    reportName: projection?.report.name ?? ownedRow?.reportName ?? '',
+    claimStatus: status,
+    reason: ownClaim?.reason ?? ownedRow?.reason ?? null,
+    identifyingDetails: ownClaim?.identifyingDetails ?? ownedRow?.identifyingDetails ?? null,
+    dateLost: ownClaim?.dateLost ?? ownedRow?.dateLost ?? null,
+    submittedAt,
+    autoRejected: status === 'Rejected — auto',
   };
 
   // ── The thread ──────────────────────────────────────────────────────────
@@ -188,6 +203,55 @@ function readOnlyNoticeFor(
  * subject's.** The claimant, the finder, and the administrator are the
  * three participants, and a member who is none of them has no role tag.
  */
+function claimIdsMatch(left: string, right: string): boolean {
+  return left.toLowerCase() === right.toLowerCase();
+}
+
+/**
+ * The claimant's own Claim row, when the visibility projection did not
+ * carry it — for example after a competing-claim id ordering bug.
+ *
+ * **Only the claimant's own row is read,** and only the fields the Claim
+ * detail page shows.
+ */
+async function readOwnedClaimRow(
+  claimId: string,
+  actorId: string,
+  reportId: string,
+): Promise<{
+  readonly status: string;
+  readonly reason: string | null;
+  readonly identifyingDetails: string | null;
+  readonly dateLost: string | null;
+  readonly submittedAt: string;
+  readonly reportName: string;
+} | null> {
+  const row = await prisma.claim.findFirst({
+    where: { id: claimId, claimantId: actorId, reportId },
+    select: {
+      status: true,
+      reason: true,
+      identifyingDetails: true,
+      dateLost: true,
+      submittedAt: true,
+      report: { select: { name: true } },
+    },
+  });
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    status: row.status,
+    reason: row.reason,
+    identifyingDetails: row.identifyingDetails,
+    dateLost: row.dateLost ? row.dateLost.toISOString().slice(0, 10) : null,
+    submittedAt: row.submittedAt.toISOString(),
+    reportName: row.report.name ?? '',
+  };
+}
+
 function roleFor(
   authorId: string,
   claimantId: string,

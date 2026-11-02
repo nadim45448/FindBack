@@ -99,6 +99,14 @@ export interface QueueRowView {
   readonly actionLabel: string;
   /** The action's destination. */
   readonly actionHref: string;
+  /** An optional second action's label — Pending Registrations only. */
+  readonly secondaryActionLabel?: string | undefined;
+  /** An optional second action's destination. */
+  readonly secondaryActionHref?: string | undefined;
+  /** The primary action's visual variant. */
+  readonly actionVariant?: 'primary' | 'success' | undefined;
+  /** The secondary action's visual variant. */
+  readonly secondaryActionVariant?: 'danger' | undefined;
 }
 
 /** The queue surface's props. */
@@ -215,6 +223,23 @@ export function AdminQueueSurface({
   }
 
   if (loading) {
+    if (queue === 'pending-registrations') {
+      return (
+        <div className="admin-console">
+          <h1 className="hero__title">{heading}</h1>
+
+          <ul className="registration-queue" role="status" aria-label={LOADING}>
+            {[0, 1, 2].map((index) => (
+              <li key={index} className="registration-queue__card" aria-hidden="true">
+                <div className="admin-queue__skeleton-bar" style={{ width: '60%' }} />
+                <div className="admin-queue__skeleton-bar" style={{ width: '40%' }} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
+
     return (
       <div className="admin-console">
         <h1 className="hero__title">{heading}</h1>
@@ -257,6 +282,54 @@ export function AdminQueueSurface({
           <p>{queueEmptyCopy(queue)}</p>
           {note ? <p className="field__helper">{note}</p> : null}
         </div>
+      </div>
+    );
+  }
+
+  if (queue === 'pending-registrations') {
+    return (
+      <div className="admin-console">
+        <div className="admin-console__head">
+          <h1 className="hero__title">{heading}</h1>
+          <p className="admin-console__meta">
+            {rows.length} awaiting review · ordered by submission time
+          </p>
+        </div>
+
+        <ul className="registration-queue">
+          {rows.map((row) => (
+            <li key={row.key} className="registration-queue__card">
+              <div className="registration-queue__body">
+                <p className="registration-queue__primary">
+                  <strong>{row.cells[0]}</strong>
+                  <span aria-hidden="true"> · </span>
+                  <code className="registration-review__email">{row.cells[1]}</code>
+                </p>
+                <p className="registration-queue__meta">
+                  Role: {row.cells[2]} · Submitted {row.cells[3]}
+                </p>
+              </div>
+
+              <div className="registration-queue__actions">
+                <Link
+                  href={row.actionHref}
+                  className={`button button--sm ${actionButtonClass(row.actionVariant ?? 'primary')}`}
+                >
+                  {row.actionLabel}
+                </Link>
+
+                {row.secondaryActionLabel && row.secondaryActionHref ? (
+                  <Link
+                    href={row.secondaryActionHref}
+                    className={`button button--sm ${actionButtonClass(row.secondaryActionVariant ?? 'danger')}`}
+                  >
+                    {row.secondaryActionLabel}
+                  </Link>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
     );
   }
@@ -338,9 +411,23 @@ export function AdminQueueSurface({
                 — the claim review, the registration review, the Lost-side
                 verification screen — not a generic detail page.
               */}
-              <Link href={row.actionHref} className="button button--primary button--sm">
-                {row.actionLabel}
-              </Link>
+              <div className="admin-queue__actions">
+                <Link
+                  href={row.actionHref}
+                  className={`button button--sm ${actionButtonClass(row.actionVariant ?? 'primary')}`}
+                >
+                  {row.actionLabel}
+                </Link>
+
+                {row.secondaryActionLabel && row.secondaryActionHref ? (
+                  <Link
+                    href={row.secondaryActionHref}
+                    className={`button button--sm ${actionButtonClass(row.secondaryActionVariant ?? 'danger')}`}
+                  >
+                    {row.secondaryActionLabel}
+                  </Link>
+                ) : null}
+              </div>
             </span>
           </div>
         ))}
@@ -395,3 +482,14 @@ export const VERIFICATIONS_COLUMNS: readonly QueueColumn[] = Object.freeze([
  * "action" column), and §5.7 says the action column is right-aligned.
  */
 export const ACTION_COLUMN: QueueColumn = Object.freeze({ heading: COLUMN_ACTION });
+
+function actionButtonClass(variant: 'primary' | 'success' | 'danger'): string {
+  switch (variant) {
+    case 'success':
+      return 'button--success';
+    case 'danger':
+      return 'button--danger';
+    default:
+      return 'button--primary';
+  }
+}

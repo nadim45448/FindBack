@@ -65,13 +65,18 @@ export class PrismaClaimReviewReader implements ClaimReviewReader {
         category: string;
         date: Date;
         campus_area: string;
+        claimant_display_name: string;
+        claimant_email: string;
       }>
     >(Prisma.sql`
       SELECT c."id", c."status", c."report_id", c."reason", c."identifying_details",
              c."date_lost", c."submitted_at",
-             r."name", r."category", r."date", r."campus_area"
+             r."name", r."category", r."date", r."campus_area",
+             a."displayName" AS claimant_display_name,
+             a."email" AS claimant_email
       FROM "claims" AS c
       JOIN "reports" AS r ON r."id" = c."report_id"
+      JOIN "accounts" AS a ON a."id" = c."claimant_id"
       WHERE c."id" = ${claimId}::uuid
     `);
 
@@ -105,6 +110,8 @@ export class PrismaClaimReviewReader implements ClaimReviewReader {
         claimId: row.id,
         status,
         reportId: row.report_id,
+        claimantDisplayName: row.claimant_display_name,
+        claimantEmail: row.claimant_email,
         // **A Claim that was never submitted through the form carries no
         // evidence.** A lifecycle-written Claim is a decided one, and its
         // reason and details are genuinely absent — the screen shows the

@@ -61,7 +61,7 @@ interface RelationshipQueryRow {
   report_id: string;
   report_type: string;
   reporter_id: string;
-  claim_id: string | null;
+  claim_ids: string[];
   recovery_response_id: string | null;
 }
 
@@ -90,12 +90,27 @@ export class PrismaReportVisibilityReader implements ReportVisibilityReader {
           r.${Prisma.raw(quoteName(PHYSICAL.report.id))}        AS report_id,
           r.${Prisma.raw(quoteName(PHYSICAL.report.type))}        AS report_type,
           r.${Prisma.raw(quoteName(PHYSICAL.report.reporterId))}  AS reporter_id,
-          c.${Prisma.raw(quoteName(PHYSICAL.claim.id))}            AS claim_id,
+          (
+            SELECT COALESCE(
+              array_agg(
+                c.${Prisma.raw(quoteName(PHYSICAL.claim.id))}
+                ORDER BY
+                  CASE c.${Prisma.raw(quoteName(PHYSICAL.claim.status))}
+                    WHEN 'Pending' THEN 0
+                    WHEN 'Approved' THEN 1
+                    ELSE 2
+                  END,
+                  c.${Prisma.raw(quoteName(PHYSICAL.claim.submittedAt))} DESC NULLS LAST,
+                  c.${Prisma.raw(quoteName(PHYSICAL.claim.id))} ASC
+              ),
+              ARRAY[]::uuid[]
+            )
+            FROM ${Prisma.raw(quoteName(TABLES.claim))} c
+            WHERE c.${Prisma.raw(quoteName(PHYSICAL.claim.reportId))} = r.${Prisma.raw(quoteName(PHYSICAL.report.id))}
+              AND c.${Prisma.raw(quoteName(PHYSICAL.claim.claimantId))} = ${viewerId}
+          ) AS claim_ids,
           rr.${Prisma.raw(quoteName(PHYSICAL.response.id))}        AS recovery_response_id
         FROM ${Prisma.raw(quoteName(TABLES.report))} r
-        LEFT JOIN ${Prisma.raw(quoteName(TABLES.claim))} c
-          ON c.${Prisma.raw(quoteName(PHYSICAL.claim.reportId))} = r.${Prisma.raw(quoteName(PHYSICAL.report.id))}
-         AND c.${Prisma.raw(quoteName(PHYSICAL.claim.claimantId))} = ${viewerId}
         LEFT JOIN ${Prisma.raw(quoteName(TABLES.response))} rr
           ON rr.${Prisma.raw(quoteName(PHYSICAL.response.reportId))} = r.${Prisma.raw(quoteName(PHYSICAL.report.id))}
          AND rr.${Prisma.raw(quoteName(PHYSICAL.response.responderId))} = ${viewerId}
@@ -110,12 +125,15 @@ export class PrismaReportVisibilityReader implements ReportVisibilityReader {
       return null;
     }
 
+    const claimIds = row.claim_ids ?? [];
+
     return createReportRelationship({
       reportId: row.report_id,
       reportType: row.report_type === 'Found' ? 'Found' : 'Lost',
       reporterId: row.reporter_id,
       viewerId,
-      claimId: row.claim_id,
+      claimIds,
+      claimId: claimIds[0] ?? null,
       recoveryResponseId: row.recovery_response_id,
     });
   }

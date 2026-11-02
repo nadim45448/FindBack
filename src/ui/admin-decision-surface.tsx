@@ -227,13 +227,15 @@ export function AdminDecisionSurface({
 
         <button
           type="button"
-          className="button button--tertiary"
+          className="button button--danger"
           disabled={submitting}
           onClick={() => void decide('reject')}
         >
           {rejectLabel}
         </button>
+      </div>
 
+      <div className="button-row">
         <button
           type="button"
           className="button button--secondary"

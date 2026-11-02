@@ -62,6 +62,8 @@ export class ClaimReviewService {
 
     return assembleClaimReview({
       claimId: facts.claim.claimId,
+      claimantDisplayName: facts.claim.claimantDisplayName,
+      claimantEmail: facts.claim.claimantEmail,
       claimStatus: facts.claim.status,
       reason: facts.claim.reason,
       identifyingDetails: facts.claim.identifyingDetails,

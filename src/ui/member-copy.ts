@@ -77,6 +77,43 @@ export const MY_REPORTS_TABLE_DATE = 'Date';
 export const MY_REPORTS_TABLE_STATUS = 'Status';
 export const MY_REPORTS_TABLE_CLAIMS = 'Claims';
 
+/** My reports table — Lost-side recovery responses (same column as claims for Found). */
+export const MY_REPORTS_TABLE_ACTIVITY = 'Activity';
+
+export const MY_REPORTS_NEEDS_REVIEW_BANNER =
+  'These are your open lost reports with recovery responses waiting for your review.';
+
+export const MY_REPORTS_REVIEW_RESPONSES_LINK = 'Review responses';
+
+/** Found-report owner — claims summary on item detail. */
+export const FOUND_OWNER_CLAIMS_HEADING = 'Claims on this item';
+
+export const FOUND_OWNER_CLAIMS_PENDING_BODY =
+  'An administrator will review competing claims and notify you.';
+
+export const FOUND_OWNER_CLAIMS_APPROVED_BODY =
+  'An administrator will reach out to arrange the handoff with the approved claimant.';
+
+export const FOUND_OWNER_CLAIMS_REOPENED_BODY =
+  'No pending claims. The report has returned to Open.';
+
+export const FOUND_OWNER_CLAIM_THREAD_LINK = 'Open messages';
+
+export const FOUND_OWNER_CLAIM_THREAD_HEADING = 'Messages about a claim';
+
+export const FOUND_OWNER_CLAIM_THREAD_LEDE =
+  'A member filed a claim on your found item. You can coordinate here with the claimant and administrators. Claim reason and identifying details stay private — only the claimant and administrators see them.';
+
+/** Claimant — status on item detail (mockup alerts). */
+export const CLAIM_DETAIL_PENDING_ALERT = 'You have a pending claim for this item.';
+
+export const CLAIM_DETAIL_APPROVED_ALERT =
+  'Your claim was approved. An administrator will reach out to confirm the handoff.';
+
+export const CLAIM_DETAIL_REJECTED_ALERT = 'Your claim was not approved.';
+
+export const CLAIM_DETAIL_VIEW_LINK = 'View claim';
+
 /** Compact report CTAs on the My reports header row. */
 export const REPORT_LOST_ITEM_SHORT = 'Report lost';
 export const REPORT_FOUND_ITEM_SHORT = 'Report found';
@@ -901,8 +938,12 @@ export const REPORT_STATUS_HELPERS: Readonly<
   }),
   Lost: Object.freeze({
     Open: 'Active. No Recovery Responses yet.',
+    OpenWithResponses:
+      'Recovery responses are waiting. Review them and select one for verification when you are ready.',
     'Verification Pending':
       'The Lost-report owner selected a Recovery Response for verification. An administrator will record the determination.',
+    VerificationPendingMatchConfirmed:
+      'A match was confirmed. An administrator will confirm when the item is physically returned to you.',
     Returned: 'This item has been returned. No further action is needed.',
     Closed: 'This report is no longer active.',
   }),

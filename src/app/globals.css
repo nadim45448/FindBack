@@ -1396,6 +1396,25 @@ p {
   color: #ffffff;
 }
 
+.button--danger:hover:not(:disabled) {
+  background: #991818;
+}
+
+.button--success {
+  background: var(--semantic-success);
+  color: #ffffff;
+}
+
+.button--success:hover:not(:disabled) {
+  background: #246640;
+}
+
+.button--success:visited,
+.button--success:hover,
+.button--success:active {
+  color: #ffffff;
+}
+
 .button:disabled {
   background: var(--disabled-bg);
   color: var(--disabled-text);
@@ -1647,9 +1666,93 @@ p {
 
 .card {
   padding: var(--space-5);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--elevation-1);
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.registration-queue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.registration-queue__card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--elevation-1);
+}
+
+.registration-queue__primary {
+  margin: 0;
+  font: var(--font-body-md);
+}
+
+.registration-queue__meta {
+  margin: var(--space-1) 0 0;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+}
+
+.registration-queue__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.registration-review__details {
+  margin: 0;
+}
+
+.registration-review__detail {
+  margin-bottom: var(--space-3);
+}
+
+.registration-review__detail:last-child {
+  margin-bottom: 0;
+}
+
+.registration-review__detail dd {
+  margin: 2px 0 0;
+}
+
+.registration-review__email {
+  font-size: 13px;
+}
+
+.registration-review__info-list {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-5);
+}
+
+@media (max-width: 720px) {
+  .registration-queue__card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .registration-queue__actions {
+    justify-content: flex-start;
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2384,6 +2487,55 @@ p {
   background: var(--semantic-info-soft);
 }
 
+.banner--success {
+  background: var(--semantic-success-soft);
+  border-left: 3px solid var(--semantic-success);
+}
+
+.claim-review-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.claim-admin-review__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.claim-admin-review__head .hero__title {
+  margin: 0;
+}
+
+.claim-admin-review__section-title {
+  margin: 0 0 var(--space-3);
+  font: var(--font-title-md);
+}
+
+.claim-admin-review__competing {
+  background: var(--semantic-warning-soft);
+  border-left: 3px solid var(--semantic-warning);
+}
+
+.claim-admin-review__no-compete {
+  margin: var(--space-2) 0 0;
+}
+
+.claim-admin-review__decision-actions {
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .claim-review-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .banner__heading {
   font: var(--font-title-md);
 }
@@ -2938,6 +3090,14 @@ p {
 .admin-queue__cell--action {
   display: flex;
   justify-content: flex-end;
+}
+
+.admin-queue__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 /**

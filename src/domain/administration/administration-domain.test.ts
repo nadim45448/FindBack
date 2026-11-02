@@ -127,14 +127,18 @@ describe('the four operational queues', () => {
     expect(queueEmptyCopy('verifications')).toBe('No items are in verification.');
   });
 
-  it('gives only the Pending Registrations queue an empty-state note', () => {
+  it('gives the Pending Registrations and Verifications queues an empty-state note', () => {
     expect(emptyStateNoteFor('pending-registrations')).toBe(
       'When someone new registers, they appear here.',
     );
 
     expect(emptyStateNoteFor('pending-claims')).toBeNull();
-    expect(emptyStateNoteFor('awaiting-return')).toBeNull();
-    expect(emptyStateNoteFor('verifications')).toBeNull();
+    expect(emptyStateNoteFor('awaiting-return')).toBe(
+      'When an administrator approves a claim, the found item appears here until the physical return is recorded.',
+    );
+    expect(emptyStateNoteFor('verifications')).toBe(
+      'When a lost-item owner selects a recovery response for verification, the report appears here.',
+    );
   });
 
   it('gives each queue the same label the tile shows', () => {

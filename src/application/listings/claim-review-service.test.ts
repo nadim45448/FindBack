@@ -24,6 +24,8 @@ const FACTS: ClaimReviewFacts = {
     claimId: 'claim-1',
     status: 'Pending',
     reportId: 'report-1',
+    claimantDisplayName: 'Sam Okafor',
+    claimantEmail: 'sam@example.edu',
     reason: 'It is my brown leather wallet.',
     identifyingDetails: 'Blue cardholder with a dent.',
     dateLost: '2026-10-20',

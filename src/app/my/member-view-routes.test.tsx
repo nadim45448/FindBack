@@ -93,6 +93,10 @@ vi.mock('./reports/_claim-summaries', () => ({
   readClaimSummariesForReports: async () => ({}),
 }));
 
+vi.mock('./reports/_recovery-response-summaries', () => ({
+  readRecoveryResponseSummariesForReports: async () => ({}),
+}));
+
 vi.mock('@/infrastructure/listings/listings-stack', () => ({
   buildListingsStack: () => ({
     listings: {

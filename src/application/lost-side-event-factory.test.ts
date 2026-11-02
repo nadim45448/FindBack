@@ -504,22 +504,22 @@ describe('LostSideEventFactory — the batch closeouts', () => {
     });
   });
 
-  it('refuses an empty child set and writes neither event', async () => {
+  it('writes only event 30 when there are no standby responses to resolve', async () => {
     const { factory, repository } = buildFactory();
 
-    await expect(
-      factory.recordReturnedCloseout(
-        {
-          lostReportId: 'report-1',
-          actingAdministratorId: 'riley-1',
-          resolvedResponses: [],
-          matchedResponseId: 'rr-1',
-        },
-        transaction,
-      ),
-    ).rejects.toThrow(BatchResolutionError);
+    const pair = await factory.recordReturnedCloseout(
+      {
+        lostReportId: 'report-1',
+        actingAdministratorId: 'riley-1',
+        resolvedResponses: [],
+        matchedResponseId: 'rr-1',
+      },
+      transaction,
+    );
 
-    expect(repository.appended).toHaveLength(0);
+    expect(repository.appended.map((event) => event.eventNumber)).toEqual([30]);
+    expect(pair.batch).toBeNull();
+    expect(pair.individual.eventNumber).toBe(30);
   });
 
   it('records event 27 with the trigger role in its metadata', async () => {

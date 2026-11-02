@@ -335,7 +335,7 @@ describe('the Claim projector', () => {
   });
 
   it('grants the claimant the evidence on their own Claim only', () => {
-    const projected = projectClaims(rows, ['unrelatedMember', 'claimant'], 'claim-1');
+    const projected = projectClaims(rows, ['unrelatedMember', 'claimant'], ['claim-1']);
 
     expect(projected).toHaveLength(2);
     expect(projected[0]!.reason).toBe('It is mine');
@@ -349,9 +349,22 @@ describe('the Claim projector', () => {
   });
 
   it('scopes the visible Claim ids to the claimant', () => {
-    expect(visibleClaimIds(rows, ['unrelatedMember', 'claimant'], 'claim-1')).toEqual([
+    expect(visibleClaimIds(rows, ['unrelatedMember', 'claimant'], ['claim-1'])).toEqual([
       'claim-1',
     ]);
+  });
+
+  it('marks every own Claim when the viewer has more than one on the report', () => {
+    const projected = projectClaims(rows, ['unrelatedMember', 'claimant'], [
+      'claim-1',
+      'claim-2',
+    ]);
+
+    expect(projected.find((claim) => claim.claimId === 'claim-1')?.isOwn).toBe(true);
+    expect(projected.find((claim) => claim.claimId === 'claim-2')?.isOwn).toBe(true);
+    expect(visibleClaimIds(rows, ['unrelatedMember', 'claimant'], ['claim-1', 'claim-2'])).toEqual(
+      ['claim-1', 'claim-2'],
+    );
   });
 
   it('scopes the visible Claim ids to every Claim for the owner', () => {

@@ -248,7 +248,8 @@ export interface ToVerificationPendingDraft {
 
 /** The events a closeout writes, in the order the trail shows them. */
 export interface LostSideEventPair {
-  readonly batch: AuditEvent;
+  /** Event 26 — absent when there were no standby responses to resolve. */
+  readonly batch: AuditEvent | null;
   readonly individual: AuditEvent;
 }
 
@@ -608,8 +609,6 @@ export class LostSideEventFactory {
       targetStatus: 'Resolved — Report Returned',
     };
 
-    assertBatchShape(EVENT.returnedCloseout, batch);
-
     // Event 26 references event 30 by the matched response id, so the two
     // must agree before either is written.
     assertReturnedPairing(draft.matchedResponseId, draft.matchedResponseId);
@@ -620,22 +619,28 @@ export class LostSideEventFactory {
       triggeredByRole: 'administrator',
     });
 
-    const batchEvent = await this.writer.record(
-      {
-        eventType: EVENT.returnedCloseout,
-        parent: { parentType: REPORT_PARENT, parentId: draft.lostReportId },
-        actor,
-        payload: {
-          childResponses: batch.resolvedResponses.map((resolved) => ({
-            recoveryResponseId: resolved.recoveryResponseId,
-            previousStatus: resolved.previousStatus,
-          })),
-          matchedSelectedResponseId: draft.matchedResponseId,
+    let batchEvent: AuditEvent | null = null;
+
+    if (batch.resolvedResponses.length > 0) {
+      assertBatchShape(EVENT.returnedCloseout, batch);
+
+      batchEvent = await this.writer.record(
+        {
+          eventType: EVENT.returnedCloseout,
+          parent: { parentType: REPORT_PARENT, parentId: draft.lostReportId },
+          actor,
+          payload: {
+            childResponses: batch.resolvedResponses.map((resolved) => ({
+              recoveryResponseId: resolved.recoveryResponseId,
+              previousStatus: resolved.previousStatus,
+            })),
+            matchedSelectedResponseId: draft.matchedResponseId,
+          },
+          occurredAt: draft.occurredAt,
         },
-        occurredAt: draft.occurredAt,
-      },
-      transaction,
-    );
+        transaction,
+      );
+    }
 
     const individualEvent = await this.writer.record(
       {

@@ -1,42 +1,44 @@
 import type { Metadata } from 'next';
 
 import { AdminAccessScreen } from '@/ui/admin-access-screen';
-import { AdminDecisionSurface } from '@/ui/admin-decision-surface';
-
-export const metadata: Metadata = {
-  title: 'Review registration',
-};
+import {
+  REGISTRATION_ALREADY_REVIEWED,
+  REGISTRATION_APPROVE_HEADING,
+  REGISTRATION_REJECT_HEADING,
+} from '@/ui/admin-copy';
+import {
+  RegistrationReviewSurface,
+  type RegistrationReviewMode,
+} from '@/ui/registration-review-surface';
 
 import { resolveAdminAccess } from '../../_admin-page';
+import { formatTimestamp, readPendingRegistrationById } from '../../_queue-page';
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  readonly searchParams: Promise<{ readonly decision?: string }>;
+}): Promise<Metadata> {
+  const { decision } = await searchParams;
+  const mode = resolveRegistrationMode(decision);
+
+  return {
+    title: mode === 'reject' ? REGISTRATION_REJECT_HEADING : REGISTRATION_APPROVE_HEADING,
+  };
+}
 
 /**
  * The registration review — `/admin/registrations/:id` (FR-3, FR-27).
  *
- * ## The queue's action reaches here
- *
- * §15.2's Pending Registrations queue ends with an *action* column, and
- * §5.7 says the action *"reaches the specific work item"*. The specific
- * work item for a registration is **the decision on that registration** —
- * so the queue's action link lands here, and this page carries the two
- * decisions.
- *
- * ## The page is a server component that gates, then hands over
- *
- * **The authorisation is checked here, once.** A non-administrator gets
- * the access screen and no content from the administration stack — the
- * same two gates every administrator page has: this one keeps the data
- * out of the response, and the route's one keeps it out of the database.
- *
- * ## The client half sends the decision; the route applies it
- *
- * The decision is a `POST /api/admin/registrations/:id` with
- * `decision: 'approve'` or `decision: 'reject'`. **The page never decides
- * anything** — it sends the intent and the route's use case rules on it.
+ * **Approve and reject are separate surfaces**, matching the BMAD mockups.
+ * The queue links here with `?decision=approve` or `?decision=reject`.
  */
 export default async function RegistrationReviewPage({
   params,
+  searchParams,
 }: {
   readonly params: Promise<{ readonly id: string }>;
+  readonly searchParams: Promise<{ readonly decision?: string }>;
 }): Promise<React.JSX.Element> {
   const access = await resolveAdminAccess();
 
@@ -45,15 +47,38 @@ export default async function RegistrationReviewPage({
   }
 
   const { id } = await params;
+  const { decision } = await searchParams;
+  const mode = resolveRegistrationMode(decision);
+  const registration = await readPendingRegistrationById(access.userId, id);
+
+  if (!registration) {
+    return (
+      <div className="form-column">
+        <h1 className="hero__title">
+          {mode === 'reject' ? REGISTRATION_REJECT_HEADING : REGISTRATION_APPROVE_HEADING}
+        </h1>
+
+        <div className="banner banner--info" role="status">
+          <p>{REGISTRATION_ALREADY_REVIEWED}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <AdminDecisionSurface
+    <RegistrationReviewSurface
+      mode={mode}
+      displayName={registration.displayName}
+      email={registration.email}
+      selfDeclaredRole={registration.selfDeclaredRole}
+      submittedAtLabel={formatTimestamp(registration.registeredAt)}
+      administratorName={access.displayName ?? 'Administrator'}
       endpoint={`/api/admin/registrations/${id}`}
-      heading="Review registration"
-      approveLabel="Approve"
-      rejectLabel="Reject"
-      requiresReason
       afterHref="/admin/registrations"
     />
   );
+}
+
+function resolveRegistrationMode(decision: string | undefined): RegistrationReviewMode {
+  return decision === 'reject' ? 'reject' : 'approve';
 }

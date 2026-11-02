@@ -8,6 +8,7 @@ import {
   APPROVE,
   CONFIRM_RETURNED,
   MANAGE_VERIFICATION,
+  REJECT,
   REVIEW,
 } from '@/ui/admin-copy';
 
@@ -52,6 +53,40 @@ export interface QueuePageResult {
  *
  * **The mapping is per queue,** because each queue's columns are its own.
  */
+/**
+ * A pending registration row, as the review page reads it.
+ */
+export interface PendingRegistrationRow {
+  readonly accountId: string;
+  readonly displayName: string;
+  readonly email: string;
+  readonly selfDeclaredRole: string;
+  readonly registeredAt: Date;
+}
+
+/**
+ * Read one pending registration by account id.
+ */
+export async function readPendingRegistrationById(
+  userId: string,
+  accountId: string,
+): Promise<PendingRegistrationRow | null> {
+  try {
+    const stack = buildAdminStack();
+    const result = await stack.queues.read({ userId, isAdministrator: true }, 'pending-registrations');
+
+    if (result.queue !== 'pending-registrations') {
+      return null;
+    }
+
+    const row = result.rows.find((entry) => entry.accountId === accountId);
+
+    return row ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function readQueue(
   queue: OperationalQueueId,
   userId: string,
@@ -90,7 +125,11 @@ function registrationRows(queue: PendingRegistrationsQueue): readonly QueueRowVi
       formatTimestamp(row.registeredAt),
     ],
     actionLabel: APPROVE,
-    actionHref: `/admin/registrations/${row.accountId}`,
+    actionHref: `/admin/registrations/${row.accountId}?decision=approve`,
+    actionVariant: 'success',
+    secondaryActionLabel: REJECT,
+    secondaryActionHref: `/admin/registrations/${row.accountId}?decision=reject`,
+    secondaryActionVariant: 'danger',
   }));
 }
 

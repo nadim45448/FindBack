@@ -213,15 +213,46 @@ describe('the My reports surface', () => {
             rejected: 0,
           },
         }}
+        recoverySummaries={{}}
         campusAreaLabels={{ library: 'Library' }}
         statusFilter={null}
       />,
     );
 
-    expect(screen.getByRole('columnheader', { name: 'Claims' })).toBeTruthy();
-    expect(screen.getByText('1 approved · 2 pending')).toBeTruthy();
+    expect(screen.getByRole('columnheader', { name: 'Activity' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: '2 pending · admin reviewing' })).toBeTruthy();
     expect(screen.getByText('Bag · Library')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Report lost' })).toBeTruthy();
+  });
+
+  it('links lost reports with submitted responses to the review screen', () => {
+    const lostId = '22222222-2222-2222-2222-222222222222';
+
+    render(
+      <MyReportsSurface
+        rows={[
+          {
+            id: lostId,
+            type: 'Lost',
+            status: 'Open',
+            name: 'Lost mouse',
+            category: 'Electronics',
+            date: '2026-10-21',
+            campusArea: 'library',
+          },
+        ]}
+        claimSummaries={{}}
+        recoverySummaries={{
+          [lostId]: { submitted: 2, inProgress: 0 },
+        }}
+        campusAreaLabels={{ library: 'Library' }}
+        statusFilter={null}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: 'Review responses (2)' }).getAttribute('href')).toBe(
+      `/my/reports/${lostId}/review-responses`,
+    );
   });
 });
 
@@ -326,6 +357,29 @@ describe('the item detail surface', () => {
     render(<ItemDetailSurface projection={ownFound} />);
 
     expect(screen.queryByRole('link', { name: 'Submit a claim' })).toBeNull();
+  });
+
+  it('shows the found owner claims overview and thread links', () => {
+    const claimId = '44444444-4444-4444-4444-444444444444';
+    const ownFound = projection({
+      columns: ['unrelatedMember', 'foundReportOwner'],
+      report: { ...projection().report, type: 'Found', status: 'Claim Requested' },
+      claims: [
+        {
+          claimId,
+          status: 'Pending',
+          submittedAt: '2026-10-22T09:00:00.000Z',
+          isOwn: false,
+        },
+      ],
+    });
+
+    render(<ItemDetailSurface projection={ownFound} />);
+
+    expect(screen.getByRole('heading', { name: 'Claims on this item' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Open messages' }).getAttribute('href')).toBe(
+      `/my/reports/11111111-1111-1111-1111-111111111111/claims/${claimId}`,
+    );
   });
 
   it('does not offer the CTA when the viewer already has a Pending participation', () => {

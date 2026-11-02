@@ -109,8 +109,8 @@ export class PrismaLostReportCloseoutReader implements LostReportCloseoutReader 
     // status — and after a `Match Confirmed` determination it is the one
     // that holds `Match Confirmed`.
     const selected =
-      responses.find((response) => response.status === 'Selected for Verification') ??
-      responses.find((response) => response.status === 'Match Confirmed');
+      responses.find((response) => response.status === 'Match Confirmed') ??
+      responses.find((response) => response.status === 'Selected for Verification');
 
     return {
       id: report.id,

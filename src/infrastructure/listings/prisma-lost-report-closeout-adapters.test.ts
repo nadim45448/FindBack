@@ -345,7 +345,7 @@ describeWithDatabase('the Lost-side closeout adapters (database)', () => {
         inTransaction((handle) =>
           closeouts.confirmLostReturned(reportId, matchedResponseId, false, handle),
         ),
-      ).rejects.toThrow(/Match Confirmed/);
+      ).rejects.toThrow(/match confirmation before confirming/i);
 
       // **Nothing else was written.** The guard throws inside the
       // transaction, so the report's move and the batch resolution both roll

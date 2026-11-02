@@ -603,6 +603,8 @@ describeWithDatabase('bolt 003 — the Lost-side acceptance criteria', () => {
           },
           handle,
         );
+
+        throw new Error('Force rollback after partial closeout writes.');
       }),
     ).rejects.toThrow();
 

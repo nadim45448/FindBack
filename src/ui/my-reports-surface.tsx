@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { ReportListingRow, ReportStatus } from '@/domain/listings';
 import { REPORT_STATUSES } from '@/domain/listings';
 
-import type { ReportClaimSummary } from './my-reports-types';
+import type { ReportClaimSummary, ReportRecoverySummary } from './my-reports-types';
 
 import { StatusBadge } from './status-badge';
 
@@ -14,7 +14,9 @@ import {
   MY_REPORTS_EMPTY_HEADING,
   MY_REPORTS_FILTER_LABEL,
   MY_REPORTS_PAGE_TITLE,
-  MY_REPORTS_TABLE_CLAIMS,
+  MY_REPORTS_NEEDS_REVIEW_BANNER,
+  MY_REPORTS_REVIEW_RESPONSES_LINK,
+  MY_REPORTS_TABLE_ACTIVITY,
   MY_REPORTS_TABLE_DATE,
   MY_REPORTS_TABLE_ITEM,
   MY_REPORTS_TABLE_STATUS,
@@ -27,8 +29,10 @@ import {
 export interface MyReportsSurfaceProps {
   readonly rows: readonly ReportListingRow[];
   readonly claimSummaries: Readonly<Record<string, ReportClaimSummary>>;
+  readonly recoverySummaries: Readonly<Record<string, ReportRecoverySummary>>;
   readonly campusAreaLabels: Readonly<Record<string, string>>;
   readonly statusFilter: ReportStatus | null;
+  readonly needsReview?: boolean | undefined;
   readonly error?: string | undefined;
 }
 
@@ -44,8 +48,10 @@ const STATUS_FILTER_OPTIONS: readonly { readonly value: string; readonly label: 
 export function MyReportsSurface({
   rows,
   claimSummaries,
+  recoverySummaries,
   campusAreaLabels,
   statusFilter,
+  needsReview = false,
   error,
 }: MyReportsSurfaceProps): React.JSX.Element {
   return (
@@ -90,23 +96,44 @@ export function MyReportsSurface({
         </div>
       </form>
 
+      {needsReview && !error ? (
+        <div className="banner banner--info" role="status">
+          <p>{MY_REPORTS_NEEDS_REVIEW_BANNER}</p>
+        </div>
+      ) : null}
+
       {error ? (
         <div className="error-summary" role="alert">
           <p className="error-summary__heading">{error}</p>
         </div>
       ) : null}
 
-      {!error && rows.length === 0 ? <MyReportsEmpty /> : null}
+      {!error && rows.length === 0 ? (
+        needsReview ? <MyReportsNeedsReviewEmpty /> : <MyReportsEmpty />
+      ) : null}
 
       {!error && rows.length > 0 ? (
         <section aria-live="polite">
           <ReportsTable
             rows={rows}
             claimSummaries={claimSummaries}
+            recoverySummaries={recoverySummaries}
             campusAreaLabels={campusAreaLabels}
           />
         </section>
       ) : null}
+    </div>
+  );
+}
+
+function MyReportsNeedsReviewEmpty(): React.JSX.Element {
+  return (
+    <div className="listings__empty">
+      <strong>{MY_REPORTS_NEEDS_REVIEW_BANNER}</strong>
+
+      <div>
+        <Link href="/my/reports">{'View all my reports'}</Link>
+      </div>
     </div>
   );
 }
@@ -130,10 +157,12 @@ function MyReportsEmpty(): React.JSX.Element {
 function ReportsTable({
   rows,
   claimSummaries,
+  recoverySummaries,
   campusAreaLabels,
 }: {
   readonly rows: readonly ReportListingRow[];
   readonly claimSummaries: Readonly<Record<string, ReportClaimSummary>>;
+  readonly recoverySummaries: Readonly<Record<string, ReportRecoverySummary>>;
   readonly campusAreaLabels: Readonly<Record<string, string>>;
 }): React.JSX.Element {
   const router = useRouter();
@@ -146,7 +175,7 @@ function ReportsTable({
           <th scope="col">{MY_REPORTS_TABLE_TYPE}</th>
           <th scope="col">{MY_REPORTS_TABLE_DATE}</th>
           <th scope="col">{MY_REPORTS_TABLE_STATUS}</th>
-          <th scope="col">{MY_REPORTS_TABLE_CLAIMS}</th>
+          <th scope="col">{MY_REPORTS_TABLE_ACTIVITY}</th>
         </tr>
       </thead>
 
@@ -156,6 +185,7 @@ function ReportsTable({
             key={row.id}
             row={row}
             claimSummary={claimSummaries[row.id]}
+            recoverySummary={recoverySummaries[row.id]}
             campusLabel={campusAreaLabels[row.campusArea] ?? row.campusArea}
             onOpen={() => {
               router.push(`/my/reports/${row.id}`);
@@ -170,15 +200,18 @@ function ReportsTable({
 function ReportTableRow({
   row,
   claimSummary,
+  recoverySummary,
   campusLabel,
   onOpen,
 }: {
   readonly row: ReportListingRow;
   readonly claimSummary: ReportClaimSummary | undefined;
+  readonly recoverySummary: ReportRecoverySummary | undefined;
   readonly campusLabel: string;
   readonly onOpen: () => void;
 }): React.JSX.Element {
   const detailHref = `/my/reports/${row.id}`;
+  const reviewHref = `/my/reports/${row.id}/review-responses`;
 
   return (
     <tr
@@ -216,24 +249,76 @@ function ReportTableRow({
         <StatusBadge status={row.status} kind="Status" />
       </td>
 
-      <td data-label={MY_REPORTS_TABLE_CLAIMS}>
-        {formatClaimSummary(row.type, claimSummary)}
+      <td data-label={MY_REPORTS_TABLE_ACTIVITY}>
+        {formatActivityCell(row, claimSummary, recoverySummary, detailHref, reviewHref)}
       </td>
     </tr>
   );
 }
 
-function formatClaimSummary(
-  type: ReportListingRow['type'],
-  summary: ReportClaimSummary | undefined,
-): string {
-  if (type === 'Lost') {
+function formatActivityCell(
+  row: ReportListingRow,
+  claimSummary: ReportClaimSummary | undefined,
+  recoverySummary: ReportRecoverySummary | undefined,
+  detailHref: string,
+  reviewHref: string,
+): React.JSX.Element | string {
+  if (row.type === 'Lost') {
+    const submitted = recoverySummary?.submitted ?? 0;
+    const inProgress = recoverySummary?.inProgress ?? 0;
+
+    if (row.status === 'Open' && submitted > 0) {
+      return (
+        <Link
+          href={reviewHref}
+          className="member-data-table__item-link"
+          onClick={(event) => {
+            event.stopPropagation();
+          }}
+        >
+          {`${MY_REPORTS_REVIEW_RESPONSES_LINK} (${submitted})`}
+        </Link>
+      );
+    }
+
+    if (submitted > 0) {
+      return `${submitted} submitted`;
+    }
+
+    if (inProgress > 0 || row.status === 'Verification Pending') {
+      return (
+        <Link
+          href={reviewHref}
+          className="member-data-table__item-link"
+          onClick={(event) => {
+            event.stopPropagation();
+          }}
+        >
+          {MY_REPORTS_REVIEW_RESPONSES_LINK}
+        </Link>
+      );
+    }
+
     return '—';
   }
 
-  const approved = summary?.approved ?? 0;
-  const pending = summary?.pending ?? 0;
-  const rejected = summary?.rejected ?? 0;
+  const approved = claimSummary?.approved ?? 0;
+  const pending = claimSummary?.pending ?? 0;
+  const rejected = claimSummary?.rejected ?? 0;
+
+  if (pending > 0 && (row.status === 'Open' || row.status === 'Claim Requested')) {
+    return (
+      <Link
+        href={detailHref}
+        className="member-data-table__item-link"
+        onClick={(event) => {
+          event.stopPropagation();
+        }}
+      >
+        {`${pending} pending · admin reviewing`}
+      </Link>
+    );
+  }
 
   let text = `${approved} approved · ${pending} pending`;
 

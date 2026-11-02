@@ -148,7 +148,7 @@ describe('the report reader, mapping its rows', () => {
           report_id: 'report-1',
           report_type: 'Found',
           reporter_id: 'owner-1',
-          claim_id: 'claim-1',
+          claim_ids: ['claim-1'],
           recovery_response_id: null,
         },
       ]),
@@ -163,6 +163,7 @@ describe('the report reader, mapping its rows', () => {
       hasClaim: true,
       hasRecoveryResponse: false,
       claimId: 'claim-1',
+      claimIds: ['claim-1'],
       recoveryResponseId: null,
     });
   });
@@ -182,7 +183,7 @@ describe('the report reader, mapping its rows', () => {
           report_id: 'report-1',
           report_type: 'Lost',
           reporter_id: 'owner-1',
-          claim_id: null,
+          claim_ids: [],
           recovery_response_id: 'response-1',
         },
       ]),

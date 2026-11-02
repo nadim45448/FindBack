@@ -6,9 +6,12 @@ import {
   type VerificationCandidate,
 } from '@/ui/admin-verification-surface';
 
+import { prisma } from '@/infrastructure/db/prisma';
 import { buildListingsStack } from '@/infrastructure/listings/listings-stack';
 
 import type { ActorContext } from '@/domain/accounts';
+
+import { loadRecoveryResponsesForAdminVerification } from '../_recovery-responses-for-verification';
 
 import { buildAdminStack, resolveAdminAccess } from '../../_admin-page';
 
@@ -67,8 +70,11 @@ export default async function LostVerificationPage({
     );
   }
 
+  const surfaceKey = candidates.map((c) => `${c.responseId}:${c.status}`).join('|');
+
   return (
     <AdminVerificationSurface
+      key={surfaceKey || id}
       reportId={id}
       determinedByUserId={owner.ownerUserId}
       heading="Manage verification"
@@ -105,11 +111,24 @@ async function readOwner(reportId: string, userId: string): Promise<ReportOwner 
 
     const row = queue.rows.find((candidate) => candidate.reportId === reportId);
 
-    if (!row) {
+    if (row) {
+      return { reportName: row.reportName, ownerUserId: row.ownerUserId };
+    }
+
+    const report = await prisma.report.findFirst({
+      where: {
+        id: reportId,
+        type: 'Lost',
+        status: 'Verification Pending',
+      },
+      select: { id: true, name: true, reporterId: true },
+    });
+
+    if (!report) {
       return null;
     }
 
-    return { reportName: row.reportName, ownerUserId: row.ownerUserId };
+    return { reportName: report.name, ownerUserId: report.reporterId };
   } catch {
     return null;
   }
@@ -140,7 +159,7 @@ async function readCandidates(
 
     const projection = await stack.details.show(actor, reportId);
 
-    return projection.recoveryResponses.map((response) => ({
+    const fromProjection = projection.recoveryResponses.map((response) => ({
       responseId: response.responseId,
       status: response.status,
       campusArea: response.campusArea ?? '',
@@ -149,7 +168,13 @@ async function readCandidates(
       dateFound: response.dateFound ?? '',
       submittedAt: response.submittedAt,
     }));
+
+    if (fromProjection.length > 0) {
+      return fromProjection;
+    }
+
+    return loadRecoveryResponsesForAdminVerification(reportId);
   } catch {
-    return [];
+    return loadRecoveryResponsesForAdminVerification(reportId);
   }
 }
