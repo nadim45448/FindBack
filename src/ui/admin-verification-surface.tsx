@@ -27,7 +27,6 @@ import {
   VERIFICATION_RECORD_NOT_MATCH,
   VERIFICATION_REVIEW_HEADING,
   VERIFICATION_SELECTED_RESPONSE_SECTION,
-  VIEW_AUDIT_TRAIL,
 } from './admin-copy';
 import { Breadcrumbs } from './breadcrumbs';
 import { ConfirmationDialog } from './confirmation-dialog';
@@ -244,10 +243,6 @@ export function AdminVerificationSurface({
         </div>
 
         <div className="admin-confirm-return__head-actions">
-          <Link href={auditHref} className="button button--tertiary button--sm">
-            {VIEW_AUDIT_TRAIL}
-          </Link>
-
           <Link href={afterHref} className="button button--secondary button--sm">
             {VERIFICATION_BACK_TO_QUEUE}
           </Link>

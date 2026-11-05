@@ -20,6 +20,7 @@ import {
   MY_RECOVERY_RESPONSES_TABLE_STATUS,
   MY_RECOVERY_RESPONSES_TABLE_SUBMITTED,
   OPEN_THREAD_BUTTON,
+  PARTICIPATION_THREAD_SECTION_ID,
   SERVER_ERROR_MESSAGE,
 } from './member-copy';
 import { StatusBadge } from './status-badge';
@@ -168,6 +169,7 @@ function RecoveryResponseTableRow({
   readonly campusAreaLabels: Readonly<Record<string, string>>;
 }): React.JSX.Element {
   const detailHref = `/my/recovery-responses/${row.id}`;
+  const threadHref = `${detailHref}#${PARTICIPATION_THREAD_SECTION_ID}`;
   const campusLabel = campusAreaLabels[row.report.campusArea] ?? row.report.campusArea;
 
   return (
@@ -199,7 +201,7 @@ function RecoveryResponseTableRow({
 
       <td className="member-data-table__actions" data-label="">
         <Link
-          href={detailHref}
+          href={threadHref}
           className="button button--secondary button--sm"
           onClick={(event) => event.stopPropagation()}
         >

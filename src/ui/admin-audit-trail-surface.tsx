@@ -62,7 +62,7 @@ import {
   LOADING,
   LOAD_OLDER,
   NO_AUDIT_EVENTS,
-  OPEN_FULL_AUDIT_TRAIL,
+  EMBEDDED_AUDIT_MORE_ON_FULL_PAGE,
   SHOW_DETAILS,
   TRY_AGAIN,
   VERIFICATION_AUDIT_SECTION,
@@ -288,8 +288,8 @@ export function AdminAuditTrailSurface({
         </div>
 
         {error ? (
-          <div className="banner banner--info" role="status">
-            <p>{error}</p>
+          <div className="error-summary" role="alert">
+            <p className="error-summary__heading">{error}</p>
           </div>
         ) : null}
 
@@ -304,10 +304,8 @@ export function AdminAuditTrailSurface({
             </div>
 
             {offersLoadOlder(rows.length, hasMore === true) && fullTrailHref ? (
-              <p className="admin-embedded-audit__more">
-                <Link href={fullTrailHref} className="button button--tertiary button--sm">
-                  {OPEN_FULL_AUDIT_TRAIL}
-                </Link>
+              <p className="admin-embedded-audit__more verification-admin-review__meta">
+                {EMBEDDED_AUDIT_MORE_ON_FULL_PAGE}
               </p>
             ) : null}
           </>

@@ -17,6 +17,7 @@ import {
   MY_CLAIMS_TABLE_ITEM_STATUS,
   MY_CLAIMS_TABLE_SUBMITTED,
   OPEN_THREAD_BUTTON,
+  PARTICIPATION_THREAD_SECTION_ID,
   SERVER_ERROR_MESSAGE,
 } from './member-copy';
 import { StatusBadge } from './status-badge';
@@ -160,6 +161,7 @@ function ClaimTableRow({
   readonly campusAreaLabels: Readonly<Record<string, string>>;
 }): React.JSX.Element {
   const detailHref = `/my/claims/${row.id}`;
+  const threadHref = `${detailHref}#${PARTICIPATION_THREAD_SECTION_ID}`;
   const campusLabel = campusAreaLabels[row.report.campusArea] ?? row.report.campusArea;
 
   return (
@@ -195,7 +197,7 @@ function ClaimTableRow({
 
       <td className="member-data-table__actions" data-label="">
         <Link
-          href={detailHref}
+          href={threadHref}
           className="button button--secondary button--sm"
           onClick={(event) => event.stopPropagation()}
         >

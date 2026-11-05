@@ -402,6 +402,10 @@ export const VIEW_AUDIT_TRAIL = 'View audit trail';
 /** When the embedded trail is truncated to one page. */
 export const OPEN_FULL_AUDIT_TRAIL = 'Open full audit trail';
 
+/** Hint below embedded audit when older events live on the full trail page. */
+export const EMBEDDED_AUDIT_MORE_ON_FULL_PAGE =
+  'More events are on the full audit trail page.';
+
 /** Audit block on the Lost verification review screen. */
 export const VERIFICATION_AUDIT_SECTION = 'Audit trail';
 

@@ -50,6 +50,7 @@ import {
   THREAD_EMPTY,
   THREAD_LOAD_FAILED,
   THREAD_SEND_FAILED,
+  PARTICIPATION_THREAD_SECTION_ID,
 } from './member-copy';
 import { CharacterCounter } from './character-counter';
 
@@ -134,18 +135,18 @@ export function ThreadSurface({
 
   if (permissionDenied) {
     return (
-      <section className="detail-section">
+      <section className="detail-section" id={PARTICIPATION_THREAD_SECTION_ID}>
         <h2 className="detail-section__heading">{heading}</h2>
 
-        <div className="banner banner--info" role="alert">
-          <p className="banner__heading">{permissionDenied}</p>
+        <div className="error-summary" role="alert">
+          <p className="error-summary__heading">{permissionDenied}</p>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="detail-section">
+    <section className="detail-section" id={PARTICIPATION_THREAD_SECTION_ID}>
       <h2 className="detail-section__heading">{heading}</h2>
 
       {error ? (

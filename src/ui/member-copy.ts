@@ -142,6 +142,9 @@ export const BROWSE_ITEMS_BUTTON = 'Browse items';
 /** Table action linking to a claim or recovery thread. */
 export const OPEN_THREAD_BUTTON = 'Open thread';
 
+/** In-page anchor for the message thread on claim / recovery detail pages. */
+export const PARTICIPATION_THREAD_SECTION_ID = 'participation-thread';
+
 /** The `My Claims` heading. */
 export const MY_CLAIMS_HEADING = 'My Claims';
 

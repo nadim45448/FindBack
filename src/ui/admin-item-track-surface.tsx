@@ -108,7 +108,7 @@ export function AdminItemTrackSurface({
                 {reading.claims.map((claim) => (
                   <tr key={claim.claimId}>
                     <td>
-                      <Link href={`/admin/claims/${claim.claimId}`} className="topbar__link">
+                      <Link href={`/admin/claims/${claim.claimId}`} className="table-link">
                         {claim.claimantDisplayName}
                       </Link>
                     </td>

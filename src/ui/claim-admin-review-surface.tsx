@@ -34,7 +34,6 @@ import {
   CLAIM_REVIEW_HEADING,
   CLAIM_REVIEW_ITEM_PHOTO,
   VERIFICATION_BACK_TO_QUEUE,
-  VIEW_AUDIT_TRAIL,
 } from './admin-copy';
 import { CANCEL } from './member-copy';
 
@@ -361,10 +360,6 @@ export function ClaimAdminReviewSurface({
         </div>
 
         <div className="admin-confirm-return__head-actions">
-          <Link href={auditHref} className="button button--tertiary button--sm">
-            {VIEW_AUDIT_TRAIL}
-          </Link>
-
           <Link href={afterHref} className="button button--secondary button--sm">
             {VERIFICATION_BACK_TO_QUEUE}
           </Link>
