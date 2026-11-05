@@ -1,6 +1,17 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('public surfaces', () => {
+  test('landing page shows value proposition and CTAs', async ({ page }) => {
+    await page.goto('/');
+
+    await expect(page.locator('#hero-title')).toHaveText(
+      'FindBack helps our organization return lost items to their members.',
+    );
+    await expect(page.getByRole('link', { name: 'Sign in' }).first()).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Create an account' }).first()).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Browse Lost & Found →' })).toBeVisible();
+  });
+
   test('listings page shows summary heading and sign-in path', async ({ page }) => {
     await page.goto('/listings');
 

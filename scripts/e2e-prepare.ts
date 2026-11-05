@@ -36,5 +36,7 @@ console.log('E2E — preparing test database…\n');
 run('npx', ['tsx', 'scripts/ensure-test-database.ts']);
 run('npx', ['tsx', 'prisma/seed.ts']);
 run('npx', ['tsx', 'scripts/dev-accounts.ts']);
+run('npx', ['tsx', 'scripts/e2e-ensure-dev-accounts.ts']);
+run('npx', ['tsx', 'scripts/e2e-seed.ts']);
 
 console.log('\nE2E — database ready.\n');

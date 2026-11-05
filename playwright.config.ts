@@ -7,7 +7,8 @@ for (const file of ['.env.local', '.env']) {
   }
 }
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
+const e2ePort = process.env.PLAYWRIGHT_PORT ?? '3001';
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${e2ePort}`;
 const e2eDatabaseUrl = process.env.DATABASE_URL_TEST ?? process.env.DATABASE_URL;
 
 if (!e2eDatabaseUrl) {
@@ -35,7 +36,7 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   projects: [
-    { name: 'setup', testMatch: /auth\.setup\.ts/ },
+    { name: 'setup', testMatch: /auth\.setup\.ts/, fullyParallel: false },
     {
       name: 'anonymous',
       testMatch: /anonymous\.spec\.ts/,
@@ -48,25 +49,27 @@ export default defineConfig({
     },
     {
       name: 'member',
-      testMatch: /member\.spec\.ts/,
+      testMatch: [/member\.spec\.ts/, /member-.*\.spec\.ts/],
       dependencies: ['setup'],
       use: { ...devices['Desktop Chrome'], storageState: memberAuthFile },
     },
     {
       name: 'admin',
-      testMatch: /admin\.spec\.ts/,
+      testMatch: [/admin\.spec\.ts/, /admin-.*\.spec\.ts/],
       dependencies: ['setup'],
       use: { ...devices['Desktop Chrome'], storageState: adminAuthFile },
     },
   ],
   webServer: {
-    command: 'npm run dev',
+    command: 'bash scripts/e2e-web-server.sh',
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: Boolean(process.env.PLAYWRIGHT_REUSE_SERVER),
     timeout: 180_000,
     env: {
       ...process.env,
       DATABASE_URL: e2eDatabaseUrl,
+      PORT: e2ePort,
+      E2E_MANAGE_SERVER: process.env.PLAYWRIGHT_REUSE_SERVER ? '0' : '1',
     },
   },
 });

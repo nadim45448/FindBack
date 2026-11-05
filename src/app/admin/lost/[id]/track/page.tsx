@@ -6,9 +6,9 @@ import { AdminItemTrackSurface } from '@/ui/admin-item-track-surface';
 import { contextualAuditHref } from '@/ui/admin-contextual-audit-href';
 import { ADMIN_TRACK_HEADING } from '@/ui/admin-copy';
 
-import { resolveAdminAccess } from '../../../../_admin-page';
-import { formatTrackDate, readItemTrack } from '../../../../_item-track-page';
-import { formatTimestamp } from '../../../../_queue-page';
+import { resolveAdminAccess } from '../../../_admin-page';
+import { formatTrackDate, readItemTrack } from '../../../_item-track-page';
+import { formatTimestamp } from '../../../_queue-page';
 
 export async function generateMetadata({
   params,
