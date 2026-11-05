@@ -94,9 +94,14 @@ export default async function SubmitRecoveryResponsePage({
   const earliest = new Date(today);
   earliest.setUTCDate(earliest.getUTCDate() - RECOVERY_RESPONSE_DATE_FOUND_MAX_AGE_DAYS);
 
+  const report = projection.report;
+  const itemMeta = [report.campusArea, report.date].filter(Boolean).join(' · ');
+
   return (
     <RecoveryResponseFormPanel
       reportId={id}
+      itemName={report.name ?? 'Lost item'}
+      itemMeta={itemMeta.length > 0 ? itemMeta : undefined}
       minDate={earliest.toISOString().slice(0, 10)}
       maxDate={today.toISOString().slice(0, 10)}
       campusAreas={campusAreas}

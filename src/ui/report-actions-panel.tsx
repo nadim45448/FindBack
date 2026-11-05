@@ -47,6 +47,10 @@ export interface ReportActionsPanelProps {
   readonly reportId: string;
   /** The plan the domain produced. */
   readonly plan: ReporterActionPlan;
+  /** Item-detail reporter callout — enabled buttons only. */
+  readonly calloutOnly?: boolean | undefined;
+  /** Optional slot for API failures (rendered outside the button row). */
+  readonly onFailure?: ((message: string | null) => void) | undefined;
 }
 
 /**
@@ -55,10 +59,20 @@ export interface ReportActionsPanelProps {
 export function ReportActionsPanel({
   reportId,
   plan,
+  calloutOnly = false,
+  onFailure,
 }: ReportActionsPanelProps): React.JSX.Element {
   const router = useRouter();
 
   const [failure, setFailure] = useState<string | null>(null);
+
+  const reportFailure = useCallback(
+    (message: string | null): void => {
+      setFailure(message);
+      onFailure?.(message);
+    },
+    [onFailure],
+  );
 
   /**
    * Delete the report.
@@ -67,7 +81,7 @@ export function ReportActionsPanel({
    * the report is gone and there is nothing to re-read.
    */
   const remove = useCallback(async (): Promise<void> => {
-    setFailure(null);
+    reportFailure(null);
 
     try {
       const response = await fetch(`/api/reports/${reportId}/delete`, {
@@ -82,11 +96,11 @@ export function ReportActionsPanel({
 
       const body = (await response.json().catch(() => ({}))) as { error?: string };
 
-      setFailure(body.error ?? SERVER_ERROR_MESSAGE);
+      reportFailure(body.error ?? SERVER_ERROR_MESSAGE);
     } catch {
-      setFailure(SERVER_ERROR_MESSAGE);
+      reportFailure(SERVER_ERROR_MESSAGE);
     }
-  }, [reportId, router]);
+  }, [reportId, reportFailure, router]);
 
   /**
    * Withdraw the report.
@@ -96,7 +110,7 @@ export function ReportActionsPanel({
    * from the server.
    */
   const withdraw = useCallback(async (): Promise<void> => {
-    setFailure(null);
+    reportFailure(null);
 
     try {
       const response = await fetch(`/api/reports/${reportId}/withdraw`, {
@@ -111,15 +125,15 @@ export function ReportActionsPanel({
 
       const body = (await response.json().catch(() => ({}))) as { error?: string };
 
-      setFailure(body.error ?? SERVER_ERROR_MESSAGE);
+      reportFailure(body.error ?? SERVER_ERROR_MESSAGE);
     } catch {
-      setFailure(SERVER_ERROR_MESSAGE);
+      reportFailure(SERVER_ERROR_MESSAGE);
     }
-  }, [reportId, router]);
+  }, [reportId, reportFailure, router]);
 
   return (
     <>
-      {failure ? (
+      {!calloutOnly && failure ? (
         <div className="error-summary" role="alert">
           <p className="error-summary__heading">{failure}</p>
         </div>
@@ -127,6 +141,7 @@ export function ReportActionsPanel({
 
       <ReportActionsSurface
         plan={plan}
+        calloutOnly={calloutOnly}
         onEdit={() => {
           router.push(`/my/reports/${reportId}/edit`);
         }}

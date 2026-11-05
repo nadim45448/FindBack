@@ -4,6 +4,8 @@ import { ItemDetailPageLayout } from '@/ui/item-detail-page-layout';
 import { ItemDetailSurface } from '@/ui/item-detail-surface';
 import { MY_REPORTS_PAGE_TITLE } from '@/ui/member-copy';
 
+import { reportHasMatchConfirmed } from '@/domain/listings';
+
 import { resolveMemberAccess } from '../../_member-page';
 import { readReportDetailForMember } from '../_report-detail-reading';
 import { readRecoveryResponseSummariesForReports } from '../_recovery-response-summaries';
@@ -45,10 +47,15 @@ export default async function MyReportDetailPage({
   const recoveryResponseCount =
     (recoverySummary?.submitted ?? 0) + (recoverySummary?.inProgress ?? 0);
 
+  const hasMatchConfirmed = reportHasMatchConfirmed(reading.projection.recoveryResponses);
+
   return (
     <ItemDetailPageLayout
       reportId={id}
       reportTitle={title}
+      reportStatus={reading.projection.report.status}
+      reportType={reading.projection.report.type}
+      hasMatchConfirmed={hasMatchConfirmed}
       plan={reading.plan}
       crumbs={[
         { label: MY_REPORTS_PAGE_TITLE, href: '/my/reports' },

@@ -50,19 +50,25 @@ import {
 } from '@/domain/administration';
 
 import {
+  AUDIT_AFTER_RETURN_LEDE,
   AUDIT_TRAIL_HEADING,
   COLUMN_ACTOR,
   COLUMN_AUDIT_ACTION,
   COLUMN_DETAILS,
   COLUMN_TARGET,
   COLUMN_TIMESTAMP,
+  ADMIN_NAV_DASHBOARD,
   GO_BACK,
   LOADING,
   LOAD_OLDER,
   NO_AUDIT_EVENTS,
+  OPEN_FULL_AUDIT_TRAIL,
   SHOW_DETAILS,
   TRY_AGAIN,
+  VERIFICATION_AUDIT_SECTION,
+  VIEW_AUDIT_TRAIL,
 } from './admin-copy';
+import { Breadcrumbs } from './breadcrumbs';
 import { StatusBadge } from './status-badge';
 
 /**
@@ -117,6 +123,119 @@ export interface AdminAuditTrailSurfaceProps {
    * be typed.
    */
   readonly editHref?: string | undefined;
+  /** Banner after a successful confirm-returned redirect. */
+  readonly afterReturn?: boolean;
+  /** Full page vs section embedded in verification review. */
+  readonly variant?: 'page' | 'embedded';
+  /** Link to the dedicated audit route when `variant` is `embedded`. */
+  readonly fullTrailHref?: string | undefined;
+}
+
+function AuditTrailTable({
+  rows,
+  expandedId,
+  toggle,
+  compact = false,
+}: {
+  readonly rows: readonly AuditTrailRow[];
+  readonly expandedId: string | null;
+  readonly toggle: (id: string) => void;
+  readonly compact?: boolean;
+}): React.JSX.Element {
+  const tableClassName = compact
+    ? 'audit-trail audit-trail--timeline audit-trail--embedded'
+    : 'audit-trail audit-trail--timeline';
+
+  return (
+    <table className={tableClassName}>
+      <caption className="visually-hidden">{AUDIT_TRAIL_HEADING}</caption>
+
+      <thead>
+        <tr>
+          <th scope="col" className="visually-hidden">
+            Timeline
+          </th>
+          <th scope="col">{COLUMN_TIMESTAMP}</th>
+          <th scope="col">{COLUMN_ACTOR}</th>
+          <th scope="col">{COLUMN_AUDIT_ACTION}</th>
+          <th scope="col">{COLUMN_TARGET}</th>
+          <th scope="col">{COLUMN_DETAILS}</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {rows.map((row) => {
+          const presentation = presentationFor(row.eventType);
+          const disclosureId = `audit-details-${row.id}`;
+          const open = expandedId === row.id;
+          const showsDisclosure = hasDetailsDisclosure(row.details);
+
+          return (
+            <tr key={row.id} className="audit-trail__row" data-accent={presentation.accent}>
+              <td className="audit-trail__cell audit-trail__cell--timeline" aria-hidden="true">
+                <span className="audit-trail__timeline-dot" />
+              </td>
+
+              <td className="audit-trail__cell audit-trail__cell--time tabular">
+                {row.occurredAt}
+              </td>
+
+              <td className="audit-trail__cell audit-trail__cell--actor">
+                <div className="audit-trail__actor" aria-hidden="true">
+                  <span className="audit-trail__actor-name">{row.actorDisplayName}</span>
+                  <StatusBadge status={actorRoleTag(row.actorRole)} kind="Role" tone="neutral" />
+                </div>
+                <span className="visually-hidden">
+                  {auditRowAccessibleName({
+                    eventType: row.eventType,
+                    actorDisplayName: row.actorDisplayName,
+                    target: row.target,
+                    timestamp: row.occurredAt,
+                  })}
+                </span>
+              </td>
+
+              <td className="audit-trail__cell">
+                <span className="audit-trail__action">{actionVerbFor(row.eventType)}</span>
+                <span className="audit-trail__label">{presentation.label}</span>
+              </td>
+
+              <td className="audit-trail__cell audit-trail__cell--target">{row.target}</td>
+
+              <td className="audit-trail__cell">
+                {showsDisclosure ? (
+                  <>
+                    <button
+                      type="button"
+                      className="audit-trail__disclosure"
+                      aria-expanded={open}
+                      aria-controls={disclosureId}
+                      onClick={() => {
+                        toggle(row.id);
+                      }}
+                    >
+                      {SHOW_DETAILS}
+                    </button>
+
+                    <div id={disclosureId} hidden={!open} className="audit-trail__details">
+                      {row.details.map((detail) => (
+                        <p key={detail} className="audit-trail__detail">
+                          {detail}
+                        </p>
+                      ))}
+                      {row.reason ? (
+                        <p className="audit-trail__detail">Reason: {row.reason}</p>
+                      ) : null}
+                    </div>
+                  </>
+                ) : null}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
 }
 
 /**
@@ -128,8 +247,11 @@ export function AdminAuditTrailSurface({
   loading,
   hasMore,
   parentLabel,
-  backHref = '/',
+  backHref = '/admin',
   editHref,
+  afterReturn = false,
+  variant = 'page',
+  fullTrailHref,
 }: AdminAuditTrailSurfaceProps): React.JSX.Element {
   /**
    * The expanded row.
@@ -144,14 +266,103 @@ export function AdminAuditTrailSurface({
     setExpandedId((current) => (current === id ? null : id));
   }, []);
 
-  const heading = parentLabel
-    ? `${AUDIT_TRAIL_HEADING} — ${parentLabel}`
-    : AUDIT_TRAIL_HEADING;
+  const heading = AUDIT_TRAIL_HEADING;
+  const breadcrumbCurrent = parentLabel ?? 'Report';
+
+  if (variant === 'embedded') {
+    return (
+      <section
+        className="card admin-embedded-audit verification-admin-review__audit"
+        aria-labelledby="verification-audit-heading"
+      >
+        <div className="admin-embedded-audit__head verification-admin-review__audit-head">
+          <h2 id="verification-audit-heading" className="verification-admin-review__card-subtitle">
+            {VERIFICATION_AUDIT_SECTION}
+          </h2>
+
+          {fullTrailHref ? (
+            <Link href={fullTrailHref} className="button button--tertiary button--sm">
+              {VIEW_AUDIT_TRAIL}
+            </Link>
+          ) : null}
+        </div>
+
+        {error ? (
+          <div className="banner banner--info" role="status">
+            <p>{error}</p>
+          </div>
+        ) : null}
+
+        {!error && rows.length === 0 ? (
+          <p className="verification-admin-review__meta">{NO_AUDIT_EVENTS}</p>
+        ) : null}
+
+        {!error && rows.length > 0 ? (
+          <>
+            <div className="audit-trail__table-wrap">
+              <AuditTrailTable compact rows={rows} expandedId={expandedId} toggle={toggle} />
+            </div>
+
+            {offersLoadOlder(rows.length, hasMore === true) && fullTrailHref ? (
+              <p className="admin-embedded-audit__more">
+                <Link href={fullTrailHref} className="button button--tertiary button--sm">
+                  {OPEN_FULL_AUDIT_TRAIL}
+                </Link>
+              </p>
+            ) : null}
+          </>
+        ) : null}
+      </section>
+    );
+  }
+
+  function pageHead(): React.JSX.Element {
+    return (
+      <>
+        <Breadcrumbs
+          variant="compact"
+          crumbs={[
+            { label: ADMIN_NAV_DASHBOARD, href: backHref },
+            { label: breadcrumbCurrent, href: null },
+            { label: AUDIT_TRAIL_HEADING, href: null },
+          ]}
+        />
+
+        <div className="claim-admin-review__head admin-audit-trail__head">
+          <h1 className="hero__title">{heading}</h1>
+
+          <div className="admin-audit-trail__head-actions">
+            {editHref ? (
+              <Link href={editHref} className="button button--tertiary button--sm">
+                Edit report
+              </Link>
+            ) : null}
+
+            <Link href={backHref} className="button button--secondary button--sm">
+              {GO_BACK}
+            </Link>
+          </div>
+        </div>
+
+        {parentLabel ? (
+          <p className="admin-console__meta">
+            Traceability for <strong>{parentLabel}</strong>
+          </p>
+        ) : null}
+
+        {afterReturn ? (
+          <div className="banner banner--success" role="status">
+            <p>{AUDIT_AFTER_RETURN_LEDE}</p>
+          </div>
+        ) : null}
+      </>
+    );
+  }
 
   if (error) {
     return (
-      <div className="form-column">
-        <h1 className="hero__title">{heading}</h1>
+      <div className="admin-console">
+        {pageHead()}
 
         <div className="error-summary" role="alert">
           <p className="error-summary__heading">{error}</p>
@@ -177,8 +388,8 @@ export function AdminAuditTrailSurface({
 
   if (loading) {
     return (
-      <div className="form-column">
-        <h1 className="hero__title">{heading}</h1>
+      <div className="admin-console">
+        {pageHead()}
 
         <div className="audit-trail" role="status" aria-label={LOADING}>
           <div className="audit-trail__row" aria-hidden="true">
@@ -199,8 +410,8 @@ export function AdminAuditTrailSurface({
 
   if (rows.length === 0) {
     return (
-      <div className="form-column">
-        <h1 className="hero__title">{heading}</h1>
+      <div className="admin-console">
+        {pageHead()}
 
         <div className="admin-queue__empty" role="status">
           <p>{NO_AUDIT_EVENTS}</p>
@@ -210,139 +421,10 @@ export function AdminAuditTrailSurface({
   }
 
   return (
-    <div className="form-column">
-      <h1 className="hero__title">{heading}</h1>
+    <div className="admin-console">
+      {pageHead()}
 
-      {editHref ? (
-        <p className="button-row">
-          <Link href={editHref} className="button button--secondary">
-            Edit report
-          </Link>
-        </p>
-      ) : null}
-
-      {/*
-        **A real table.** `<th scope="col">` on each heading, so a screen
-        reader announces the column when it moves between cells.
-      */}
-      <table className="audit-trail">
-        <caption className="visually-hidden">{AUDIT_TRAIL_HEADING}</caption>
-
-        <thead>
-          <tr>
-            <th scope="col">{COLUMN_TIMESTAMP}</th>
-            <th scope="col">{COLUMN_ACTOR}</th>
-            <th scope="col">{COLUMN_AUDIT_ACTION}</th>
-            <th scope="col">{COLUMN_TARGET}</th>
-            <th scope="col">{COLUMN_DETAILS}</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {rows.map((row) => {
-            const presentation = presentationFor(row.eventType);
-            const disclosureId = `audit-details-${row.id}`;
-            const open = expandedId === row.id;
-            const showsDisclosure = hasDetailsDisclosure(row.details);
-
-            return (
-              <tr
-                key={row.id}
-                className="audit-trail__row"
-                data-accent={presentation.accent}
-              >
-                <td className="audit-trail__cell audit-trail__cell--time tabular">
-                  {row.occurredAt}
-                </td>
-
-                <td className="audit-trail__cell">
-                  {/*
-                    **The actor's name and role tag.** §17.2 names two
-                    roles: `Member` and `Administrator`.
-                  */}
-                  <span aria-hidden="true">{row.actorDisplayName}</span>
-                  <span className="visually-hidden">
-                    {auditRowAccessibleName({
-                      eventType: row.eventType,
-                      actorDisplayName: row.actorDisplayName,
-                      target: row.target,
-                      timestamp: row.occurredAt,
-                    })}
-                  </span>
-                  {/*
-                    **The role tag is a badge,** but it is not a *status* —
-                    it says who acted, not what state something is in. So it
-                    names its own kind and keeps the neutral tone.
-                  */}
-                  <StatusBadge
-                    status={actorRoleTag(row.actorRole)}
-                    kind="Role"
-                    tone="neutral"
-                  />
-                </td>
-
-                <td className="audit-trail__cell">
-                  {/*
-                    **The action's plain-English verb.** §17.2 names the
-                    verbs — `created`, `edited`, `claimed`, `approved` — and
-                    the verb is derived from the label, so the visible text
-                    and the accessible name cannot disagree.
-                  */}
-                  <span className="audit-trail__action">
-                    {actionVerbFor(row.eventType)}
-                  </span>
-
-                  {/*
-                    **The event's own label rides with the verb.** The
-                    numbered workflow events and the non-numbered records
-                    are told apart by their labels, and only the non-numbered
-                    ones are distinguished by the absence of a number
-                    (§17.5a) — so the label is shown for every row and the
-                    number is shown only for the numbered ones.
-                  */}
-                  <span className="audit-trail__label">{presentation.label}</span>
-                </td>
-
-                <td className="audit-trail__cell">{row.target}</td>
-
-                <td className="audit-trail__cell">
-                  {showsDisclosure ? (
-                    <>
-                      {/*
-                        **The disclosure.** Collapsed by default, and the
-                        button carries `aria-expanded` and `aria-controls`
-                        so its state and its target are both announced.
-                      */}
-                      <button
-                        type="button"
-                        className="audit-trail__disclosure"
-                        aria-expanded={open}
-                        aria-controls={disclosureId}
-                        onClick={() => {
-                          toggle(row.id);
-                        }}
-                      >
-                        {SHOW_DETAILS}
-                      </button>
-
-                      <div id={disclosureId} hidden={!open} className="audit-trail__details">
-                        {row.details.map((detail) => (
-                          <p key={detail} className="audit-trail__detail">
-                            {detail}
-                          </p>
-                        ))}
-                        {row.reason ? (
-                          <p className="audit-trail__detail">Reason: {row.reason}</p>
-                        ) : null}
-                      </div>
-                    </>
-                  ) : null}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <AuditTrailTable rows={rows} expandedId={expandedId} toggle={toggle} />
 
       {/*
         **Pagination is a button.** UX-OQ-C rejects infinite scroll because

@@ -1,28 +1,10 @@
 'use client';
 
 /**
- * The administrator's Lost-side verification surface.
+ * The administrator's Lost-side verification surface — mockup 15.
  *
- * ## The queue's action reaches here
- *
- * §15.5's Items in Verification queue's action reaches *"the Lost-side
- * verification screen"*, and that screen is this page.
- *
- * ## The determination is the owner's
- *
- * FR-45: the Lost report's **owner** determines whether a candidate is
- * their item. The endpoint carries the `determinedByUserId`, and the
- * domain refuses a determination from anybody else — so the surface sends
- * the owner's id, taken from the report's projection, and never the
- * administrator's own.
- *
- * ## Two outcomes, and they are not symmetric
- *
- * `match_confirmed` and `not_a_match` are the two outcomes, and neither
- * ends the report. **`Match Confirmed` is not terminal** — the report stays
- * `Verification Pending` until the item is physically returned and the
- * administrator confirms the return. So confirming a match is a step, not
- * an ending, and the surface says so — then offers **Confirm Returned**.
+ * FR-45: the Lost report's **owner** determines match; the administrator
+ * **records** the determination on this screen.
  */
 
 import Link from 'next/link';
@@ -32,10 +14,32 @@ import { useRouter } from 'next/navigation';
 import {
   CONFIRM_RETURNED,
   LOST_RETURN_SUBSTITUTE_LINK,
+  VERIFICATION_ACTIONS_HELP,
+  VERIFICATION_ACTIONS_SECTION,
+  VERIFICATION_BACK_TO_QUEUE,
+  VERIFICATION_BREADCRUMB_QUEUE,
+  VERIFICATION_MATCH_CONFIRM_MODAL,
   VERIFICATION_MATCH_CONFIRMED_LEDE,
+  VERIFICATION_NO_RESPONSES,
+  VERIFICATION_NO_SELECTED,
+  VERIFICATION_NOT_MATCH_MODAL,
+  VERIFICATION_RECORD_MATCH,
+  VERIFICATION_RECORD_NOT_MATCH,
+  VERIFICATION_REVIEW_HEADING,
+  VERIFICATION_SELECTED_RESPONSE_SECTION,
+  VIEW_AUDIT_TRAIL,
 } from './admin-copy';
+import { Breadcrumbs } from './breadcrumbs';
+import { ConfirmationDialog } from './confirmation-dialog';
 import { csrfHeaders } from './csrf';
-import { CANCEL } from './member-copy';
+import { LOST_REPORT_AWAITING_RETURN_STATUS } from '@/domain/listings';
+
+import {
+  AdminAuditTrailSurface,
+  type AuditTrailRow,
+} from './admin-audit-trail-surface';
+import { StatusBadge } from './status-badge';
+import { CANDIDATE_IMAGE_LABEL } from './member-copy';
 
 /**
  * One candidate, as the administrator sees it.
@@ -48,32 +52,59 @@ export interface VerificationCandidate {
   readonly observedIdentifyingDetails: string;
   readonly dateFound: string;
   readonly submittedAt: string;
+  readonly submittedAtLabel: string;
+  /** True when a candidate image was uploaded and the viewer may request it. */
+  readonly hasCandidateImage: boolean;
+}
+
+/** Lost report summary for the left column. */
+export interface VerificationReportSummary {
+  readonly name: string;
+  readonly category: string;
+  readonly campusArea: string;
+  readonly dateLabel: string;
+  readonly ownerDisplayName: string;
+  readonly verificationStartedLabel: string | null;
 }
 
 /**
  * The verification surface's props.
  */
 export interface AdminVerificationSurfaceProps {
-  /** The report id the determination is recorded against. */
   readonly reportId: string;
-  /** The report's owner — the only actor who may determine. */
   readonly determinedByUserId: string;
-  /** The heading above the determination. */
-  readonly heading: string;
-  /** The report's name. */
-  readonly reportName: string;
-  /** The candidates on the report. */
+  readonly summary: VerificationReportSummary;
   readonly candidates: readonly VerificationCandidate[];
-  /** Where the browser goes once the determination is recorded. */
   readonly afterHref: string;
+  /** Contextual audit trail for this Lost report (§17.1). */
+  readonly auditHref: string;
+  /** The report's audit events (first page), loaded on the server. */
+  readonly auditTrail: {
+    readonly rows: readonly AuditTrailRow[];
+    readonly hasMore: boolean;
+    readonly error?: string | undefined;
+  };
 }
 
-function initialSelected(candidates: readonly VerificationCandidate[]): string | null {
-  const awaitingDetermination = candidates.find(
-    (candidate) => candidate.status === 'Selected for Verification',
+function activeCandidate(
+  candidates: readonly VerificationCandidate[],
+): VerificationCandidate | null {
+  return (
+    candidates.find((candidate) => candidate.status === 'Selected for Verification') ??
+    candidates.find((candidate) => candidate.status === 'Match Confirmed') ??
+    null
   );
+}
 
-  return awaitingDetermination?.responseId ?? null;
+function displayResponseStatus(
+  status: string,
+  hasOtherSelected: boolean,
+): string {
+  if (status === 'Submitted' && hasOtherSelected) {
+    return 'Submitted — Standby';
+  }
+
+  return status;
 }
 
 /**
@@ -82,32 +113,35 @@ function initialSelected(candidates: readonly VerificationCandidate[]): string |
 export function AdminVerificationSurface({
   reportId,
   determinedByUserId,
-  heading,
-  reportName,
+  summary,
   candidates,
   afterHref,
+  auditHref,
+  auditTrail,
 }: AdminVerificationSurfaceProps): React.JSX.Element {
   const router = useRouter();
 
-  const [selected, setSelected] = useState<string | null>(() => initialSelected(candidates));
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirming, setConfirming] = useState<'match' | 'not_match' | null>(null);
 
   const returnHref = `/admin/lost/${reportId}/return`;
+
+  const focus = useMemo(() => activeCandidate(candidates), [candidates]);
 
   const matchConfirmed = useMemo(
     () => candidates.some((candidate) => candidate.status === 'Match Confirmed'),
     [candidates],
   );
 
-  const selectedCandidate =
-    selected === null ? null : (candidates.find((c) => c.responseId === selected) ?? null);
+  const hasSelectedForVerification = candidates.some(
+    (candidate) =>
+      candidate.status === 'Selected for Verification' ||
+      candidate.status === 'Match Confirmed',
+  );
 
-  const canDetermine = selectedCandidate?.status === 'Selected for Verification';
+  const canDetermine = focus?.status === 'Selected for Verification';
 
-  /**
-   * Record a determination on the selected candidate.
-   */
   async function confirmReturned(): Promise<void> {
     if (!matchConfirmed || submitting) {
       return;
@@ -135,7 +169,7 @@ export function AdminVerificationSurface({
         return;
       }
 
-      router.push(afterHref);
+      router.push(`${auditHref}?from=return`);
       router.refresh();
     } catch {
       setFormError('Something went wrong on our side. Try again, or come back in a moment.');
@@ -144,16 +178,17 @@ export function AdminVerificationSurface({
   }
 
   async function determine(outcome: 'match_confirmed' | 'not_a_match'): Promise<void> {
-    if (submitting || selected === null || !canDetermine) {
+    if (submitting || focus === null || !canDetermine) {
       return;
     }
 
     setSubmitting(true);
     setFormError(null);
+    setConfirming(null);
 
     try {
       const response = await fetch(
-        `/api/admin/reports/${reportId}/recovery-responses/${selected}/determine`,
+        `/api/admin/reports/${reportId}/recovery-responses/${focus.responseId}/determine`,
         {
           method: 'POST',
           headers: {
@@ -185,11 +220,39 @@ export function AdminVerificationSurface({
     }
   }
 
-  return (
-    <div className="form-column">
-      <h1 className="hero__title">{heading}</h1>
+  const whereFound =
+    focus && (focus.campusArea || focus.exactPlace)
+      ? [focus.campusArea, focus.exactPlace].filter(Boolean).join(' — ')
+      : null;
 
-      <p className="hero__lede">{reportName}</p>
+  return (
+    <div className="admin-console verification-admin-review">
+      <Breadcrumbs
+        variant="compact"
+        crumbs={[
+          { label: VERIFICATION_BREADCRUMB_QUEUE, href: afterHref },
+          { label: summary.name, href: null },
+        ]}
+      />
+
+      <div className="claim-admin-review__head verification-admin-review__head">
+        <div className="verification-admin-review__title-row">
+          <h1 className="hero__title">{VERIFICATION_REVIEW_HEADING}</h1>
+          <StatusBadge
+            status={matchConfirmed ? LOST_REPORT_AWAITING_RETURN_STATUS : 'Verification Pending'}
+          />
+        </div>
+
+        <div className="admin-confirm-return__head-actions">
+          <Link href={auditHref} className="button button--tertiary button--sm">
+            {VIEW_AUDIT_TRAIL}
+          </Link>
+
+          <Link href={afterHref} className="button button--secondary button--sm">
+            {VERIFICATION_BACK_TO_QUEUE}
+          </Link>
+        </div>
+      </div>
 
       {matchConfirmed ? (
         <div className="banner banner--info" role="status">
@@ -198,7 +261,7 @@ export function AdminVerificationSurface({
       ) : null}
 
       {formError ? (
-        <div className="error-summary" role="alert" tabIndex={-1} id="error-summary">
+        <div className="error-summary" role="alert" tabIndex={-1}>
           <h2 className="error-summary__heading">Check the form</h2>
           <ul className="error-summary__list">
             <li>{formError}</li>
@@ -206,78 +269,217 @@ export function AdminVerificationSurface({
         </div>
       ) : null}
 
-      {candidates.length === 0 ? (
-        <div className="banner banner--info" role="status">
-          <p>There are no recovery responses for this item yet.</p>
-        </div>
-      ) : (
-        <fieldset className="field">
-          <legend className="field__label">Recovery responses</legend>
+      <div className="verification-admin-review__layout">
+        <section className="card verification-admin-review__summary">
+          <h2 className="verification-admin-review__card-title">{summary.name}</h2>
 
-          {candidates.map((candidate) => (
-            <label key={candidate.responseId} className="field__label" htmlFor={candidate.responseId}>
-              <input
-                id={candidate.responseId}
-                name="selectedResponse"
-                type="radio"
-                checked={selected === candidate.responseId}
-                onChange={() => setSelected(candidate.responseId)}
-              />{' '}
-              {candidate.campusArea} — {candidate.exactPlace} — {candidate.status}
-            </label>
-          ))}
-        </fieldset>
-      )}
+          <p className="verification-admin-review__meta">
+            {summary.category} · {summary.dateLabel} · {summary.campusArea}
+          </p>
 
-      {canDetermine ? (
-        <div className="button-row">
-          <button
-            type="button"
-            className="button button--primary"
-            disabled={submitting}
-            onClick={() => void determine('match_confirmed')}
-          >
-            Confirm match
-          </button>
+          <p>
+            <StatusBadge
+              status={
+                matchConfirmed ? LOST_REPORT_AWAITING_RETURN_STATUS : 'Verification Pending'
+              }
+            />
+          </p>
 
-          <button
-            type="button"
-            className="button button--tertiary"
-            disabled={submitting}
-            onClick={() => void determine('not_a_match')}
-          >
-            Not a match
-          </button>
-        </div>
-      ) : null}
+          <p className="verification-admin-review__meta">
+            {'Owner '}
+            <strong>{summary.ownerDisplayName}</strong>
+            {summary.verificationStartedLabel ? (
+              <>
+                {' · Verification started '}
+                {summary.verificationStartedLabel}
+              </>
+            ) : null}
+          </p>
 
-      {matchConfirmed ? (
-        <div className="button-row">
-          <button
-            type="button"
-            className="button button--primary"
-            disabled={submitting}
-            onClick={() => void confirmReturned()}
-          >
-            {CONFIRM_RETURNED}
-          </button>
+          {focus ? (
+            <>
+              <hr className="verification-admin-review__divider" />
 
-          <Link className="button button--tertiary" href={returnHref}>
-            {LOST_RETURN_SUBSTITUTE_LINK}
-          </Link>
-        </div>
-      ) : null}
+              <h3 className="verification-admin-review__card-subtitle">
+                {VERIFICATION_SELECTED_RESPONSE_SECTION}
+              </h3>
 
-      <div className="button-row">
-        <button
-          type="button"
-          className="button button--secondary"
-          disabled={submitting}
-          onClick={() => router.push(afterHref)}
-        >
-          {CANCEL}
-        </button>
+              <dl className="registration-review__details verification-admin-review__details">
+                <Detail label="Status" value={<StatusBadge status={focus.status} />} />
+                {whereFound ? <Detail label="Where found" value={whereFound} /> : null}
+                {focus.dateFound ? <Detail label="Date found" value={focus.dateFound} /> : null}
+                {focus.observedIdentifyingDetails ? (
+                  <Detail
+                    label="Observed identifying details"
+                    value={focus.observedIdentifyingDetails}
+                  />
+                ) : null}
+              </dl>
+
+              {focus.hasCandidateImage ? (
+                <div className="verification-admin-review__image">
+                  <p className="field__label">{CANDIDATE_IMAGE_LABEL}</p>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className="detail-image"
+                    src={`/api/reports/${reportId}/recovery-responses/${focus.responseId}/image`}
+                    alt={'Candidate image of the found item'}
+                  />
+                </div>
+              ) : null}
+            </>
+          ) : hasSelectedForVerification ? null : (
+            <p className="verification-admin-review__meta">{VERIFICATION_NO_SELECTED}</p>
+          )}
+        </section>
+
+        <section className="card verification-admin-review__main">
+          {candidates.length === 0 ? (
+            <p className="verification-admin-review__meta">{VERIFICATION_NO_RESPONSES}</p>
+          ) : (
+            <div className="verification-admin-review__table-wrap">
+              <table className="member-data-table verification-admin-review__table">
+                <thead>
+                  <tr>
+                    <th scope="col">Status</th>
+                    <th scope="col">Where found</th>
+                    <th scope="col">Submitted</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {candidates.map((candidate) => {
+                    const isFocus = focus?.responseId === candidate.responseId;
+                    const location = [candidate.campusArea, candidate.exactPlace]
+                      .filter(Boolean)
+                      .join(' — ');
+
+                    return (
+                      <tr
+                        key={candidate.responseId}
+                        className={
+                          isFocus
+                            ? 'member-data-table__row verification-admin-review__row--focus'
+                            : 'member-data-table__row'
+                        }
+                      >
+                        <td data-label="Status">
+                          <StatusBadge
+                            status={displayResponseStatus(
+                              candidate.status,
+                              hasSelectedForVerification,
+                            )}
+                          />
+                        </td>
+
+                        <td data-label="Where found">{location || '—'}</td>
+
+                        <td data-label="Submitted">{candidate.submittedAtLabel}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {focus ? (
+            <>
+              <hr className="verification-admin-review__divider" />
+
+              <h3 className="verification-admin-review__card-subtitle">
+                {VERIFICATION_ACTIONS_SECTION}
+              </h3>
+
+              <p className="verification-admin-review__meta">{VERIFICATION_ACTIONS_HELP}</p>
+
+              {canDetermine ? (
+                <div className="button-row verification-admin-review__action-buttons">
+                  <button
+                    type="button"
+                    className="button button--primary button--sm"
+                    disabled={submitting}
+                    onClick={() => setConfirming('match')}
+                  >
+                    {VERIFICATION_RECORD_MATCH}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="button button--danger button--sm"
+                    disabled={submitting}
+                    onClick={() => setConfirming('not_match')}
+                  >
+                    {VERIFICATION_RECORD_NOT_MATCH}
+                  </button>
+                </div>
+              ) : null}
+
+              {matchConfirmed ? (
+                <div className="button-row verification-admin-review__action-buttons">
+                  <button
+                    type="button"
+                    className="button button--primary button--sm"
+                    disabled={submitting}
+                    onClick={() => void confirmReturned()}
+                  >
+                    {CONFIRM_RETURNED}
+                  </button>
+
+                  <Link className="button button--tertiary button--sm" href={returnHref}>
+                    {LOST_RETURN_SUBSTITUTE_LINK}
+                  </Link>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </section>
       </div>
+
+      <AdminAuditTrailSurface
+        variant="embedded"
+        rows={auditTrail.rows}
+        hasMore={auditTrail.hasMore}
+        error={auditTrail.error}
+        fullTrailHref={auditHref}
+        parentLabel={summary.name}
+      />
+
+      {confirming === 'match' ? (
+        <ConfirmationDialog
+          heading={VERIFICATION_RECORD_MATCH}
+          body={VERIFICATION_MATCH_CONFIRM_MODAL}
+          confirmLabel={VERIFICATION_RECORD_MATCH}
+          onConfirm={() => void determine('match_confirmed')}
+          onCancel={() => setConfirming(null)}
+        />
+      ) : null}
+
+      {confirming === 'not_match' ? (
+        <ConfirmationDialog
+          heading={VERIFICATION_RECORD_NOT_MATCH}
+          body={VERIFICATION_NOT_MATCH_MODAL}
+          confirmLabel={VERIFICATION_RECORD_NOT_MATCH}
+          confirmClassName="button button--danger"
+          onConfirm={() => void determine('not_a_match')}
+          onCancel={() => setConfirming(null)}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function Detail({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <div className="registration-review__detail">
+      <dt className="field__label">{label}</dt>
+      <dd>{value}</dd>
     </div>
   );
 }

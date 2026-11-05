@@ -76,6 +76,7 @@ interface VerificationQueryRow {
   owner_display_name: string;
   responder_display_name: string | null;
   verification_started_at: Date | null;
+  selected_response_status: string | null;
 }
 
 /** The count row every count query returns. */
@@ -100,10 +101,11 @@ export class PrismaAdministratorQueueReader implements QueueReader {
       case 'ClaimStatus':
         return this.readPendingClaims(filter.reportType, filter.status, limit);
 
-      case 'ReportStatus':
-        return filter.reportType === 'Lost'
-          ? this.readVerifications(filter.status, limit)
-          : this.readAwaitingReturn(filter.status, limit);
+      case 'ItemsAwaitingReturn':
+        return this.readItemsAwaitingReturn(limit);
+
+      case 'LostItemsInVerification':
+        return this.readLostItemsInVerification(limit);
 
       default:
         // **The filter is a closed union,** so an unknown kind is a defect
@@ -271,6 +273,96 @@ export class PrismaAdministratorQueueReader implements QueueReader {
         itemName: row.name,
         claimantName: row.claimant_display_name,
         approvedAt: row.approved_at,
+        reportType: 'Found' as const,
+      })),
+      count: total,
+    };
+  }
+
+  /**
+   * Items Awaiting Return — Found `Claim Approved` and Lost match-confirmed.
+   */
+  private async readItemsAwaitingReturn(
+    limit: number,
+  ): Promise<{ rows: readonly QueueRow[]; count: number }> {
+    const [found, lost] = await Promise.all([
+      this.readAwaitingReturn('Claim Approved', limit),
+      this.readLostAwaitingReturn(limit),
+    ]);
+
+    const rows = [...found.rows, ...lost.rows]
+      .sort((left, right) => {
+        const leftAt =
+          left.kind === 'AwaitingReturn' ? left.approvedAt.getTime() : 0;
+        const rightAt =
+          right.kind === 'AwaitingReturn' ? right.approvedAt.getTime() : 0;
+
+        return leftAt - rightAt;
+      })
+      .slice(0, limit);
+
+    return {
+      rows,
+      count: found.count + lost.count,
+    };
+  }
+
+  /** Lost-side rows for Items Awaiting Return (`Match Confirmed`). */
+  private async readLostAwaitingReturn(
+    limit: number,
+  ): Promise<{ rows: readonly QueueRow[]; count: number }> {
+    const where = Prisma.sql`
+      WHERE r.${Prisma.raw(quoteName('type'))} = ${'Lost'}
+      AND r.${Prisma.raw(quoteName('status'))} = ${'Verification Pending'}
+    `;
+
+    const matchJoin = Prisma.sql`
+      JOIN ${Prisma.raw(quoteName(TABLES.response))} rr
+        ON rr.${Prisma.raw(quoteName('report_id'))} = r.${Prisma.raw(quoteName('id'))}
+       AND rr.${Prisma.raw(quoteName('status'))} = ${'Match Confirmed'}
+    `;
+
+    const [rows, total] = await Promise.all([
+      this.client.$queryRaw<
+        {
+          id: string;
+          name: string;
+          owner_display_name: string;
+          ready_at: Date;
+        }[]
+      >(
+        Prisma.sql`
+          SELECT
+            r.${Prisma.raw(quoteName('id'))} AS id,
+            r.${Prisma.raw(quoteName('name'))} AS name,
+            owner.${Prisma.raw(quoteName('displayName'))} AS owner_display_name,
+            rr.${Prisma.raw(quoteName('updated_at'))} AS ready_at
+          FROM ${Prisma.raw(quoteName(TABLES.report))} r
+          JOIN ${Prisma.raw(quoteName(TABLES.account))} owner
+            ON owner.${Prisma.raw(quoteName('id'))} = r.${Prisma.raw(quoteName('reporter_id'))}
+          ${matchJoin}
+          ${where}
+          ORDER BY rr.${Prisma.raw(quoteName('updated_at'))} ASC, r.${Prisma.raw(quoteName('id'))} ASC
+          LIMIT ${limit}
+        `,
+      ),
+      this.count(TABLES.report, 'r', where, [
+        {
+          table: TABLES.response,
+          alias: 'rr',
+          on: `rr."report_id" = r."id" AND rr."status" = 'Match Confirmed'`,
+        },
+      ]),
+    ]);
+
+    return {
+      rows: rows.map((row) => ({
+        kind: 'AwaitingReturn' as const,
+        reportId: row.id,
+        itemName: row.name,
+        claimantName: row.owner_display_name,
+        approvedAt: row.ready_at,
+        reportType: 'Lost' as const,
       })),
       count: total,
     };
@@ -279,13 +371,19 @@ export class PrismaAdministratorQueueReader implements QueueReader {
   /**
    * The Items in Verification queue — §15.5.
    *
-   * **Lost-side only.** The selected responder is the one in
-   * `Selected for Verification` or `Match Confirmed` — a response that
-   * has been selected and is still in play.
+   * **Lost-side only.** The owner has selected a response; the administrator
+   * has not yet recorded Match Confirmed / Not a Match.
    */
+  private async readLostItemsInVerification(
+    limit: number,
+  ): Promise<{ rows: readonly QueueRow[]; count: number }> {
+    return this.readVerifications('Verification Pending', limit, 'Selected for Verification');
+  }
+
   private async readVerifications(
     status: string,
     limit: number,
+    selectedStatus: 'Selected for Verification' | 'Match Confirmed' = 'Selected for Verification',
   ): Promise<{ rows: readonly QueueRow[]; count: number }> {
     const where = Prisma.sql`
       WHERE r.${Prisma.raw(quoteName('type'))} = ${'Lost'}
@@ -293,9 +391,9 @@ export class PrismaAdministratorQueueReader implements QueueReader {
     `;
 
     const selectedJoin = Prisma.sql`
-      LEFT JOIN ${Prisma.raw(quoteName(TABLES.response))} rr
+      JOIN ${Prisma.raw(quoteName(TABLES.response))} rr
         ON rr.${Prisma.raw(quoteName('report_id'))} = r.${Prisma.raw(quoteName('id'))}
-       AND rr.${Prisma.raw(quoteName('status'))} IN (${'Selected for Verification'}, ${'Match Confirmed'})
+       AND rr.${Prisma.raw(quoteName('status'))} = ${selectedStatus}
       LEFT JOIN ${Prisma.raw(quoteName(TABLES.account))} responder
         ON responder.${Prisma.raw(quoteName('id'))} = rr.${Prisma.raw(quoteName('responder_id'))}
     `;
@@ -309,7 +407,8 @@ export class PrismaAdministratorQueueReader implements QueueReader {
             owner.${Prisma.raw(quoteName('id'))} AS owner_id,
             owner.${Prisma.raw(quoteName('displayName'))} AS owner_display_name,
             responder.${Prisma.raw(quoteName('displayName'))} AS responder_display_name,
-            r.${Prisma.raw(quoteName('updated_at'))} AS verification_started_at
+            r.${Prisma.raw(quoteName('updated_at'))} AS verification_started_at,
+            rr.${Prisma.raw(quoteName('status'))} AS selected_response_status
           FROM ${Prisma.raw(quoteName(TABLES.report))} r
           JOIN ${Prisma.raw(quoteName(TABLES.account))} owner
             ON owner.${Prisma.raw(quoteName('id'))} = r.${Prisma.raw(quoteName('reporter_id'))}
@@ -319,7 +418,13 @@ export class PrismaAdministratorQueueReader implements QueueReader {
           LIMIT ${limit}
         `,
       ),
-      this.count(TABLES.report, 'r', where),
+      this.count(TABLES.report, 'r', where, [
+        {
+          table: TABLES.response,
+          alias: 'rr',
+          on: `rr."report_id" = r."id" AND rr."status" = '${selectedStatus}'`,
+        },
+      ]),
     ]);
 
     return {
@@ -331,6 +436,7 @@ export class PrismaAdministratorQueueReader implements QueueReader {
         ownerUserId: row.owner_id,
         selectedResponderDisplayName: row.responder_display_name,
         verificationStartedAt: row.verification_started_at,
+        hasMatchConfirmed: false,
       })),
       count: total,
     };

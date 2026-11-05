@@ -241,6 +241,18 @@ export function planReporterActions(facts: ReporterActionFacts): ReporterActionP
 }
 
 /**
+ * Whether the reporter toolbar appears on item detail.
+ *
+ * **The bar is for in-flight reports only.** Once the report reaches a
+ * terminal status — `Returned` or `Closed` — Edit, Delete, and Withdraw
+ * are all blocked, so the mockup omits the callout and shows breadcrumbs
+ * and content only. That keeps withdrawn and returned details consistent.
+ */
+export function shouldShowReporterToolbar(status: ReportStatus): boolean {
+  return !isTerminalReportStatus(status);
+}
+
+/**
  * Whether the report carries an interaction that blocks Delete.
  *
  * **The type decides which fact counts** — a Found report's interaction is

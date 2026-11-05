@@ -65,6 +65,8 @@ export class PrismaClaimReviewReader implements ClaimReviewReader {
         category: string;
         date: Date;
         campus_area: string;
+        image_ref: string | null;
+        image_withheld: boolean;
         claimant_display_name: string;
         claimant_email: string;
       }>
@@ -72,6 +74,7 @@ export class PrismaClaimReviewReader implements ClaimReviewReader {
       SELECT c."id", c."status", c."report_id", c."reason", c."identifying_details",
              c."date_lost", c."submitted_at",
              r."name", r."category", r."date", r."campus_area",
+             r."image_ref", r."image_withheld",
              a."displayName" AS claimant_display_name,
              a."email" AS claimant_email
       FROM "claims" AS c
@@ -126,6 +129,7 @@ export class PrismaClaimReviewReader implements ClaimReviewReader {
         category: row.category,
         date: formatIsoDay(row.date),
         campusArea: row.campus_area,
+        hasItemImage: row.image_ref !== null && row.image_ref !== '' && !row.image_withheld,
       },
       competingClaims: competitors.map((competitor) => ({
         claimId: competitor.id,

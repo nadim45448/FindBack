@@ -3,10 +3,10 @@ import type { Metadata } from 'next';
 import { Breadcrumbs } from '@/ui/breadcrumbs';
 import {
   MY_REPORTS_PAGE_TITLE,
-  RECOVERY_RESPONSE_OWNER_DETAIL_HEADING,
   RECOVERY_RESPONSE_THREAD_HEADING,
   RECOVERY_RESPONSE_THREAD_PERMISSION_DENIED,
   REVIEW_RECOVERY_RESPONSES,
+  recoveryResponseThreadBreadcrumb,
 } from '@/ui/member-copy';
 import { RecoveryResponseDetailSurface } from '@/ui/recovery-response-surface';
 import { ThreadPanel } from '@/ui/thread-panel';
@@ -34,7 +34,7 @@ export default async function OwnerRecoveryResponsePage({
   }
 
   return (
-    <div className="item-detail-page">
+    <div className="item-detail-page participation-detail-page">
       <Breadcrumbs
         variant="compact"
         crumbs={[
@@ -44,7 +44,7 @@ export default async function OwnerRecoveryResponsePage({
             label: REVIEW_RECOVERY_RESPONSES,
             href: `/my/reports/${reportId}/review-responses`,
           },
-          { label: 'Response', href: null },
+          { label: recoveryResponseThreadBreadcrumb(reading.reportName), href: null },
         ]}
       />
 
@@ -61,7 +61,8 @@ export default async function OwnerRecoveryResponsePage({
         reportId={reading.reportId}
         reportName={reading.reportName}
         reportDetailHref={`/my/reports/${reportId}`}
-        detailHeading={RECOVERY_RESPONSE_OWNER_DETAIL_HEADING}
+        variant="owner"
+        reviewResponsesHref={`/my/reports/${reportId}/review-responses`}
         withdrawable={false}
       />
 

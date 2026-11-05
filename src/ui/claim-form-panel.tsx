@@ -13,13 +13,8 @@
  *
  * ## The submission goes to the API
  *
- * **The claim's fields are the domain's**, and the server validates them.
- * The native constraints on the inputs mirror the server's bounds, so the
- * browser refuses what the server would refuse — but the server's verdict
- * is the one that counts.
- *
- * **A successful submission navigates to the claim's detail page,** where
- * the claim and its thread are read by the server.
+ * **A successful submission navigates to the claim's detail page** with
+ * `?submitted=1`, so §12.1's confirmation copy is visible on arrival.
  */
 
 import { useCallback, useState } from 'react';
@@ -28,11 +23,17 @@ import { useRouter } from 'next/navigation';
 import { csrfHeaders } from './csrf';
 import { ErrorSummary, useFocusFirstInvalidField } from './form-parts';
 import { ClaimFormSurface, type ClaimFormValues } from './claim-form-surface';
+import { ParticipationContextCard } from './participation-context-card';
+import { ParticipationFormPageShell } from './participation-form-page-shell';
 
 import {
   CLAIM_ERROR_SUMMARY_HEADING,
   CLAIM_FIELD_ELEMENT_IDS,
   CLAIM_FIELD_LABELS,
+  CLAIM_FORM_BREADCRUMB,
+  CLAIM_FORM_DESCRIPTION,
+  CLAIM_FORM_HEADING,
+  MEMBER_BROWSE_PAGE_TITLE,
   SERVER_ERROR_MESSAGE,
 } from './member-copy';
 
@@ -42,6 +43,10 @@ import {
 export interface ClaimFormPanelProps {
   /** The report's id — the Found item the claim is against. */
   readonly reportId: string;
+  /** The Found item's name — context card. */
+  readonly itemName: string;
+  /** Optional meta line (campus area, date). */
+  readonly itemMeta?: string | undefined;
   /** The values the form opens with. */
   readonly initialValues?: ClaimFormValues | undefined;
   /** The minimum date the native picker accepts. */
@@ -64,6 +69,8 @@ export const EMPTY_CLAIM_FORM_VALUES: ClaimFormValues = Object.freeze({
  */
 export function ClaimFormPanel({
   reportId,
+  itemName,
+  itemMeta,
   initialValues = EMPTY_CLAIM_FORM_VALUES,
   minDate,
   maxDate,
@@ -74,32 +81,14 @@ export function ClaimFormPanel({
   const [errors, setErrors] = useState<Readonly<Record<string, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
-  /**
-   * Whether the member has attempted a submission.
-   *
-   * **This is the validate-after-submit gate.** No error state exists
-   * before the first submit attempt.
-   */
   const [submitted, setSubmitted] = useState(false);
 
-  /**
-   * Focus the first invalid field, and scroll it into view.
-   *
-   * **The ids map bridges the server's field names and the form's element
-   * ids** — the server calls the field `identifyingDetails` and the form's
-   * element is `claimIdentifyingDetails`.
-   */
   useFocusFirstInvalidField(errors, submitted, CLAIM_FIELD_ELEMENT_IDS);
 
-  /**
-   * Submit the claim.
-   */
   const submit = useCallback(async (): Promise<void> => {
     setSubmitting(true);
     setErrors({});
     setFailure(null);
-    // **The submission attempt is what turns the error state on.** The form
-    // is validated *after* the submit, never before it.
     setSubmitted(true);
 
     try {
@@ -117,7 +106,7 @@ export function ClaimFormPanel({
       if (response.ok) {
         const body = (await response.json()) as { id?: string };
 
-        router.push(body.id ? `/my/claims/${body.id}` : '/my/claims');
+        router.push(body.id ? `/my/claims/${body.id}?submitted=1` : '/my/claims');
         return;
       }
 
@@ -138,17 +127,6 @@ export function ClaimFormPanel({
     }
   }, [reportId, router, values]);
 
-  /**
-   * A change to one field.
-   *
-   * **The field's error clears the moment the member edits it.** Clearing
-   * on the *edit* rather than on a re-validation is what makes it
-   * immediate — the member does not have to submit again to see that their
-   * correction was accepted.
-   *
-   * **Only the changed field's error clears.** The others are untouched,
-   * because a member may have made one correction and left the rest.
-   */
   const change = useCallback((next: ClaimFormValues): void => {
     setValues(next);
 
@@ -164,7 +142,6 @@ export function ClaimFormPanel({
       for (const key of keys) {
         const field = key as keyof ClaimFormValues;
 
-        // **The error goes when the value it was about has changed.**
         if (next[field] !== values[field]) {
           continue;
         }
@@ -177,7 +154,17 @@ export function ClaimFormPanel({
   }, [values]);
 
   return (
-    <>
+    <ParticipationFormPageShell
+      heading={CLAIM_FORM_HEADING}
+      lede={CLAIM_FORM_DESCRIPTION}
+      crumbs={[
+        { label: MEMBER_BROWSE_PAGE_TITLE, href: '/listings' },
+        { label: CLAIM_FORM_BREADCRUMB, href: null },
+      ]}
+      context={
+        <ParticipationContextCard itemName={itemName} reportType="Found" meta={itemMeta} />
+      }
+    >
       {failure ? (
         <div className="error-summary" role="alert">
           <p className="error-summary__heading">{failure}</p>
@@ -200,7 +187,10 @@ export function ClaimFormPanel({
         errors={errors}
         minDate={minDate}
         maxDate={maxDate}
+        onCancel={() => {
+          router.push(`/listings/${reportId}`);
+        }}
       />
-    </>
+    </ParticipationFormPageShell>
   );
 }

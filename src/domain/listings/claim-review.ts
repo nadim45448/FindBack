@@ -64,6 +64,8 @@ export interface ReviewItemDetails {
   /** The calendar day, as `YYYY-MM-DD`. */
   readonly date: string;
   readonly campusArea: string;
+  /** Whether the Found report has a listing photo. */
+  readonly hasItemImage: boolean;
 }
 
 /**
@@ -76,6 +78,8 @@ export interface ReviewItemDetails {
  */
 export interface ClaimReviewScreen {
   readonly claimId: string;
+  /** The Found report the claim is against — used for authorised image delivery. */
+  readonly reportId: string;
   readonly claimantDisplayName: string;
   readonly claimantEmail: string;
   readonly claimStatus: ClaimStatus;
@@ -113,6 +117,7 @@ export interface ClaimReviewScreen {
  */
 export interface ClaimReviewFacts {
   readonly claimId: string;
+  readonly reportId: string;
   readonly claimantDisplayName: string;
   readonly claimantEmail: string;
   readonly claimStatus: ClaimStatus;
@@ -136,6 +141,7 @@ export interface ClaimReviewFacts {
 export function assembleClaimReview(facts: ClaimReviewFacts): ClaimReviewScreen {
   return {
     claimId: facts.claimId,
+    reportId: facts.reportId,
     claimantDisplayName: facts.claimantDisplayName,
     claimantEmail: facts.claimantEmail,
     claimStatus: facts.claimStatus,

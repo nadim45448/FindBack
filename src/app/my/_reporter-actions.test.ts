@@ -220,6 +220,31 @@ describe('the reporter action plan', () => {
     expect(plan?.withdraw).toEqual({ kind: 'Blocked', reason: 'TerminalStatus' });
   });
 
+  it('permits Withdraw on a Lost report in Verification Pending before match confirmed', () => {
+    const owned = projection({
+      columns: ['unrelatedMember', 'lostReportOwner'],
+      report: {
+        id: '11111111-1111-1111-1111-111111111111',
+        type: 'Lost',
+        status: 'Verification Pending',
+        name: 'Brown leather wallet',
+      },
+      recoveryResponses: [
+        {
+          responseId: '44444444-4444-4444-4444-444444444444',
+          status: 'Selected for Verification',
+          submittedAt: '2026-10-21T09:00:00.000Z',
+          isOwn: false,
+        },
+      ],
+    });
+
+    const plan = reporterActionPlan(owned);
+
+    expect(plan?.edit).toEqual({ kind: 'Permitted' });
+    expect(plan?.withdraw).toEqual({ kind: 'Permitted' });
+  });
+
   it('makes a Match Confirmed Lost workflow administrator-only', () => {
     // **§10.4: "only an Administrator may end the Lost workflow."** The
     // plan says so explicitly, so the surface can say it in plain English

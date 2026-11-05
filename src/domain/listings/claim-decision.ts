@@ -31,6 +31,7 @@
  */
 
 import type { ClaimStatus } from './claim-status';
+import type { ReportStatus } from './found-report-status';
 
 import { ValidationError } from '@/lib/errors';
 
@@ -102,6 +103,54 @@ export function claimDecisionBlockMessage(reason: ClaimDecisionBlockReason): str
       throw new Error(`Unhandled claim decision block reason: ${String(unreachable)}`);
     }
   }
+}
+
+/**
+ * Facts for a decision conflict message — §6.4 concurrent-action copy.
+ */
+export interface ClaimDecisionConflictFacts {
+  readonly claimStatus: ClaimStatus;
+  readonly reportStatus?: ReportStatus;
+}
+
+/**
+ * Explain why this claim can no longer be approved or rejected.
+ *
+ * **Competing claims are the common case.** When another administrator
+ * approved a different claim first, this claim is usually `Rejected`
+ * (auto-rejection) while the item is `Claim Approved` — the message names
+ * that outcome instead of a generic server error.
+ */
+export function claimDecisionConflictMessage(facts: ClaimDecisionConflictFacts): string {
+  if (facts.reportStatus !== undefined && facts.reportStatus !== 'Claim Requested') {
+    return claimConcurrentDecisionMessage(facts.reportStatus);
+  }
+
+  switch (facts.claimStatus) {
+    case 'Rejected':
+      return (
+        'Another claim on this item was already approved. This claim was auto-rejected and is ' +
+        'no longer pending. Open the review screen to see the recorded decision.'
+      );
+    case 'Approved':
+      return (
+        'This claim has already been approved. Refresh the page to see the current item status.'
+      );
+    case 'Returned':
+      return claimDecisionBlockMessage('ClaimNotPending');
+    default:
+      return claimDecisionBlockMessage('ClaimNotPending');
+  }
+}
+
+/**
+ * When the item's workflow moved on before this decision landed — §6.4.
+ */
+export function claimConcurrentDecisionMessage(reportStatus: ReportStatus): string {
+  return (
+    `This item's claim was already decided by another administrator. The item is now ` +
+    `${reportStatus}. No action is needed from you.`
+  );
 }
 
 /**

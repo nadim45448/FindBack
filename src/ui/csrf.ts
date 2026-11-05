@@ -35,6 +35,8 @@
 
 import { useEffect, useSyncExternalStore } from 'react';
 
+import { loadClientSession } from './session';
+
 /* -------------------------------------------------------------------------- */
 /* The store                                                                   */
 /* -------------------------------------------------------------------------- */
@@ -129,7 +131,20 @@ export function useCsrfToken(): string | null {
       return;
     }
 
-    void issueAnonymousToken();
+    void (async () => {
+      const session = await loadClientSession();
+
+      if (getCsrfSnapshot()) {
+        return;
+      }
+
+      // **Anonymous only when the server says nobody is signed in.** Minting
+      // an anonymous token before `/api/session` answers would bind the forms
+      // to the wrong cookie while a member session is already present.
+      if (!session.actorId) {
+        await issueAnonymousToken();
+      }
+    })();
   }, [token]);
 
   return token;

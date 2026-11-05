@@ -2,28 +2,21 @@
  * The **per-image delivery rule** — who may receive the *bytes* of a report
  * image.
  *
- * **The rule follows the FR-39 field grant, with two participation
- * exceptions.**
+ * **Report listing photos follow the authenticated browse grant.** EXPERIENCE.md
+ * §6.3 grants the report `image` to unrelated members, claimants, and recovery
+ * responders on the detail page. Byte delivery matches that grant: any member
+ * who holds `unrelatedMember` on the report may load the listing photo, including
+ * after they submit a Claim or Recovery Response.
  *
- * The visibility matrix grants the `image` field to every authenticated
- * viewer column except anonymous — including unrelated members browsing a
- * report. The detail surface renders that field as `<img
- * src="/api/reports/:id/image">`, so byte delivery must match the grant or
- * members see a broken image.
- *
- * **Participation is still not permission.** A claimant and a recovery
- * responder hold columns that carry the image *reference* in their
- * projection, but they must not receive the report image's *bytes* — an
- * image is not ownership evidence (Found), and a responder must not see
- * another candidate's context (Lost).
+ * **Candidate images on Recovery Responses are a separate rule** — see
+ * `candidate-image-delivery.ts`. A responder must not receive another
+ * candidate's upload through that path.
  *
  * | Viewer | Bytes |
  * |---|---|
  * | Anonymous | Never |
- * | Unrelated member (browse) | Yes — same as the `image` field grant |
+ * | Authenticated member browsing the report | Yes |
  * | Report owner | Yes |
- * | Claimant on that Found report | No |
- * | Recovery responder on that Lost report | No |
  * | Administrator | Yes |
  *
  * Pure — no I/O, no framework imports.
@@ -34,8 +27,7 @@ import type { ReportRelationship } from './report-relationship';
 import type { Viewer } from './viewer';
 
 /**
- * Columns that can grant report image bytes when no participation column
- * blocks delivery.
+ * Columns that can grant report image bytes.
  */
 export const IMAGE_DELIVERY_COLUMNS: readonly ProjectionColumn[] = [
   'unrelatedMember',
@@ -45,28 +37,9 @@ export const IMAGE_DELIVERY_COLUMNS: readonly ProjectionColumn[] = [
 ];
 
 /**
- * Participation columns that block delivery even when `unrelatedMember` is
- * present.
- */
-export const IMAGE_DELIVERY_BLOCKED_PARTICIPATION_COLUMNS: readonly ProjectionColumn[] = [
-  'claimant',
-  'recoveryResponder',
-];
-
-/**
  * True when the column set includes a column that can grant image bytes.
- *
- * **Claimant and recovery-responder columns veto delivery** — they are
- * checked here so callers that only inspect columns get the same answer as
- * `mayReceiveImage` for the participation cases.
  */
 export function grantsImageDelivery(columns: readonly ProjectionColumn[]): boolean {
-  if (
-    IMAGE_DELIVERY_BLOCKED_PARTICIPATION_COLUMNS.some((column) => columns.includes(column))
-  ) {
-    return false;
-  }
-
   return columns.some((column) => IMAGE_DELIVERY_COLUMNS.includes(column));
 }
 
@@ -79,12 +52,6 @@ export function mayReceiveImage(
   columns: readonly ProjectionColumn[],
 ): boolean {
   if (viewer.kind === 'anonymous') {
-    return false;
-  }
-
-  if (
-    IMAGE_DELIVERY_BLOCKED_PARTICIPATION_COLUMNS.some((column) => columns.includes(column))
-  ) {
     return false;
   }
 

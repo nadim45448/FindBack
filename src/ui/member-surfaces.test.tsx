@@ -219,20 +219,19 @@ describe('the My reports surface', () => {
       />,
     );
 
-    expect(screen.getByRole('columnheader', { name: 'Activity' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: '2 pending · admin reviewing' })).toBeTruthy();
+    expect(screen.getByRole('columnheader', { name: 'Claims' })).toBeTruthy();
+    expect(screen.getByText('1 approved · 2 pending')).toBeTruthy();
     expect(screen.getByText('Bag · Library')).toBeTruthy();
+    expect(screen.getByLabelText('Type: Found')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Report lost' })).toBeTruthy();
   });
 
-  it('links lost reports with submitted responses to the review screen', () => {
-    const lostId = '22222222-2222-2222-2222-222222222222';
-
+  it('shows claim counts for lost reports in the claims column', () => {
     render(
       <MyReportsSurface
         rows={[
           {
-            id: lostId,
+            id: '22222222-2222-2222-2222-222222222222',
             type: 'Lost',
             status: 'Open',
             name: 'Lost mouse',
@@ -243,16 +242,19 @@ describe('the My reports surface', () => {
         ]}
         claimSummaries={{}}
         recoverySummaries={{
-          [lostId]: { submitted: 2, inProgress: 0 },
+          '22222222-2222-2222-2222-222222222222': {
+            submitted: 2,
+            inProgress: 0,
+            hasMatchConfirmed: false,
+          },
         }}
         campusAreaLabels={{ library: 'Library' }}
         statusFilter={null}
       />,
     );
 
-    expect(screen.getByRole('link', { name: 'Review responses (2)' }).getAttribute('href')).toBe(
-      `/my/reports/${lostId}/review-responses`,
-    );
+    expect(screen.getByText('0 approved · 0 pending')).toBeTruthy();
+    expect(screen.getByLabelText('Type: Lost')).toBeTruthy();
   });
 });
 
@@ -263,6 +265,30 @@ describe('the item detail surface', () => {
     expect(screen.getByText('Brown leather wallet')).toBeTruthy();
     expect(screen.getByText('A brown leather wallet with a zip pocket.')).toBeTruthy();
     expect(screen.getByText('Alex')).toBeTruthy();
+  });
+
+  it('loads the report image when byte delivery is allowed', () => {
+    const { container } = render(<ItemDetailSurface projection={projection()} />);
+
+    const image = container.querySelector(
+      'img.detail-image[src="/api/reports/11111111-1111-1111-1111-111111111111/image"]',
+    );
+
+    expect(image).toBeTruthy();
+  });
+
+  it('loads the report image for a claimant browsing the item', () => {
+    const claimed = projection({
+      columns: ['unrelatedMember', 'claimant'],
+    });
+
+    const { container } = render(<ItemDetailSurface projection={claimed} />);
+
+    expect(
+      container.querySelector(
+        'img.detail-image[src="/api/reports/11111111-1111-1111-1111-111111111111/image"]',
+      ),
+    ).toBeTruthy();
   });
 
   it('omits a withheld field from the delivered HTML entirely', () => {

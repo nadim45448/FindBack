@@ -1,12 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
-import type { ReportListingRow, ReportStatus } from '@/domain/listings';
+import {
+  displayReportStatus,
+  type ReportListingRow,
+  type ReportStatus,
+  type ReportType,
+} from '@/domain/listings';
 import { REPORT_STATUSES } from '@/domain/listings';
 
 import type { ReportClaimSummary, ReportRecoverySummary } from './my-reports-types';
+
+import { MemberDataTableRow } from './member-data-table-row';
 
 import { StatusBadge } from './status-badge';
 
@@ -15,8 +21,7 @@ import {
   MY_REPORTS_FILTER_LABEL,
   MY_REPORTS_PAGE_TITLE,
   MY_REPORTS_NEEDS_REVIEW_BANNER,
-  MY_REPORTS_REVIEW_RESPONSES_LINK,
-  MY_REPORTS_TABLE_ACTIVITY,
+  MY_REPORTS_TABLE_CLAIMS,
   MY_REPORTS_TABLE_DATE,
   MY_REPORTS_TABLE_ITEM,
   MY_REPORTS_TABLE_STATUS,
@@ -114,12 +119,12 @@ export function MyReportsSurface({
 
       {!error && rows.length > 0 ? (
         <section aria-live="polite">
-          <ReportsTable
-            rows={rows}
-            claimSummaries={claimSummaries}
-            recoverySummaries={recoverySummaries}
-            campusAreaLabels={campusAreaLabels}
-          />
+      <ReportsTable
+        rows={rows}
+        claimSummaries={claimSummaries}
+        recoverySummaries={recoverySummaries}
+        campusAreaLabels={campusAreaLabels}
+      />
         </section>
       ) : null}
     </div>
@@ -165,8 +170,6 @@ function ReportsTable({
   readonly recoverySummaries: Readonly<Record<string, ReportRecoverySummary>>;
   readonly campusAreaLabels: Readonly<Record<string, string>>;
 }): React.JSX.Element {
-  const router = useRouter();
-
   return (
     <table className="member-data-table">
       <thead>
@@ -175,7 +178,7 @@ function ReportsTable({
           <th scope="col">{MY_REPORTS_TABLE_TYPE}</th>
           <th scope="col">{MY_REPORTS_TABLE_DATE}</th>
           <th scope="col">{MY_REPORTS_TABLE_STATUS}</th>
-          <th scope="col">{MY_REPORTS_TABLE_ACTIVITY}</th>
+          <th scope="col">{MY_REPORTS_TABLE_CLAIMS}</th>
         </tr>
       </thead>
 
@@ -187,9 +190,6 @@ function ReportsTable({
             claimSummary={claimSummaries[row.id]}
             recoverySummary={recoverySummaries[row.id]}
             campusLabel={campusAreaLabels[row.campusArea] ?? row.campusArea}
-            onOpen={() => {
-              router.push(`/my/reports/${row.id}`);
-            }}
           />
         ))}
       </tbody>
@@ -202,33 +202,21 @@ function ReportTableRow({
   claimSummary,
   recoverySummary,
   campusLabel,
-  onOpen,
 }: {
   readonly row: ReportListingRow;
   readonly claimSummary: ReportClaimSummary | undefined;
   readonly recoverySummary: ReportRecoverySummary | undefined;
   readonly campusLabel: string;
-  readonly onOpen: () => void;
 }): React.JSX.Element {
   const detailHref = `/my/reports/${row.id}`;
-  const reviewHref = `/my/reports/${row.id}/review-responses`;
+  const statusLabel = displayReportStatus(row.type, row.status, {
+    hasMatchConfirmed: recoverySummary?.hasMatchConfirmed ?? false,
+  });
 
   return (
-    <tr
-      className="member-data-table__row"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          onOpen();
-        }
-      }}
-    >
+    <MemberDataTableRow href={detailHref}>
       <td data-label={MY_REPORTS_TABLE_ITEM}>
-        <Link href={detailHref} className="member-data-table__item-link" onClick={(e) => e.stopPropagation()}>
-          <strong>{row.name}</strong>
-        </Link>
+        <strong>{row.name}</strong>
 
         <div className="member-data-table__meta">
           {row.category}
@@ -238,7 +226,7 @@ function ReportTableRow({
       </td>
 
       <td data-label={MY_REPORTS_TABLE_TYPE}>
-        <StatusBadge status={row.type} kind="Type" tone="neutral" />
+        <ReportTypeBadge type={row.type} />
       </td>
 
       <td className="tabular" data-label={MY_REPORTS_TABLE_DATE}>
@@ -246,79 +234,29 @@ function ReportTableRow({
       </td>
 
       <td data-label={MY_REPORTS_TABLE_STATUS}>
-        <StatusBadge status={row.status} kind="Status" />
+        <StatusBadge status={statusLabel} kind="Status" />
       </td>
 
-      <td data-label={MY_REPORTS_TABLE_ACTIVITY}>
-        {formatActivityCell(row, claimSummary, recoverySummary, detailHref, reviewHref)}
-      </td>
-    </tr>
+      <td data-label={MY_REPORTS_TABLE_CLAIMS}>{formatClaimsCell(claimSummary)}</td>
+    </MemberDataTableRow>
   );
 }
 
-function formatActivityCell(
-  row: ReportListingRow,
-  claimSummary: ReportClaimSummary | undefined,
-  recoverySummary: ReportRecoverySummary | undefined,
-  detailHref: string,
-  reviewHref: string,
-): React.JSX.Element | string {
-  if (row.type === 'Lost') {
-    const submitted = recoverySummary?.submitted ?? 0;
-    const inProgress = recoverySummary?.inProgress ?? 0;
+function ReportTypeBadge({ type }: { readonly type: ReportType }): React.JSX.Element {
+  const modifier = type === 'Lost' ? 'lost' : 'found';
 
-    if (row.status === 'Open' && submitted > 0) {
-      return (
-        <Link
-          href={reviewHref}
-          className="member-data-table__item-link"
-          onClick={(event) => {
-            event.stopPropagation();
-          }}
-        >
-          {`${MY_REPORTS_REVIEW_RESPONSES_LINK} (${submitted})`}
-        </Link>
-      );
-    }
+  return (
+    <span className={`report-type-badge report-type-badge--${modifier}`} aria-label={`Type: ${type}`}>
+      {type}
+    </span>
+  );
+}
 
-    if (submitted > 0) {
-      return `${submitted} submitted`;
-    }
-
-    if (inProgress > 0 || row.status === 'Verification Pending') {
-      return (
-        <Link
-          href={reviewHref}
-          className="member-data-table__item-link"
-          onClick={(event) => {
-            event.stopPropagation();
-          }}
-        >
-          {MY_REPORTS_REVIEW_RESPONSES_LINK}
-        </Link>
-      );
-    }
-
-    return '—';
-  }
-
+/** Claims column — mockup `08-my-reports.html` (plain counts, no in-table links). */
+function formatClaimsCell(claimSummary: ReportClaimSummary | undefined): string {
   const approved = claimSummary?.approved ?? 0;
   const pending = claimSummary?.pending ?? 0;
   const rejected = claimSummary?.rejected ?? 0;
-
-  if (pending > 0 && (row.status === 'Open' || row.status === 'Claim Requested')) {
-    return (
-      <Link
-        href={detailHref}
-        className="member-data-table__item-link"
-        onClick={(event) => {
-          event.stopPropagation();
-        }}
-      >
-        {`${pending} pending · admin reviewing`}
-      </Link>
-    );
-  }
 
   let text = `${approved} approved · ${pending} pending`;
 

@@ -25,14 +25,14 @@ import type { ReporterActionPlan } from '@/domain/listings';
 
 import { ReportFormPageShell } from './report-form-page-shell';
 import { ReportFormSurface, type ReportFormValues } from './report-form-surface';
-import { ReportActionsSurface } from './report-actions-surface';
+import { ReportActionsSurface, reporterCalloutNotice } from './report-actions-surface';
 
 import {
-  ADMINISTRATOR_ONLY_WORKFLOW,
   CANCEL,
   DELETE,
   EDIT,
   REPORT_CLOSED_CANNOT_EDIT,
+  LOST_OWNER_VERIFICATION_PENDING_CALLOUT,
   REPORT_HAS_INTERACTION_CANNOT_DELETE,
   REPORT_EXACT_PLACE_HELPER,
   SENSITIVE_LABEL,
@@ -266,6 +266,20 @@ describe('the report actions', () => {
     administratorOnly: false,
   };
 
+  it('uses verification-pending callout copy for a Lost owner who selected a response', () => {
+    const notice = reporterCalloutNotice(
+      {
+        edit: { kind: 'Permitted' },
+        delete: { kind: 'Blocked', reason: 'InteractionExists' },
+        withdraw: { kind: 'Permitted' },
+        administratorOnly: false,
+      },
+      { status: 'Verification Pending', type: 'Lost' },
+    );
+
+    expect(notice).toBe(LOST_OWNER_VERIFICATION_PENDING_CALLOUT);
+  });
+
   it('offers all three actions when the plan permits them', () => {
     render(<ReportActionsSurface plan={PERMITTED} />);
 
@@ -295,7 +309,7 @@ describe('the report actions', () => {
 
   it('points at Withdraw when Delete is blocked by an interaction', () => {
     // **§10.4: once a Claim or RR exists, "the reporter must use Withdraw
-    // instead."** The message names the remedy.
+    // instead."** Delete is omitted from the row; Withdraw remains offered.
     render(
       <ReportActionsSurface
         plan={{
@@ -305,29 +319,27 @@ describe('the report actions', () => {
       />,
     );
 
-    const deleteButton = screen.getByRole('button', { name: DELETE }) as HTMLButtonElement;
-
-    expect(deleteButton.disabled).toBe(true);
-    expect(screen.getByText(REPORT_HAS_INTERACTION_CANNOT_DELETE)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: DELETE })).toBeNull();
+    expect(screen.getByRole('button', { name: WITHDRAW })).toBeTruthy();
   });
 
-  it('says only an administrator can end the workflow', () => {
-    // **§10.4: "only an Administrator may end the Lost workflow."**
+  it('omits Withdraw from the toolbar when only an administrator may end the workflow', () => {
+    // **§10.4: "only an Administrator may end the Lost workflow."** The
+    // callout carries that sentence; the toolbar stays Edit-only.
     render(
       <ReportActionsSurface
         plan={{
           edit: { kind: 'Permitted' },
-          delete: { kind: 'Blocked', reason: 'TerminalStatus' },
+          delete: { kind: 'Blocked', reason: 'InteractionExists' },
           withdraw: { kind: 'Blocked', reason: 'MatchConfirmed' },
           administratorOnly: true,
         }}
       />,
     );
 
-    const withdraw = screen.getByRole('button', { name: WITHDRAW }) as HTMLButtonElement;
-
-    expect(withdraw.disabled).toBe(true);
-    expect(screen.getByText(ADMINISTRATOR_ONLY_WORKFLOW)).toBeTruthy();
+    expect(screen.getByRole('button', { name: EDIT })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: WITHDRAW })).toBeNull();
+    expect(screen.queryByRole('button', { name: DELETE })).toBeNull();
   });
 
   it('confirms a delete before doing it', () => {

@@ -44,17 +44,23 @@ export interface AuditPageResult {
 /**
  * Render the contextual audit page for one report and one side.
  */
+export interface RenderAuditPageOptions {
+  /** When true, explain that the return confirmation should appear in the trail. */
+  readonly afterReturn?: boolean;
+}
+
 export async function renderAuditPage(
   reportId: string,
   side: AuditRouteSide,
+  options: RenderAuditPageOptions = {},
 ): Promise<React.JSX.Element> {
   const access = await resolveAdminAccess();
 
   if (!access.allowed) {
-    return <AdminAccessScreen />;
+    return <AdminAccessScreen backHref="/admin" />;
   }
 
-  const result = await readAuditTrail(reportId, side, access.userId);
+  const result = await readContextualReportAuditTrail(reportId, side, access.userId);
 
   return (
     <AdminAuditTrailSurface
@@ -62,6 +68,8 @@ export async function renderAuditPage(
       parentLabel={result.parentLabel}
       hasMore={result.hasMore}
       error={result.error}
+      backHref="/admin"
+      afterReturn={options.afterReturn ?? false}
       editHref={`/admin/reports/${reportId}/edit`}
     />
   );
@@ -75,7 +83,8 @@ export async function renderAuditPage(
  * query is not issued, so the response carries no signal about whether a
  * trail exists for that id.
  */
-async function readAuditTrail(
+/** Read one page of a report's contextual audit trail (§17.1). */
+export async function readContextualReportAuditTrail(
   reportId: string,
   side: AuditRouteSide,
   userId: string,

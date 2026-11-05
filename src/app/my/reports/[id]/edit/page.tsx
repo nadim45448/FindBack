@@ -1,36 +1,27 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
+import { asTerminalStatus, terminalEditMessage, type ReportStatus } from '@/domain/listings';
+
+import { ReportFormPageShell } from '@/ui/report-form-page-shell';
 import { ReportFormPanel } from '@/ui/report-form-panel';
+import { MY_REPORTS_PAGE_TITLE } from '@/ui/member-copy';
 
 import { requireMember } from '../../../_member-page';
-import { readReportForm, SERVER_ERROR_MESSAGE } from '../../../../report/_report-form-page';
-import { readReportForEdit } from './_report-edit-page';
+import {
+  campusAreasForForm,
+  readReportForm,
+  SERVER_ERROR_MESSAGE,
+} from '../../../../report/_report-form-page';
+import { readReportDetailForMember } from '../../_report-detail-reading';
+import { reportFormValuesFromProjection } from './_report-edit-page';
 
 export const metadata: Metadata = {
   title: 'Edit report',
 };
 
 /**
- * The report edit form — §10.2, §10.4.
- *
- * ## The type does not change
- *
- * §10.1 encodes the type in the URL and forbids toggling it. **An edit
- * changes the report's content, not its type** — so the form is opened with
- * the report's own type, and the edit request carries no type at all. The
- * edit parser drops it even if a client sent one.
- *
- * ## The report is read through the projection
- *
- * **The form opens with the report's current values,** and they come from
- * the FR-39 projection — the same read the detail page uses. The reporter
- * holds the owner column, so the projection carries the content fields.
- *
- * ## The date bounds are the report's own type's bounds
- *
- * A Lost report keeps the 365-day bound and a Found report keeps the
- * 30-day bound. **An edit does not relax the bound** — the report is still
- * the type it was created as.
+ * The report edit form — §10.2, §10.4, mockup `09-edit-report.html`.
  */
 export default async function EditReportPage({
   params,
@@ -41,43 +32,66 @@ export default async function EditReportPage({
 
   const actor = await requireMember(`/my/reports/${id}/edit`);
 
-  const report = await readReportForEdit(actor, id);
+  const detail = await readReportDetailForMember(actor, id);
 
-  if (!report) {
+  if (!detail || detail.plan === null) {
     return <ReportNotFound />;
   }
 
-  const reading = await readReportForm(report.type);
+  if (detail.plan.edit.kind === 'Blocked') {
+    const status = detail.projection.report.status as ReportStatus;
+    const terminal = asTerminalStatus(status);
+    const message =
+      terminal !== null && detail.plan.edit.reason === 'TerminalStatus'
+        ? terminalEditMessage(terminal)
+        : 'This report can no longer be edited.';
+
+    return (
+      <ReportFormPageShell type={detail.projection.report.type} editing>
+        <div className="banner banner--warning" role="status">
+          <p>
+            <strong>{message}</strong>
+          </p>
+        </div>
+
+        <p className="field__helper">
+          <Link href={`/my/reports/${id}`}>{'Back to report'}</Link>
+        </p>
+      </ReportFormPageShell>
+    );
+  }
+
+  const reading = await readReportForm(detail.projection.report.type);
 
   if (!reading) {
     return (
-      <div className="error-summary" role="alert">
-        <p className="error-summary__heading">{SERVER_ERROR_MESSAGE}</p>
-      </div>
+      <ReportFormPageShell type={detail.projection.report.type} editing>
+        <div className="error-summary" role="alert">
+          <p className="error-summary__heading">{SERVER_ERROR_MESSAGE}</p>
+        </div>
+      </ReportFormPageShell>
     );
   }
 
   return (
-    <ReportFormPanel
-      type={report.type}
-      initialValues={report.values}
-      categories={reading.categories}
-      campusAreas={reading.campusAreas}
-      minDate={reading.minDate}
-      maxDate={reading.maxDate}
-      editing
-      reportId={report.reportId}
-    />
+    <ReportFormPageShell type={detail.projection.report.type} editing>
+      <ReportFormPanel
+        type={detail.projection.report.type}
+        initialValues={reportFormValuesFromProjection(detail.projection)}
+        categories={reading.categories}
+        campusAreas={campusAreasForForm(
+          reading.campusAreas,
+          detail.projection.report.campusArea,
+        )}
+        minDate={reading.minDate}
+        maxDate={reading.maxDate}
+        editing
+        reportId={id}
+      />
+    </ReportFormPageShell>
   );
 }
 
-/**
- * The not-found page.
- *
- * **The same page for a report that does not exist and for one the member
- * may not see.** The report's existence is a private fact about another
- * member's assertion, so the two are deliberately indistinguishable.
- */
 function ReportNotFound(): React.JSX.Element {
   return (
     <div className="empty-view">
@@ -85,6 +99,10 @@ function ReportNotFound(): React.JSX.Element {
 
       <p className="empty-view__body">
         {'That report could not be found. It may have been removed, or the link may be wrong.'}
+      </p>
+
+      <p className="field__helper">
+        <Link href="/my/reports">{MY_REPORTS_PAGE_TITLE}</Link>
       </p>
     </div>
   );

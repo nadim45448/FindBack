@@ -62,7 +62,7 @@ interface RelationshipQueryRow {
   report_type: string;
   reporter_id: string;
   claim_ids: string[];
-  recovery_response_id: string | null;
+  recovery_response_ids: string[];
 }
 
 /** The Prisma report visibility reader. */
@@ -109,11 +109,27 @@ export class PrismaReportVisibilityReader implements ReportVisibilityReader {
             WHERE c.${Prisma.raw(quoteName(PHYSICAL.claim.reportId))} = r.${Prisma.raw(quoteName(PHYSICAL.report.id))}
               AND c.${Prisma.raw(quoteName(PHYSICAL.claim.claimantId))} = ${viewerId}
           ) AS claim_ids,
-          rr.${Prisma.raw(quoteName(PHYSICAL.response.id))}        AS recovery_response_id
+          (
+            SELECT COALESCE(
+              array_agg(
+                rr2.${Prisma.raw(quoteName(PHYSICAL.response.id))}
+                ORDER BY
+                  CASE rr2.${Prisma.raw(quoteName(PHYSICAL.response.status))}
+                    WHEN 'Submitted' THEN 0
+                    WHEN 'Selected for Verification' THEN 1
+                    WHEN 'Match Confirmed' THEN 2
+                    ELSE 3
+                  END,
+                  rr2.${Prisma.raw(quoteName(PHYSICAL.response.submittedAt))} DESC NULLS LAST,
+                  rr2.${Prisma.raw(quoteName(PHYSICAL.response.id))} ASC
+              ),
+              ARRAY[]::uuid[]
+            )
+            FROM ${Prisma.raw(quoteName(TABLES.response))} rr2
+            WHERE rr2.${Prisma.raw(quoteName(PHYSICAL.response.reportId))} = r.${Prisma.raw(quoteName(PHYSICAL.report.id))}
+              AND rr2.${Prisma.raw(quoteName(PHYSICAL.response.responderId))} = ${viewerId}
+          ) AS recovery_response_ids
         FROM ${Prisma.raw(quoteName(TABLES.report))} r
-        LEFT JOIN ${Prisma.raw(quoteName(TABLES.response))} rr
-          ON rr.${Prisma.raw(quoteName(PHYSICAL.response.reportId))} = r.${Prisma.raw(quoteName(PHYSICAL.report.id))}
-         AND rr.${Prisma.raw(quoteName(PHYSICAL.response.responderId))} = ${viewerId}
         WHERE r.${Prisma.raw(quoteName(PHYSICAL.report.id))} = ${reportId}
         LIMIT 1
       `,
@@ -127,6 +143,8 @@ export class PrismaReportVisibilityReader implements ReportVisibilityReader {
 
     const claimIds = row.claim_ids ?? [];
 
+    const recoveryResponseIds = row.recovery_response_ids ?? [];
+
     return createReportRelationship({
       reportId: row.report_id,
       reportType: row.report_type === 'Found' ? 'Found' : 'Lost',
@@ -134,7 +152,7 @@ export class PrismaReportVisibilityReader implements ReportVisibilityReader {
       viewerId,
       claimIds,
       claimId: claimIds[0] ?? null,
-      recoveryResponseId: row.recovery_response_id,
+      recoveryResponseIds,
     });
   }
 

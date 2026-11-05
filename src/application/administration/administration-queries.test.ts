@@ -70,6 +70,7 @@ const AWAITING_RETURN: QueueRow = {
   itemName: 'Blue umbrella',
   claimantName: 'Alex Kim',
   approvedAt: new Date('2026-03-03T11:00:00Z'),
+  reportType: 'Found',
 };
 
 const VERIFICATION: QueueRow = {
@@ -80,6 +81,7 @@ const VERIFICATION: QueueRow = {
   ownerUserId: 'aaaaaaaa-0000-0000-0000-00000000000a',
   selectedResponderDisplayName: 'Nia Lopez',
   verificationStartedAt: new Date('2026-03-04T12:00:00Z'),
+  hasMatchConfirmed: false,
 };
 
 /** The administrator viewer. */

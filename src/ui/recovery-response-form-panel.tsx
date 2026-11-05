@@ -21,7 +21,9 @@
 import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { csrfHeaders } from './csrf';
+import { csrfHeaders, readCsrfToken, useCsrfToken } from './csrf';
+import { ParticipationContextCard } from './participation-context-card';
+import { ParticipationFormPageShell } from './participation-form-page-shell';
 import { ErrorSummary, useFocusFirstInvalidField } from './form-parts';
 import { recoveryResponseClientField } from './recovery-response-field-map';
 import {
@@ -31,9 +33,13 @@ import {
 } from './recovery-response-surface';
 
 import {
+  MEMBER_BROWSE_PAGE_TITLE,
   RECOVERY_RESPONSE_ERROR_SUMMARY_HEADING,
   RECOVERY_RESPONSE_FIELD_ELEMENT_IDS,
   RECOVERY_RESPONSE_FIELD_LABELS,
+  RECOVERY_RESPONSE_FORM_BREADCRUMB,
+  RECOVERY_RESPONSE_FORM_DESCRIPTION,
+  RECOVERY_RESPONSE_FORM_HEADING,
   SERVER_ERROR_MESSAGE,
 } from './member-copy';
 
@@ -43,6 +49,10 @@ import {
 export interface RecoveryResponseFormPanelProps {
   /** The Lost report's id. */
   readonly reportId: string;
+  /** The Lost item the response is for. */
+  readonly itemName: string;
+  /** Optional meta line (campus area, date). */
+  readonly itemMeta?: string | undefined;
   /** The values the form opens with. */
   readonly initialValues?: RecoveryResponseFormValues | undefined;
   /** The minimum date the native picker accepts. */
@@ -69,14 +79,18 @@ export const EMPTY_RECOVERY_RESPONSE_FORM_VALUES: RecoveryResponseFormValues =
  */
 export function RecoveryResponseFormPanel({
   reportId,
+  itemName,
+  itemMeta,
   initialValues = EMPTY_RECOVERY_RESPONSE_FORM_VALUES,
   minDate,
   maxDate,
   campusAreas,
 }: RecoveryResponseFormPanelProps): React.JSX.Element {
   const router = useRouter();
+  useCsrfToken();
 
   const [values, setValues] = useState<RecoveryResponseFormValues>(initialValues);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Readonly<Record<string, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
@@ -112,22 +126,14 @@ export function RecoveryResponseFormPanel({
     // is validated *after* the submit, never before it.
     setSubmitted(true);
 
+    if (!readCsrfToken()) {
+      setFailure('Your session is still loading. Wait a moment and try again.');
+      setSubmitting(false);
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/reports/${reportId}/recovery-responses`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
-        body: JSON.stringify({
-          // **The field names are the draft's,** not the form's. The form
-          // says "where found area" and "exact place"; the draft says
-          // `campusArea` and `whereFoundExactPlace`. The parser reads those
-          // names by name, so a body carrying the form's names would be a
-          // malformed request.
-          campusArea: values.whereFoundArea,
-          whereFoundExactPlace: values.exactPlace,
-          observedIdentifyingDetails: values.observedIdentifyingDetails,
-          dateFound: values.dateFound,
-        }),
-      });
+      const response = await postRecoveryResponse(reportId, values, imageFile);
 
       if (response.ok) {
         const body = (await response.json()) as { id?: string };
@@ -151,7 +157,7 @@ export function RecoveryResponseFormPanel({
     } finally {
       setSubmitting(false);
     }
-  }, [reportId, router, values]);
+  }, [imageFile, reportId, router, values]);
 
   /**
    * A change to one field.
@@ -192,7 +198,17 @@ export function RecoveryResponseFormPanel({
   }, [values]);
 
   return (
-    <>
+    <ParticipationFormPageShell
+      heading={RECOVERY_RESPONSE_FORM_HEADING}
+      lede={RECOVERY_RESPONSE_FORM_DESCRIPTION}
+      crumbs={[
+        { label: MEMBER_BROWSE_PAGE_TITLE, href: '/listings' },
+        { label: RECOVERY_RESPONSE_FORM_BREADCRUMB, href: null },
+      ]}
+      context={
+        <ParticipationContextCard itemName={itemName} reportType="Lost" meta={itemMeta} />
+      }
+    >
       {failure ? (
         <div className="error-summary" role="alert">
           <p className="error-summary__heading">{failure}</p>
@@ -216,7 +232,83 @@ export function RecoveryResponseFormPanel({
         minDate={minDate}
         maxDate={maxDate}
         campusAreas={campusAreas}
+        onCancel={() => {
+          router.push(`/listings/${reportId}`);
+        }}
+        onImageChange={(file) => {
+          setImageFile(file);
+
+          if (file) {
+            const rejection = validateRecoveryResponseImageFile(file);
+
+            if (rejection) {
+              setErrors((current) => ({ ...current, candidateImage: rejection }));
+              return;
+            }
+          }
+
+          setErrors((current) => {
+            if (!('candidateImage' in current)) {
+              return current;
+            }
+
+            const { candidateImage: _removed, ...rest } = current;
+
+            return rest;
+          });
+        }}
       />
-    </>
+    </ParticipationFormPageShell>
   );
+}
+
+const RECOVERY_RESPONSE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+
+const RECOVERY_RESPONSE_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+function validateRecoveryResponseImageFile(file: File): string | null {
+  if (!RECOVERY_RESPONSE_IMAGE_TYPES.has(file.type)) {
+    return 'That image type is not accepted. Use a JPEG, PNG, or WebP image.';
+  }
+
+  if (file.size > RECOVERY_RESPONSE_IMAGE_MAX_BYTES) {
+    return 'That image is larger than 5 MB.';
+  }
+
+  return null;
+}
+
+async function postRecoveryResponse(
+  reportId: string,
+  values: RecoveryResponseFormValues,
+  imageFile: File | null,
+): Promise<Response> {
+  const fields = {
+    campusArea: values.whereFoundArea,
+    whereFoundExactPlace: values.exactPlace,
+    observedIdentifyingDetails: values.observedIdentifyingDetails,
+    dateFound: values.dateFound,
+  };
+
+  if (imageFile && imageFile.size > 0) {
+    const form = new FormData();
+
+    for (const [key, value] of Object.entries(fields)) {
+      form.set(key, value);
+    }
+
+    form.set('image', imageFile);
+
+    return fetch(`/api/reports/${reportId}/recovery-responses`, {
+      method: 'POST',
+      headers: { ...csrfHeaders() },
+      body: form,
+    });
+  }
+
+  return fetch(`/api/reports/${reportId}/recovery-responses`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
+    body: JSON.stringify(fields),
+  });
 }

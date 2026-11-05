@@ -154,9 +154,17 @@ function claimRows(queue: PendingClaimsQueue): readonly QueueRowView[] {
 function awaitingReturnRows(queue: AwaitingReturnQueue): readonly QueueRowView[] {
   return queue.rows.map((row) => ({
     key: row.reportId,
-    cells: [row.itemName, row.claimantName, formatTimestamp(row.approvedAt)],
+    cells: [
+      row.itemName,
+      row.reportType,
+      row.claimantName,
+      formatTimestamp(row.approvedAt),
+    ],
     actionLabel: CONFIRM_RETURNED,
-    actionHref: `/admin/awaiting-return/${row.reportId}`,
+    actionHref:
+      row.reportType === 'Lost'
+        ? `/admin/lost/${row.reportId}/return`
+        : `/admin/awaiting-return/${row.reportId}`,
   }));
 }
 
@@ -170,6 +178,7 @@ function verificationRows(queue: VerificationsQueue): readonly QueueRowView[] {
     key: row.reportId,
     cells: [
       row.reportName,
+      'Verification Pending',
       row.ownerDisplayName,
       row.selectedResponderDisplayName ?? '—',
       formatTimestamp(row.verificationStartedAt),

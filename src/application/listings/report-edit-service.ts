@@ -179,7 +179,11 @@ export class ReportEditService {
     // so it can be written.
     validateReportDraft(merged, {
       now: this.clock.now(),
-      campusAreas: await this.readCampusAreas(),
+      campusAreas: campusAreasForEditValidation(
+        await this.readCampusAreas(),
+        report.campusArea.value,
+        merged.campusArea,
+      ),
       imageRef: report.imageRef,
     });
 
@@ -393,6 +397,26 @@ function nextValueOf(changes: Partial<ReportDraft>, field: EditableContentField)
  * The validator sees a **whole submission**, so a field the member left
  * alone is carried over from the stored report rather than being blank.
  */
+/**
+ * Active campus areas for validation, retaining a stored value the member
+ * did not change even when it is no longer offered to new reports.
+ */
+function campusAreasForEditValidation(
+  activeAreas: readonly CampusArea[],
+  storedCampusArea: string,
+  submittedCampusArea: string,
+): readonly CampusArea[] {
+  if (submittedCampusArea !== storedCampusArea) {
+    return activeAreas;
+  }
+
+  if (activeAreas.some((area) => area.value === storedCampusArea && area.active)) {
+    return activeAreas;
+  }
+
+  return [...activeAreas, { value: storedCampusArea, label: storedCampusArea, active: true }];
+}
+
 function mergeForValidation(
   report: PersistedReport,
   changes: Partial<ReportDraft>,

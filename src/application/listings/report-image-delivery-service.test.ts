@@ -157,9 +157,7 @@ describe('the report image delivery service', () => {
       expect(events).toEqual(['load-image', 'read-blob']);
     });
 
-    it('refuses a claimant, whose column grants the image field', async () => {
-      // **An image is not ownership evidence.** The claimant's projection
-      // carries the image reference; the bytes are refused.
+    it('delivers to a claimant browsing the Found report', async () => {
       const relationship = createReportRelationship({
         reportId: 'report-1',
         reportType: 'Found',
@@ -170,13 +168,13 @@ describe('the report image delivery service', () => {
 
       withImage(relationship);
 
-      await expect(service.deliver(aMember(), 'report-1')).rejects.toBeInstanceOf(NotFoundError);
+      const delivered = await service.deliver(aMember(), 'report-1');
 
-      expect(events).not.toContain('read-blob');
+      expect(delivered.bytes).toEqual(IMAGE_BYTES);
+      expect(events).toEqual(['load-image', 'read-blob']);
     });
 
-    it('refuses a recovery responder', async () => {
-      // **A responder must not see another candidate's image.**
+    it('delivers to a recovery responder browsing the Lost report', async () => {
       const relationship = createReportRelationship({
         reportId: 'report-1',
         reportType: 'Lost',
@@ -187,9 +185,10 @@ describe('the report image delivery service', () => {
 
       withImage(relationship);
 
-      await expect(service.deliver(aMember(), 'report-1')).rejects.toBeInstanceOf(NotFoundError);
+      const delivered = await service.deliver(aMember(), 'report-1');
 
-      expect(events).not.toContain('read-blob');
+      expect(delivered.bytes).toEqual(IMAGE_BYTES);
+      expect(events).toEqual(['load-image', 'read-blob']);
     });
 
     it('refuses a report with no image', async () => {
@@ -209,17 +208,7 @@ describe('the report image delivery service', () => {
 
       const refusals: Array<Promise<unknown>> = [service.deliver(null, 'report-1')];
 
-      withImage(
-        createReportRelationship({
-          reportId: 'report-1',
-          reportType: 'Found',
-          reporterId: REPORTER_ID,
-          viewerId: VIEWER_ID,
-          claimId: 'claim-1',
-        }),
-      );
-
-      refusals.push(service.deliver(aMember(), 'report-1'));
+      withImage(unrelatedRelationship());
 
       storedImage = null;
       refusals.push(service.deliver(aMember(), 'report-1'));

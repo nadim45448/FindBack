@@ -1,9 +1,18 @@
 'use client';
 
-import type { ReporterActionPlan } from '@/domain/listings';
+import { useCallback, useState } from 'react';
+
+import {
+  isReportStatus,
+  shouldShowReporterToolbar,
+  type ReportStatus,
+  type ReportType,
+  type ReporterActionPlan,
+} from '@/domain/listings';
 
 import { Breadcrumbs } from './breadcrumbs';
 import { ReportActionsPanel } from './report-actions-panel';
+import { reporterCalloutNotice } from './report-actions-surface';
 
 import { FINDER_TOOLBAR, MEMBER_BROWSE_PAGE_TITLE } from './member-copy';
 
@@ -15,6 +24,9 @@ export interface ItemDetailBreadcrumb {
 export interface ItemDetailPageLayoutProps {
   readonly reportId: string;
   readonly reportTitle: string;
+  readonly reportStatus: ReportStatus;
+  readonly reportType: ReportType;
+  readonly hasMatchConfirmed?: boolean | undefined;
   readonly plan: ReporterActionPlan | null;
   readonly crumbs?: readonly ItemDetailBreadcrumb[] | undefined;
   readonly children: React.ReactNode;
@@ -26,6 +38,9 @@ export interface ItemDetailPageLayoutProps {
 export function ItemDetailPageLayout({
   reportId,
   reportTitle,
+  reportStatus,
+  reportType,
+  hasMatchConfirmed = false,
   plan,
   crumbs,
   children,
@@ -37,21 +52,72 @@ export function ItemDetailPageLayout({
       { label: reportTitle, href: null },
     ] as const);
 
+  const status = isReportStatus(reportStatus) ? reportStatus : ('Open' as ReportStatus);
+
   return (
     <div className="item-detail-page">
       <Breadcrumbs variant="compact" crumbs={[...trail]} />
 
-      {plan ? (
-        <div className="reporter-callout">
-          <p className="reporter-callout__label">{FINDER_TOOLBAR}</p>
-
-          <div className="reporter-callout__actions">
-            <ReportActionsPanel reportId={reportId} plan={plan} />
-          </div>
-        </div>
+      {plan && shouldShowReporterToolbar(status) ? (
+        <ReporterCallout
+          reportId={reportId}
+          plan={plan}
+          reportStatus={status}
+          reportType={reportType}
+          hasMatchConfirmed={hasMatchConfirmed}
+        />
       ) : null}
 
       {children}
+    </div>
+  );
+}
+
+function ReporterCallout({
+  reportId,
+  plan,
+  reportStatus,
+  reportType,
+  hasMatchConfirmed,
+}: {
+  readonly reportId: string;
+  readonly plan: ReporterActionPlan;
+  readonly reportStatus: ReportStatus;
+  readonly reportType: ReportType;
+  readonly hasMatchConfirmed: boolean;
+}): React.JSX.Element {
+  const [actionFailure, setActionFailure] = useState<string | null>(null);
+
+  const onFailure = useCallback((message: string | null): void => {
+    setActionFailure(message);
+  }, []);
+
+  const notice = reporterCalloutNotice(plan, {
+    status: reportStatus,
+    type: reportType,
+    hasMatchConfirmed,
+  });
+
+  return (
+    <div className="reporter-callout">
+      <div className="reporter-callout__row">
+        <p className="reporter-callout__label">{FINDER_TOOLBAR}</p>
+
+        <ReportActionsPanel
+          reportId={reportId}
+          plan={plan}
+          calloutOnly
+          onFailure={onFailure}
+        />
+      </div>
+
+      {notice ? <p className="reporter-callout__note">{notice}</p> : null}
+
+      {actionFailure ? (
+        <div className="reporter-callout__alert error-summary" role="alert">
+          <p className="error-summary__heading">{actionFailure}</p>
+        </div>
+      ) : null}
     </div>
   );
 }

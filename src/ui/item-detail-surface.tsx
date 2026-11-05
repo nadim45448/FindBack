@@ -9,8 +9,11 @@ import Link from 'next/link';
 import { StatusBadge } from './status-badge';
 
 import {
+  displayReportStatus,
+  grantsImageDelivery,
   ownerColumnFor,
   planSectionsForProjection,
+  reportHasMatchConfirmed,
   rendersHiddenNotice,
   type ProjectedClaim,
   type VisibilityProjection,
@@ -37,6 +40,8 @@ import {
   FOUND_OWNER_CLAIMS_REOPENED_BODY,
   FOUND_OWNER_CLAIM_THREAD_LINK,
   LOST_OWNER_RECOVERY_BODY,
+  LOST_OWNER_RECOVERY_BODY_AWAITING_RETURN,
+  LOST_OWNER_RECOVERY_BODY_VERIFICATION_PENDING,
   LOST_OWNER_RECOVERY_HEADING,
   LOST_OWNER_RECOVERY_NONE,
   REPORT_STATUS_HELPERS,
@@ -71,6 +76,14 @@ export function ItemDetailSurface({
 
   const dateLabel = report.type === 'Lost' ? REPORT_DATE_LOST_LABEL : REPORT_DATE_FOUND_LABEL;
 
+  const matchConfirmed = reportHasMatchConfirmed(projection.recoveryResponses);
+  const statusLabel = displayReportStatus(report.type, report.status, {
+    hasMatchConfirmed: matchConfirmed,
+  });
+
+  const imageInProjection = isVisible('image') && Boolean(report.imageRef);
+  const imageDeliverable = imageInProjection && grantsImageDelivery(projection.columns);
+
   return (
     <article className="item-detail">
       {isVisible('header') ? (
@@ -80,7 +93,7 @@ export function ItemDetailSurface({
 
             <div className="item-detail__badges">
               <StatusBadge status={reportTypeLabel(report.type)} kind="Type" tone="neutral" />
-              <StatusBadge status={report.status} kind="Status" />
+              <StatusBadge status={statusLabel} kind="Status" />
             </div>
           </div>
         </header>
@@ -88,8 +101,14 @@ export function ItemDetailSurface({
 
       <div className="detail-grid">
         <div className="detail-grid__main">
-          <div className="detail-image-frame">
-            {isVisible('image') && report.imageRef ? (
+          <div
+            className={
+              imageDeliverable
+                ? 'detail-image-frame detail-image-frame--filled'
+                : 'detail-image-frame'
+            }
+          >
+            {imageDeliverable ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 className="detail-image"
@@ -320,17 +339,20 @@ function FoundOwnerClaimsSection({
         </div>
       ) : null}
 
-      <ul className="detail-list detail-list--stacked">
+      <ul className="found-owner-claim-list">
         {claims.map((claim) => (
-          <li key={claim.claimId} className="detail-list__row">
-            <div className="detail-list__term tabular">{claim.submittedAt}</div>
-            <div className="detail-list__value">
+          <li key={claim.claimId} className="found-owner-claim-list__item">
+            <div className="found-owner-claim-list__summary">
+              <span className="found-owner-claim-list__date tabular">{claim.submittedAt}</span>
               <StatusBadge status={claim.status} kind="Status" />
-              {' · '}
-              <Link href={`/my/reports/${reportId}/claims/${claim.claimId}`}>
-                {FOUND_OWNER_CLAIM_THREAD_LINK}
-              </Link>
             </div>
+
+            <Link
+              href={`/my/reports/${reportId}/claims/${claim.claimId}`}
+              className="button button--secondary button--sm"
+            >
+              {FOUND_OWNER_CLAIM_THREAD_LINK}
+            </Link>
           </li>
         ))}
       </ul>
@@ -401,9 +423,20 @@ function LostOwnerRecoverySection({
     return null;
   }
 
+  const matchConfirmed = projection.recoveryResponses.some(
+    (response) => response.status === 'Match Confirmed',
+  );
+
+  const bodyCopy =
+    report.status === 'Verification Pending' && matchConfirmed
+      ? LOST_OWNER_RECOVERY_BODY_AWAITING_RETURN
+      : report.status === 'Verification Pending'
+        ? LOST_OWNER_RECOVERY_BODY_VERIFICATION_PENDING
+        : LOST_OWNER_RECOVERY_BODY;
+
   return (
     <DetailCard heading={LOST_OWNER_RECOVERY_HEADING}>
-      <p className="detail-section__body">{LOST_OWNER_RECOVERY_BODY}</p>
+      <p className="detail-section__body">{bodyCopy}</p>
 
       <p className="detail-section__body">
         {`${count} response${count === 1 ? '' : 's'} so far.`}
@@ -429,10 +462,11 @@ function ParticipationSections({
 
   const ownClaims = projection.claims.filter((claim) => claim.isOwn);
   const ownClaim = preferredOwnClaim(projection.claims);
-  const ownResponse = projection.recoveryResponses.find((response) => response.isOwn);
+  const ownResponses = projection.recoveryResponses.filter((response) => response.isOwn);
+  const ownResponse = preferredOwnRecoveryResponse(ownResponses);
 
   const hasPendingClaim = ownClaims.some((claim) => claim.status === 'Pending');
-  const hasPendingResponse = ownResponse !== undefined && ownResponse.status === 'Submitted';
+  const hasPendingResponse = ownResponses.some((response) => response.status === 'Submitted');
 
   const claimEligible =
     isFound &&
@@ -513,6 +547,28 @@ function ParticipationSections({
  * Pending and Approved claims take precedence over an older Rejected one, so
  * the alert and the "Your claim" button agree with My Claims.
  */
+function preferredOwnRecoveryResponse(
+  responses: ReadonlyArray<{ readonly responseId: string; readonly status: string }>,
+): { readonly responseId: string; readonly status: string } | undefined {
+  if (responses.length === 0) {
+    return undefined;
+  }
+
+  const liveStatuses = new Set([
+    'Submitted',
+    'Selected for Verification',
+    'Match Confirmed',
+  ]);
+
+  const live = responses.find((response) => liveStatuses.has(response.status));
+
+  if (live) {
+    return live;
+  }
+
+  return responses[responses.length - 1];
+}
+
 function preferredOwnClaim(claims: readonly ProjectedClaim[]): ProjectedClaim | undefined {
   const own = claims.filter((claim) => claim.isOwn);
 

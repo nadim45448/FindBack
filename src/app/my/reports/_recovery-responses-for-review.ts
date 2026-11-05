@@ -6,6 +6,10 @@ export interface OwnerReviewResponseRow {
   readonly status: string;
   readonly submittedAt: string;
   readonly campusArea: string | null;
+  readonly exactPlace: string | null;
+  readonly observedIdentifyingDetails: string | null;
+  readonly dateFound: string | null;
+  readonly responderDisplayName: string;
 }
 
 /**
@@ -25,6 +29,10 @@ export async function loadRecoveryResponsesForOwnerReview(
       status: true,
       submittedAt: true,
       campusArea: true,
+      whereFoundExactPlace: true,
+      observedIdentifyingDetails: true,
+      dateFound: true,
+      responder: { select: { displayName: true } },
     },
     orderBy: { submittedAt: 'asc' },
   });
@@ -32,7 +40,11 @@ export async function loadRecoveryResponsesForOwnerReview(
   return rows.map((row) => ({
     responseId: row.id,
     status: row.status,
-    submittedAt: row.submittedAt.toISOString(),
+    submittedAt: row.submittedAt?.toISOString() ?? '',
     campusArea: row.campusArea,
+    exactPlace: row.whereFoundExactPlace,
+    observedIdentifyingDetails: row.observedIdentifyingDetails,
+    dateFound: row.dateFound ? row.dateFound.toISOString().slice(0, 10) : null,
+    responderDisplayName: row.responder.displayName ?? 'A member',
   }));
 }

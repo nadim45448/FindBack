@@ -171,7 +171,13 @@ describe('resolving the status view', () => {
     expect(resolveStatusView('browse', false, requested)).toEqual(['Closed']);
   });
 
-  it('keeps every status in mine regardless of the filter', () => {
-    expect(resolveStatusView('mine', false, ['Open'])).toEqual(administratorStatusView());
+  it('uses an explicit filter on mine exactly, without widening it', () => {
+    const requested = ['Open'] as const;
+
+    expect(resolveStatusView('mine', false, requested)).toEqual(requested);
+  });
+
+  it('returns every status in mine when no filter is given', () => {
+    expect(resolveStatusView('mine', false, null)).toEqual(administratorStatusView());
   });
 });

@@ -150,6 +150,17 @@ async function fetchSession(): Promise<void> {
 }
 
 /**
+ * Load the session from the server once.
+ *
+ * **Shared with the CSRF store.** The token must be derived from the same
+ * session cookie the state-changing routes validate, so the CSRF hook waits
+ * for this answer before it mints an anonymous token.
+ */
+export function loadClientSession(): Promise<ClientSession> {
+  return fetchSession().then(() => getSessionSnapshot());
+}
+
+/**
  * The session hook's result.
  *
  * **The session and the way to refresh it.** The refresh is returned

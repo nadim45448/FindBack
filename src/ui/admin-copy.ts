@@ -139,6 +139,76 @@ export const VERIFICATION_MATCH_CONFIRMED_LEDE =
 /** Link to the substitute-receiver return form (FR-24). */
 export const LOST_RETURN_SUBSTITUTE_LINK = 'Someone else received the item';
 
+/* -------------------------------------------------------------------------- */
+/* Lost verification review — BMAD mockup 15                                 */
+/* -------------------------------------------------------------------------- */
+
+export const VERIFICATION_BREADCRUMB_QUEUE = 'Items in verification';
+
+export const VERIFICATION_REVIEW_HEADING = 'Verification review';
+
+export const VERIFICATION_LOST_REPORT_SECTION = 'Lost report';
+
+export const VERIFICATION_RESPONSES_SECTION = 'Recovery responses';
+
+export const VERIFICATION_ACTIONS_SECTION = 'Verification actions';
+
+export const VERIFICATION_ACTIONS_HELP =
+  'The owner determines whether this is a match. You record the outcome after confirming with the owner in person. If the owner has not decided yet, leave this report in verification pending.';
+
+export const VERIFICATION_RECORD_MATCH =
+  "Record Match Confirmed (owner says it's theirs)";
+
+export const VERIFICATION_RECORD_NOT_MATCH =
+  "Record Not a Match (owner says it's not theirs)";
+
+export const VERIFICATION_MATCH_CONFIRM_MODAL =
+  'Record that the owner confirmed this is their item? The recovery response will move to Match Confirmed and the report stays in verification pending until the handoff is complete.';
+
+export const VERIFICATION_NOT_MATCH_MODAL =
+  'Record that the owner said this is not their item? The recovery response will move to Not a Match and the report will return to Open.';
+
+export const VERIFICATION_SELECTED_RESPONSE_SECTION =
+  'Currently selected recovery response';
+
+export const VERIFICATION_NO_RESPONSES = 'No recovery responses submitted yet.';
+
+export const VERIFICATION_NO_SELECTED =
+  'No recovery response has been selected for verification yet.';
+
+export const VERIFICATION_BACK_TO_QUEUE = 'Back to queue';
+
+/* -------------------------------------------------------------------------- */
+/* Confirm returned — §15.4 / mockups 10–11                                   */
+/* -------------------------------------------------------------------------- */
+
+/** Breadcrumb label for the Items Awaiting Return queue. */
+export const AWAITING_RETURN_BREADCRUMB_QUEUE = 'Items awaiting return';
+
+export const CONFIRM_RETURN_PAGE_HEADING = 'Confirm returned';
+
+export const CONFIRM_RETURN_DEFAULT_RECEIVER_FOUND =
+  'The default receiver is the approved claimant. Confirm when they have the item, or use the substitute option if someone else collected it on their behalf.';
+
+export const CONFIRM_RETURN_DEFAULT_RECEIVER_LOST =
+  'The default receiver is the Lost-report owner. Confirm when they have the item, or use the substitute option if someone else received it.';
+
+export const CONFIRM_RETURN_WHAT_HAPPENS_HEADING = 'This will:';
+
+export const CONFIRM_RETURN_WHAT_HAPPENS_ITEMS = [
+  'Record you as the confirming administrator',
+  'Record who received the item',
+  'Move the report to Returned (terminal)',
+  'Add an entry to the audit trail',
+] as const;
+
+export const CONFIRM_RETURN_SUBSTITUTE_SECTION = 'Substitute receiver';
+
+export const CONFIRM_RETURN_SUBSTITUTE_CHECKBOX =
+  'Someone other than the default receiver received the item';
+
+export const CONFIRM_RETURN_MATCHED_RESPONSE_SECTION = 'Matched recovery response';
+
 /**
  * The registration rejection's reason label.
  *
@@ -204,6 +274,8 @@ export const CLAIM_BREADCRUMB_QUEUE = 'Pending claims';
 
 export const CLAIM_REVIEW_HEADING = 'Review claim';
 
+export const CLAIM_REVIEW_ITEM_PHOTO = 'Item photo';
+
 export const CLAIM_APPROVE_HEADING = 'Approve this claim';
 
 export const CLAIM_REJECT_HEADING = 'Reject this claim';
@@ -217,6 +289,14 @@ export const CLAIM_APPROVE_THIS = 'Approve this claim';
 export const CLAIM_REJECT_THIS = 'Reject this claim';
 
 export const CLAIM_NO_LONGER_PENDING = 'This claim is no longer pending.';
+
+/** Shown when approve/reject loses a race (HTTP 409) — §6.4. */
+export const CLAIM_DECISION_CONFLICT_HEADING = 'This claim can no longer be decided';
+
+export const CLAIM_DECISION_FORM_ERROR_HEADING = 'Check the form';
+
+export const ADMIN_CLAIM_ACTION_FAILED =
+  'Something went wrong on our side. Try again, or come back in a moment.';
 
 export const CLAIM_REJECT_REASON_LABEL = 'Rejection reason';
 
@@ -261,8 +341,14 @@ export const COLUMN_CLAIM_ID = 'Claim ID';
 /** The item column's heading. */
 export const COLUMN_ITEM = 'Item';
 
+/** Report type on the Items Awaiting Return queue (Found or Lost). */
+export const COLUMN_REPORT_TYPE = 'Type';
+
 /** The claimant column's heading. */
 export const COLUMN_CLAIMANT = 'Claimant';
+
+/** Default receiver on the Items Awaiting Return queue. */
+export const COLUMN_RECEIVER = 'Receiver';
 
 /** The submitted-at column's heading. */
 export const COLUMN_SUBMITTED_AT = 'Submitted';
@@ -272,6 +358,9 @@ export const COLUMN_APPROVED_AT = 'Approved';
 
 /** The report column's heading — the Lost report's name. */
 export const COLUMN_REPORT = 'Report';
+
+/** The report status column on the Items in Verification queue. */
+export const COLUMN_REPORT_STATUS = 'Status';
 
 /** The owner column's heading. */
 export const COLUMN_OWNER = 'Owner';
@@ -306,6 +395,19 @@ export const COLUMN_DETAILS = 'Details';
 
 /** The audit trail's heading. */
 export const AUDIT_TRAIL_HEADING = 'Audit trail';
+
+/** Link label — contextual audit for one report (§17.1). */
+export const VIEW_AUDIT_TRAIL = 'View audit trail';
+
+/** When the embedded trail is truncated to one page. */
+export const OPEN_FULL_AUDIT_TRAIL = 'Open full audit trail';
+
+/** Audit block on the Lost verification review screen. */
+export const VERIFICATION_AUDIT_SECTION = 'Audit trail';
+
+/** Shown on the audit page after a successful handoff confirmation. */
+export const AUDIT_AFTER_RETURN_LEDE =
+  'The return confirmation and related lifecycle events appear below.';
 
 /**
  * The disclosure's label.

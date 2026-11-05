@@ -13,5 +13,9 @@ export function recoveryResponseClientField(serverField: string): string {
     return 'exactPlace';
   }
 
+  if (serverField === 'image') {
+    return 'candidateImage';
+  }
+
   return serverField;
 }

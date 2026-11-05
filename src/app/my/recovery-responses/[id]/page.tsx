@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 
+import { Breadcrumbs } from '@/ui/breadcrumbs';
 import {
+  MY_RECOVERY_RESPONSES_PAGE_TITLE,
   RECOVERY_RESPONSE_THREAD_HEADING,
   RECOVERY_RESPONSE_THREAD_PERMISSION_DENIED,
 } from '@/ui/member-copy';
@@ -48,7 +50,15 @@ export default async function RecoveryResponseDetailPage({
   }
 
   return (
-    <>
+    <div className="item-detail-page participation-detail-page">
+      <Breadcrumbs
+        variant="compact"
+        crumbs={[
+          { label: MY_RECOVERY_RESPONSES_PAGE_TITLE, href: '/my/recovery-responses' },
+          { label: `${reading.reportName} — thread`, href: null },
+        ]}
+      />
+
       <RecoveryResponseDetailSurface
         responseId={reading.responseId}
         status={reading.displayStatus}
@@ -74,7 +84,7 @@ export default async function RecoveryResponseDetailPage({
         }
         endpoint={`/api/reports/${reading.reportId}/recovery-responses/${reading.responseId}/thread/messages`}
       />
-    </>
+    </div>
   );
 }
 

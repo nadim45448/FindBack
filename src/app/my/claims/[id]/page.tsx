@@ -36,10 +36,14 @@ export const metadata: Metadata = {
  */
 export default async function ClaimDetailPage({
   params,
+  searchParams,
 }: {
   readonly params: Promise<{ readonly id: string }>;
+  readonly searchParams: Promise<{ readonly submitted?: string }>;
 }): Promise<React.JSX.Element> {
   const { id } = await params;
+  const { submitted } = await searchParams;
+  const justSubmitted = submitted === '1';
 
   const actor = await requireMember(`/my/claims/${id}`);
 
@@ -50,7 +54,7 @@ export default async function ClaimDetailPage({
   }
 
   return (
-    <>
+    <div className="item-detail-page participation-detail-page">
       <ClaimDetailSurface
         claimId={reading.claimId}
         status={reading.claimStatus}
@@ -61,6 +65,7 @@ export default async function ClaimDetailPage({
         reportId={reading.reportId}
         reportName={reading.reportName}
         autoRejected={reading.autoRejected}
+        justSubmitted={justSubmitted}
       />
 
       <ThreadPanel
@@ -71,7 +76,7 @@ export default async function ClaimDetailPage({
         permissionDenied={reading.threadDenied ? THREAD_PERMISSION_DENIED : undefined}
         endpoint={`/api/claims/${reading.claimId}/thread/messages`}
       />
-    </>
+    </div>
   );
 }
 

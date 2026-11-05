@@ -22,10 +22,12 @@
 
 import { useCallback } from 'react';
 
+import { NativeDateField } from './native-date-field';
+
 import {
+  CANCEL,
   CLAIM_DATE_LOST_LABEL,
-  CLAIM_FORM_DESCRIPTION,
-  CLAIM_FORM_HEADING,
+  CLAIM_IDENTIFYING_DETAILS_HELP,
   CLAIM_IDENTIFYING_DETAILS_LABEL,
   CLAIM_REASON_LABEL,
   SUBMIT_CLAIM_BUTTON,
@@ -60,6 +62,8 @@ export interface ClaimFormSurfaceProps {
   readonly minDate: string;
   /** The maximum date the native picker accepts. */
   readonly maxDate: string;
+  /** Where Cancel returns the member. */
+  readonly onCancel: () => void;
 }
 
 /**
@@ -73,6 +77,7 @@ export function ClaimFormSurface({
   errors = {},
   minDate,
   maxDate,
+  onCancel,
 }: ClaimFormSurfaceProps): React.JSX.Element {
   const set = useCallback(
     (key: keyof ClaimFormValues, value: string): void => {
@@ -94,10 +99,6 @@ export function ClaimFormSurface({
         onSubmit();
       }}
     >
-      <h1 className="hero__title">{CLAIM_FORM_HEADING}</h1>
-
-      <p className="hero__lede">{CLAIM_FORM_DESCRIPTION}</p>
-
       <fieldset className="card">
         <legend className="field__label">{'Details'}</legend>
 
@@ -145,7 +146,11 @@ export function ClaimFormSurface({
             <p className="field__error" id="claimIdentifyingDetails-describedby">
               {errors['identifyingDetails']}
             </p>
-          ) : null}
+          ) : (
+            <p className="field__helper" id="claimIdentifyingDetails-describedby">
+              {CLAIM_IDENTIFYING_DETAILS_HELP}
+            </p>
+          )}
 
           <textarea
             id="claimIdentifyingDetails"
@@ -156,9 +161,7 @@ export function ClaimFormSurface({
             required
             aria-required="true"
             aria-invalid={errors['identifyingDetails'] ? true : undefined}
-            aria-describedby={
-              errors['identifyingDetails'] ? 'claimIdentifyingDetails-describedby' : undefined
-            }
+            aria-describedby="claimIdentifyingDetails-describedby"
             onChange={(event) => {
               set('identifyingDetails', event.target.value);
             }}
@@ -184,10 +187,9 @@ export function ClaimFormSurface({
             </p>
           ) : null}
 
-          <input
+          <NativeDateField
             id="dateLost"
-            className="input"
-            type="date"
+            className="input input--date"
             value={values.dateLost}
             min={minDate}
             max={maxDate}
@@ -195,18 +197,22 @@ export function ClaimFormSurface({
             aria-required="true"
             aria-invalid={errors['dateLost'] ? true : undefined}
             aria-describedby={errors['dateLost'] ? 'dateLost-describedby' : undefined}
-            onChange={(event) => {
-              set('dateLost', event.target.value);
+            onChange={(next) => {
+              set('dateLost', next);
             }}
           />
         </div>
       </fieldset>
 
-      <p className="button-row">
+      <div className="form-actions">
+        <button type="button" className="button button--tertiary" disabled={submitting} onClick={onCancel}>
+          {CANCEL}
+        </button>
+
         <button type="submit" className="button button--primary" disabled={submitting}>
           {submitting ? SUBMITTING : SUBMIT_CLAIM_BUTTON}
         </button>
-      </p>
+      </div>
     </form>
   );
 }

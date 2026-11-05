@@ -9,4 +9,5 @@ export interface ReportClaimSummary {
 export interface ReportRecoverySummary {
   readonly submitted: number;
   readonly inProgress: number;
+  readonly hasMatchConfirmed: boolean;
 }

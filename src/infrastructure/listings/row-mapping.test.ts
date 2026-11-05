@@ -149,7 +149,7 @@ describe('the report reader, mapping its rows', () => {
           report_type: 'Found',
           reporter_id: 'owner-1',
           claim_ids: ['claim-1'],
-          recovery_response_id: null,
+          recovery_response_ids: [],
         },
       ]),
     ).loadRelationship('report-1', 'viewer-1');
@@ -165,6 +165,7 @@ describe('the report reader, mapping its rows', () => {
       claimId: 'claim-1',
       claimIds: ['claim-1'],
       recoveryResponseId: null,
+      recoveryResponseIds: [],
     });
   });
 
@@ -184,7 +185,7 @@ describe('the report reader, mapping its rows', () => {
           report_type: 'Lost',
           reporter_id: 'owner-1',
           claim_ids: [],
-          recovery_response_id: 'response-1',
+          recovery_response_ids: ['response-1'],
         },
       ]),
     ).loadRelationship('owner-1', 'owner-1');

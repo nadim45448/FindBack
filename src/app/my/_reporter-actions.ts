@@ -32,10 +32,12 @@
  */
 
 import {
+  isReportStatus,
   ownerColumnFor,
   planReporterActions,
   type InteractionFacts,
   type ReporterActionPlan,
+  type ReportStatus,
   type VisibilityProjection,
 } from '@/domain/listings';
 
@@ -60,11 +62,21 @@ export function reporterActionPlan(
 
   const facts = interactionFacts(projection);
 
+  const status = reportStatusFromProjection(projection.report.status);
+
   return planReporterActions({
-    status: projection.report.status as Parameters<typeof planReporterActions>[0]['status'],
+    status,
     type: projection.report.type,
     interactions: facts,
   });
+}
+
+function reportStatusFromProjection(status: string): ReportStatus {
+  if (isReportStatus(status)) {
+    return status;
+  }
+
+  return 'Open';
 }
 
 /**

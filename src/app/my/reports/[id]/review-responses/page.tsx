@@ -45,6 +45,7 @@ export default async function ReviewResponsesPage({
         reportId={reading.reportId}
         reportName={reading.reportName}
         reportStatus={reading.reportStatus}
+        selectedResponseId={reading.selectedResponseId}
         rows={reading.rows}
       />
     </div>

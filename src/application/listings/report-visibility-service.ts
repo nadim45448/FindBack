@@ -147,8 +147,11 @@ export class ReportVisibilityService {
       ? visibleClaimIds(claimRows, columns, claimantClaimIds(columns, relationship))
       : [];
 
+    const ownRecoveryResponseIds =
+      relationship.recoveryResponseIds.length > 0 ? relationship.recoveryResponseIds : null;
+
     const scopedResponseIds = grants.recoveryResponses
-      ? visibleResponseIds(responseRows, columns, relationship.recoveryResponseId)
+      ? visibleResponseIds(responseRows, columns, ownRecoveryResponseIds)
       : [];
 
     // A thread is loaded only for a parent the viewer may see. The scope is
@@ -176,7 +179,7 @@ export class ReportVisibilityService {
       recoveryResponses: projectRecoveryResponses(
         responseRows,
         columns,
-        relationship.recoveryResponseId,
+        ownRecoveryResponseIds,
       ),
       threads: projectThreads(threadRows, columns, {
         claimIds: scopedClaimIds,
@@ -231,8 +234,8 @@ export class ReportVisibilityService {
       return null;
     }
 
-    if (columns.includes('recoveryResponder') && relationship.recoveryResponseId !== null) {
-      return [relationship.recoveryResponseId];
+    if (columns.includes('recoveryResponder') && relationship.recoveryResponseIds.length > 0) {
+      return [...relationship.recoveryResponseIds];
     }
 
     return [];

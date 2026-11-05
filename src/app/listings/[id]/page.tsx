@@ -74,7 +74,13 @@ export default async function ItemDetailPage({
   const title = reading.projection.report.name ?? 'Item detail';
 
   return (
-    <ItemDetailPageLayout reportId={id} reportTitle={title} plan={reading.plan}>
+    <ItemDetailPageLayout
+      reportId={id}
+      reportTitle={title}
+      reportStatus={reading.projection.report.status}
+      reportType={reading.projection.report.type}
+      plan={reading.plan}
+    >
       <ItemDetailSurface projection={reading.projection} />
     </ItemDetailPageLayout>
   );

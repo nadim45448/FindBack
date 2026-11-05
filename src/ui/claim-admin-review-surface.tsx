@@ -8,6 +8,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+import { AdminAuditTrailSurface, type AuditTrailRow } from './admin-audit-trail-surface';
 import { Breadcrumbs } from './breadcrumbs';
 import { csrfHeaders } from './csrf';
 import { StatusBadge } from './status-badge';
@@ -15,7 +16,10 @@ import {
   CLAIM_APPROVE_CONFIRM,
   CLAIM_APPROVE_HEADING,
   CLAIM_APPROVE_INFO_HEADING,
+  ADMIN_CLAIM_ACTION_FAILED,
   CLAIM_APPROVE_THIS,
+  CLAIM_DECISION_CONFLICT_HEADING,
+  CLAIM_DECISION_FORM_ERROR_HEADING,
   CLAIM_BREADCRUMB_QUEUE,
   CLAIM_COMPETING_NONE,
   CLAIM_REJECT_CONFIRM,
@@ -28,6 +32,9 @@ import {
   CLAIM_REJECT_REASON_TOO_SHORT,
   CLAIM_REJECT_THIS,
   CLAIM_REVIEW_HEADING,
+  CLAIM_REVIEW_ITEM_PHOTO,
+  VERIFICATION_BACK_TO_QUEUE,
+  VIEW_AUDIT_TRAIL,
 } from './admin-copy';
 import { CANCEL } from './member-copy';
 
@@ -36,6 +43,8 @@ export type ClaimAdminMode = 'review' | 'approve' | 'reject';
 export interface ClaimAdminReviewSurfaceProps {
   readonly mode: ClaimAdminMode;
   readonly claimId: string;
+  readonly reportId: string;
+  readonly hasItemImage: boolean;
   readonly claimStatus: string;
   readonly claimantDisplayName: string;
   readonly claimantEmail: string;
@@ -50,11 +59,19 @@ export interface ClaimAdminReviewSurfaceProps {
   readonly competingClaimCount: number;
   readonly decisionAvailable: boolean;
   readonly afterHref: string;
+  readonly auditHref: string;
+  readonly auditTrail: {
+    readonly rows: readonly AuditTrailRow[];
+    readonly hasMore: boolean;
+    readonly error?: string | undefined;
+  };
 }
 
 export function ClaimAdminReviewSurface({
   mode,
   claimId,
+  reportId,
+  hasItemImage,
   claimStatus,
   claimantDisplayName,
   claimantEmail,
@@ -69,6 +86,8 @@ export function ClaimAdminReviewSurface({
   competingClaimCount,
   decisionAvailable,
   afterHref,
+  auditHref,
+  auditTrail,
 }: ClaimAdminReviewSurfaceProps): React.JSX.Element {
   const router = useRouter();
   const baseHref = `/admin/claims/${claimId}`;
@@ -78,6 +97,7 @@ export function ClaimAdminReviewSurface({
   const [rejectReason, setRejectReason] = useState('');
   const [reasonError, setReasonError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [formConflict, setFormConflict] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   async function postApprove(): Promise<void> {
@@ -87,6 +107,7 @@ export function ClaimAdminReviewSurface({
 
     setSubmitting(true);
     setFormError(null);
+    setFormConflict(false);
 
     try {
       const response = await fetch(approveEndpoint, {
@@ -100,7 +121,8 @@ export function ClaimAdminReviewSurface({
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => ({}))) as { error?: string };
-        setFormError(payload.error ?? 'Something went wrong on our side. Try again.');
+        setFormConflict(response.status === 409);
+        setFormError(payload.error ?? ADMIN_CLAIM_ACTION_FAILED);
         setSubmitting(false);
 
         return;
@@ -109,7 +131,7 @@ export function ClaimAdminReviewSurface({
       router.push(afterHref);
       router.refresh();
     } catch {
-      setFormError('Something went wrong on our side. Try again, or come back in a moment.');
+      setFormError(ADMIN_CLAIM_ACTION_FAILED);
       setSubmitting(false);
     }
   }
@@ -141,6 +163,7 @@ export function ClaimAdminReviewSurface({
 
     setSubmitting(true);
     setFormError(null);
+    setFormConflict(false);
     setReasonError(null);
 
     try {
@@ -155,7 +178,8 @@ export function ClaimAdminReviewSurface({
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => ({}))) as { error?: string };
-        setFormError(payload.error ?? 'Something went wrong on our side. Try again.');
+        setFormConflict(response.status === 409);
+        setFormError(payload.error ?? ADMIN_CLAIM_ACTION_FAILED);
         setSubmitting(false);
 
         return;
@@ -164,7 +188,7 @@ export function ClaimAdminReviewSurface({
       router.push(afterHref);
       router.refresh();
     } catch {
-      setFormError('Something went wrong on our side. Try again, or come back in a moment.');
+      setFormError(ADMIN_CLAIM_ACTION_FAILED);
       setSubmitting(false);
     }
   }
@@ -178,7 +202,7 @@ export function ClaimAdminReviewSurface({
 
   if (mode === 'approve') {
     return (
-      <div className="form-column claim-admin-review">
+      <div className="admin-console claim-admin-review claim-admin-review--decision">
         <Breadcrumbs
           variant="compact"
           crumbs={[
@@ -189,7 +213,7 @@ export function ClaimAdminReviewSurface({
 
         <h1 className="hero__title">{CLAIM_APPROVE_HEADING}</h1>
 
-        {formError ? <DecisionError message={formError} /> : null}
+        {formError ? <DecisionError message={formError} conflict={formConflict} /> : null}
 
         <div className="card registration-review__card">{summaryLine}</div>
 
@@ -242,7 +266,7 @@ export function ClaimAdminReviewSurface({
 
   if (mode === 'reject') {
     return (
-      <div className="form-column claim-admin-review">
+      <div className="admin-console claim-admin-review claim-admin-review--decision">
         <Breadcrumbs
           variant="compact"
           crumbs={[
@@ -253,7 +277,7 @@ export function ClaimAdminReviewSurface({
 
         <h1 className="hero__title">{CLAIM_REJECT_HEADING}</h1>
 
-        {formError ? <DecisionError message={formError} /> : null}
+        {formError ? <DecisionError message={formError} conflict={formConflict} /> : null}
 
         <div className="card registration-review__card">{summaryLine}</div>
 
@@ -318,8 +342,10 @@ export function ClaimAdminReviewSurface({
     );
   }
 
+  const itemMeta = `${itemCategory} · ${itemDate} · ${itemCampusArea}`;
+
   return (
-    <div className="form-column claim-admin-review">
+    <div className="admin-console claim-admin-review">
       <Breadcrumbs
         variant="compact"
         crumbs={[
@@ -328,9 +354,21 @@ export function ClaimAdminReviewSurface({
         ]}
       />
 
-      <div className="claim-admin-review__head">
-        <h1 className="hero__title">{CLAIM_REVIEW_HEADING}</h1>
-        <StatusBadge status={claimStatus} />
+      <div className="claim-admin-review__head verification-admin-review__head">
+        <div className="verification-admin-review__title-row">
+          <h1 className="hero__title">{CLAIM_REVIEW_HEADING}</h1>
+          <StatusBadge status={claimStatus} />
+        </div>
+
+        <div className="admin-confirm-return__head-actions">
+          <Link href={auditHref} className="button button--tertiary button--sm">
+            {VIEW_AUDIT_TRAIL}
+          </Link>
+
+          <Link href={afterHref} className="button button--secondary button--sm">
+            {VERIFICATION_BACK_TO_QUEUE}
+          </Link>
+        </div>
       </div>
 
       {competingClaimCount > 0 ? (
@@ -352,41 +390,64 @@ export function ClaimAdminReviewSurface({
         </div>
       )}
 
-      <div className="claim-review-grid">
-        <div className="card">
-          <h2 className="claim-admin-review__section-title">Item details</h2>
-          <dl className="registration-review__details">
-            <Detail label="Name" value={itemName} strong />
-            <Detail label="Category" value={itemCategory} />
-            <Detail label="Campus area" value={itemCampusArea} />
-            <Detail label="Date" value={itemDate} />
-          </dl>
-        </div>
+      <div className="claim-admin-review__layout claim-admin-review__layout--with-audit">
+        <section className="card claim-admin-review__summary">
+          <h2 className="claim-admin-review__summary-title">{itemName}</h2>
+          <p className="claim-admin-review__summary-meta">{itemMeta}</p>
 
-        <div className="card">
+          {hasItemImage ? (
+            <figure className="claim-admin-review__photo">
+              <div className="detail-image-frame detail-image-frame--filled claim-admin-review__photo-frame">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  className="detail-image"
+                  src={`/api/reports/${reportId}/image`}
+                  alt={`Photo of ${itemName}`}
+                />
+              </div>
+              <figcaption className="claim-admin-review__photo-caption">
+                {CLAIM_REVIEW_ITEM_PHOTO}
+              </figcaption>
+            </figure>
+          ) : null}
+        </section>
+
+        <section className="card claim-admin-review__main">
           <h2 className="claim-admin-review__section-title">This claim</h2>
-          <dl className="registration-review__details">
+
+          <dl className="registration-review__details claim-admin-review__claim-grid">
             <Detail label="Claimant" value={claimantDisplayName} strong />
             <Detail label="Email" value={claimantEmail} code />
             <Detail label="Submitted" value={submittedAtLabel} />
             <Detail label="Date lost (claimant says)" value={dateLost} />
-            <Detail label="Reason" value={reason} />
-            <Detail label="Identifying details" value={identifyingDetails} />
+            <Detail label="Reason" value={reason} wide />
+            <Detail label="Identifying details" value={identifyingDetails} wide />
           </dl>
+
+          {decisionAvailable ? (
+            <div className="form-actions claim-admin-review__decision-actions">
+              <Link href={`${baseHref}?decision=reject`} className="button button--danger">
+                {CLAIM_REJECT_THIS}
+              </Link>
+
+              <Link href={`${baseHref}?decision=approve`} className="button button--success">
+                {CLAIM_APPROVE_THIS}
+              </Link>
+            </div>
+          ) : null}
+        </section>
+
+        <div className="claim-admin-review__audit">
+          <AdminAuditTrailSurface
+            variant="embedded"
+            rows={auditTrail.rows}
+            hasMore={auditTrail.hasMore}
+            error={auditTrail.error}
+            fullTrailHref={auditHref}
+            parentLabel={itemName}
+          />
         </div>
       </div>
-
-      {decisionAvailable ? (
-        <div className="form-actions claim-admin-review__decision-actions">
-          <Link href={`${baseHref}?decision=reject`} className="button button--danger">
-            {CLAIM_REJECT_THIS}
-          </Link>
-
-          <Link href={`${baseHref}?decision=approve`} className="button button--success">
-            {CLAIM_APPROVE_THIS}
-          </Link>
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -396,14 +457,22 @@ function Detail({
   value,
   strong,
   code,
+  wide,
 }: {
   readonly label: string;
   readonly value: string;
   readonly strong?: boolean;
   readonly code?: boolean;
+  readonly wide?: boolean;
 }): React.JSX.Element {
   return (
-    <div className="registration-review__detail">
+    <div
+      className={
+        wide
+          ? 'registration-review__detail claim-admin-review__detail--wide'
+          : 'registration-review__detail'
+      }
+    >
       <dt className="field__label">{label}</dt>
       <dd>
         {code ? (
@@ -418,10 +487,18 @@ function Detail({
   );
 }
 
-function DecisionError({ message }: { readonly message: string }): React.JSX.Element {
+function DecisionError({
+  message,
+  conflict = false,
+}: {
+  readonly message: string;
+  readonly conflict?: boolean;
+}): React.JSX.Element {
   return (
     <div className="error-summary" role="alert" tabIndex={-1}>
-      <h2 className="error-summary__heading">Check the form</h2>
+      <h2 className="error-summary__heading">
+        {conflict ? CLAIM_DECISION_CONFLICT_HEADING : CLAIM_DECISION_FORM_ERROR_HEADING}
+      </h2>
       <ul className="error-summary__list">
         <li>{message}</li>
       </ul>

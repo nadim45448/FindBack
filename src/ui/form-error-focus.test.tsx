@@ -41,6 +41,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRouterStub, resetDomEnvironment, type RouterStub } from '@/test/dom';
 
 import { ClaimFormPanel } from './claim-form-panel';
+import { setCsrfToken } from './csrf';
 import { RecoveryResponseFormPanel } from './recovery-response-form-panel';
 import { ReportFormPanel } from './report-form-panel';
 
@@ -76,6 +77,7 @@ beforeEach(() => {
   resetDomEnvironment();
   scrollRequests.length = 0;
   Element.prototype.scrollIntoView = recordScroll;
+  setCsrfToken('test-csrf-token');
 });
 
 afterEach(() => {
@@ -132,7 +134,12 @@ function renderReportForm(): void {
  */
 function renderClaimForm(): void {
   render(
-    <ClaimFormPanel reportId="report-1" minDate="2020-01-01" maxDate="2026-01-01" />,
+    <ClaimFormPanel
+      reportId="report-1"
+      itemName="A brown wallet"
+      minDate="2020-01-01"
+      maxDate="2026-01-01"
+    />,
   );
 }
 
@@ -143,6 +150,7 @@ function renderResponseForm(): void {
   render(
     <RecoveryResponseFormPanel
       reportId="report-1"
+      itemName="Blue backpack"
       minDate="2020-01-01"
       maxDate="2026-01-01"
       campusAreas={[{ value: 'main_library', label: 'Main Library' }]}

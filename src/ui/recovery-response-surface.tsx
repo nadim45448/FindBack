@@ -30,15 +30,33 @@
  */
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useCallback, useState } from 'react';
+
+import { NativeDateField } from './native-date-field';
+
+import { ConfirmationDialog } from './confirmation-dialog';
+import { csrfHeaders, useCsrfToken } from './csrf';
 
 import {
+  BACK_TO_REVIEW_RESPONSES,
   CANDIDATE_IMAGE_LABEL,
+  CANCEL,
   DATE_FOUND_LABEL,
   OBSERVED_IDENTIFYING_DETAILS_LABEL,
   RECOVERY_RESPONSE_DETAIL_HEADING,
-  RECOVERY_RESPONSE_FORM_DESCRIPTION,
-  RECOVERY_RESPONSE_FORM_HEADING,
+  RECOVERY_RESPONSE_OBSERVED_DETAILS_HELPER,
+  RECOVERY_RESPONSE_OWNER_SECTION_HEADING,
+  RECOVERY_RESPONSE_STATUS_HELPERS,
   RECOVERY_RESPONSE_STATUS_LABEL,
+  RECOVERY_RESPONSE_WITHDRAW_CONFIRMATION,
+  SERVER_ERROR_MESSAGE,
+  WITHDRAW,
+  REVIEW_RESPONSES_META_DATE_FOUND,
+  REVIEW_RESPONSES_META_OBSERVED,
+  REVIEW_RESPONSES_META_SUBMITTED,
+  REVIEW_RESPONSES_META_WHERE,
+  recoveryResponseDetailTitle,
   SELECT_LOCATION_PLACEHOLDER,
   SUBMIT_RECOVERY_RESPONSE,
   SUBMITTING,
@@ -83,6 +101,10 @@ export interface RecoveryResponseFormSurfaceProps {
   readonly maxDate: string;
   /** Campus areas for the where-found select. */
   readonly campusAreas: readonly RecoveryResponseCampusAreaOption[];
+  /** Return to the item without submitting. */
+  readonly onCancel: () => void;
+  /** The optional candidate image the member chose. */
+  readonly onImageChange: (file: File | null) => void;
 }
 
 /**
@@ -97,6 +119,8 @@ export function RecoveryResponseFormSurface({
   minDate,
   maxDate,
   campusAreas,
+  onCancel,
+  onImageChange,
 }: RecoveryResponseFormSurfaceProps): React.JSX.Element {
   const set = (key: keyof RecoveryResponseFormValues, value: string): void => {
     onChange({ ...values, [key]: value });
@@ -115,14 +139,7 @@ export function RecoveryResponseFormSurface({
         onSubmit();
       }}
     >
-      <h1 className="hero__title">{RECOVERY_RESPONSE_FORM_HEADING}</h1>
-
-      <p className="hero__lede">{RECOVERY_RESPONSE_FORM_DESCRIPTION}</p>
-
-      <fieldset className="card">
-        <legend className="field__label">{'Details'}</legend>
-
-        <div className="field">
+      <div className="field">
           <label className="field__label" htmlFor="whereFoundArea">
             {WHERE_FOUND_AREA_LABEL}
             <span className="field__required" aria-hidden="true">
@@ -229,6 +246,8 @@ export function RecoveryResponseFormSurface({
             current={Array.from(values.observedIdentifyingDetails).length}
             max={500}
           />
+
+          <p className="field__helper">{RECOVERY_RESPONSE_OBSERVED_DETAILS_HELPER}</p>
         </div>
 
         <div className="field">
@@ -245,10 +264,9 @@ export function RecoveryResponseFormSurface({
             </p>
           ) : null}
 
-          <input
+          <NativeDateField
             id="dateFound"
-            className="input"
-            type="date"
+            className="input input--date"
             value={values.dateFound}
             min={minDate}
             max={maxDate}
@@ -256,8 +274,8 @@ export function RecoveryResponseFormSurface({
             aria-required="true"
             aria-invalid={errors['dateFound'] ? true : undefined}
             aria-describedby={errors['dateFound'] ? 'dateFound-describedby' : undefined}
-            onChange={(event) => {
-              set('dateFound', event.target.value);
+            onChange={(next) => {
+              set('dateFound', next);
             }}
           />
         </div>
@@ -291,11 +309,18 @@ export function RecoveryResponseFormSurface({
             accept="image/jpeg,image/png,image/webp"
             aria-invalid={errors['candidateImage'] ? true : undefined}
             aria-describedby="candidateImage-describedby"
+            onChange={(event) => {
+              const file = event.target.files?.[0] ?? null;
+              onImageChange(file);
+            }}
           />
         </div>
-      </fieldset>
 
-      <p className="button-row">
+      <p className="report-form__actions button-row">
+        <button type="button" className="button button--tertiary" onClick={onCancel}>
+          {CANCEL}
+        </button>
+
         <button type="submit" className="button button--primary" disabled={submitting}>
           {submitting ? SUBMITTING : SUBMIT_RECOVERY_RESPONSE}
         </button>
@@ -341,8 +366,35 @@ export interface RecoveryResponseDetailSurfaceProps {
   readonly reportDetailHref?: string | undefined;
   /** Detail page title override. */
   readonly detailHeading?: string | undefined;
+  /** Lost-report owner vs responder layout and copy. */
+  readonly variant?: 'responder' | 'owner';
+  /** Owner-only link back to the review list. */
+  readonly reviewResponsesHref?: string | undefined;
   /** Whether the responder may withdraw the response. */
   readonly withdrawable: boolean;
+}
+
+function formatSubmittedAt(iso: string): string {
+  const trimmed = iso.trim();
+
+  if (trimmed.length === 0) {
+    return '—';
+  }
+
+  return trimmed.slice(0, 10);
+}
+
+function whereFoundLabel(area: string, exact: string): string {
+  const campus = area.trim() || '—';
+  const place = exact.trim();
+
+  return place.length > 0 ? `${campus} · ${place}` : campus;
+}
+
+function displayOrDash(value: string): string {
+  const trimmed = value.trim();
+
+  return trimmed.length > 0 ? trimmed : '—';
 }
 
 /**
@@ -362,70 +414,125 @@ export function RecoveryResponseDetailSurface({
   reportName,
   reportDetailHref,
   detailHeading,
+  variant = 'responder',
+  reviewResponsesHref,
   withdrawable,
 }: RecoveryResponseDetailSurfaceProps): React.JSX.Element {
+  useCsrfToken();
+  const router = useRouter();
+  const [confirmWithdraw, setConfirmWithdraw] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawError, setWithdrawError] = useState<string | null>(null);
+
   const reportHref = reportDetailHref ?? `/listings/${reportId}`;
-  const heading = detailHeading ?? RECOVERY_RESPONSE_DETAIL_HEADING;
+  const heading = detailHeading ?? recoveryResponseDetailTitle(reportName);
+  const statusNotice = RECOVERY_RESPONSE_STATUS_HELPERS[status];
+  const isOwner = variant === 'owner';
+  const responseSectionHeading = isOwner
+    ? RECOVERY_RESPONSE_OWNER_SECTION_HEADING
+    : RECOVERY_RESPONSE_DETAIL_HEADING;
+
+  const performWithdraw = useCallback(async (): Promise<void> => {
+    setWithdrawing(true);
+    setWithdrawError(null);
+
+    try {
+      const response = await fetch(
+        `/api/reports/${reportId}/recovery-responses/${responseId}/withdraw`,
+        {
+          method: 'POST',
+          headers: csrfHeaders(),
+        },
+      );
+
+      if (response.ok) {
+        setConfirmWithdraw(false);
+        router.refresh();
+        return;
+      }
+
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+
+      setWithdrawError(body.error ?? SERVER_ERROR_MESSAGE);
+      setConfirmWithdraw(false);
+    } catch {
+      setWithdrawError(SERVER_ERROR_MESSAGE);
+      setConfirmWithdraw(false);
+    } finally {
+      setWithdrawing(false);
+    }
+  }, [reportId, responseId, router]);
 
   return (
-    <article className="recovery-response-detail">
-      <header className="detail-section">
-        <h1 className="hero__title">{heading}</h1>
+    <article className="item-detail participation-detail">
+      <header className="item-detail__header">
+        <div className="participation-detail__header-row">
+          <div>
+            <h1 className="item-detail__title">{heading}</h1>
 
-        <p className="hero__lede">
-          {/*
-            **The badge carries the display status,** and the canonical
-            status is carried alongside it in the detail list — so the
-            `Submitted — Standby` derivation is visible without implying
-            that a ninth status exists.
-          */}
+            {isOwner ? (
+              <p className="participation-detail__lede field__helper">
+                {'For your lost report '}
+                <Link href={reportHref}>{reportName}</Link>
+              </p>
+            ) : (
+              <p className="field__helper tabular">
+                {responseId}
+                {' · Lost report '}
+                {reportId}
+              </p>
+            )}
+          </div>
+
           <StatusBadge status={status} kind="Response status" />
-        </p>
+        </div>
       </header>
 
-      <section className="detail-section">
-        <h2 className="detail-section__heading">{'Lost report'}</h2>
+      {statusNotice ? (
+        <div className="banner banner--info" role="status">
+          <p>{statusNotice}</p>
+        </div>
+      ) : null}
 
-        <dl className="detail-list">
-          <dt className="detail-list__term">{'Item name'}</dt>
-          <dd className="detail-list__value">
-            <Link href={reportHref}>{reportName}</Link>
-          </dd>
+      <section className="detail-section detail-section--card participation-detail__response">
+        <h2 className="detail-section__heading">{responseSectionHeading}</h2>
+
+        <dl className="review-response-card__meta participation-detail__meta">
+          <dt>{REVIEW_RESPONSES_META_WHERE}</dt>
+          <dd>{whereFoundLabel(whereFoundArea, exactPlace)}</dd>
+
+          <dt>{REVIEW_RESPONSES_META_OBSERVED}</dt>
+          <dd>{displayOrDash(observedIdentifyingDetails)}</dd>
+
+          <dt>{REVIEW_RESPONSES_META_DATE_FOUND}</dt>
+          <dd className="tabular">{displayOrDash(dateFound)}</dd>
+
+          <dt>{REVIEW_RESPONSES_META_SUBMITTED}</dt>
+          <dd className="tabular">{formatSubmittedAt(submittedAt)}</dd>
+
+          <dt>{RECOVERY_RESPONSE_STATUS_LABEL}</dt>
+          <dd>{canonicalStatus}</dd>
         </dl>
-      </section>
 
-      <section className="detail-section">
-        <h2 className="detail-section__heading">{'Your response'}</h2>
+        {!isOwner ? (
+          <p className="participation-detail__nav">
+            <Link href={reportHref} className="button button--tertiary button--sm">
+              {'View lost report'}
+            </Link>
+          </p>
+        ) : null}
 
-        <dl className="detail-list">
-          <dt className="detail-list__term">{WHERE_FOUND_AREA_LABEL}</dt>
-          <dd className="detail-list__value">{whereFoundArea}</dd>
-
-          <dt className="detail-list__term">{'Exact place'}</dt>
-          <dd className="detail-list__value">{exactPlace}</dd>
-
-          <dt className="detail-list__term">{OBSERVED_IDENTIFYING_DETAILS_LABEL}</dt>
-          <dd className="detail-list__value">{observedIdentifyingDetails}</dd>
-
-          <dt className="detail-list__term">{DATE_FOUND_LABEL}</dt>
-          <dd className="detail-list__value tabular">{dateFound}</dd>
-
-          <dt className="detail-list__term">{'Submitted'}</dt>
-          <dd className="detail-list__value tabular">{submittedAt}</dd>
-
-          <dt className="detail-list__term">{RECOVERY_RESPONSE_STATUS_LABEL}</dt>
-          <dd className="detail-list__value">
-            {canonicalStatus}
-
-            {status !== canonicalStatus ? (
-              <span className="field__helper">{' (display: ' + status + ')'}</span>
-            ) : null}
-          </dd>
-        </dl>
+        {isOwner && reviewResponsesHref ? (
+          <p className="participation-detail__nav">
+            <Link href={reviewResponsesHref} className="button button--tertiary button--sm">
+              {BACK_TO_REVIEW_RESPONSES}
+            </Link>
+          </p>
+        ) : null}
       </section>
 
       {hasCandidateImage ? (
-        <section className="detail-section">
+        <section className="detail-section detail-section--card">
           <h2 className="detail-section__heading">{'Candidate image'}</h2>
 
           {/*
@@ -444,13 +551,49 @@ export function RecoveryResponseDetailSurface({
       ) : null}
 
       {withdrawable ? (
-        <section className="detail-section">
-          <h2 className="detail-section__heading">{'Actions'}</h2>
+        <section className="detail-section detail-section--card">
+          <h2 className="detail-section__heading">{'Withdraw this response'}</h2>
 
-          <button type="button" className="button button--danger">
-            {'Withdraw'}
-          </button>
+          <p className="detail-section__body">
+            {
+              'If this is not the same item, you can withdraw your response. You can submit a new one only while the Lost report is still open for responses.'
+            }
+          </p>
+
+          {withdrawError ? (
+            <div className="error-summary" role="alert">
+              <p className="error-summary__heading">{withdrawError}</p>
+            </div>
+          ) : null}
+
+          <div className="detail-section__actions">
+            <button
+              type="button"
+              className="button button--danger button--sm"
+              disabled={withdrawing}
+              onClick={() => {
+                setConfirmWithdraw(true);
+              }}
+            >
+              {withdrawing ? 'Withdrawing…' : WITHDRAW}
+            </button>
+          </div>
         </section>
+      ) : null}
+
+      {confirmWithdraw ? (
+        <ConfirmationDialog
+          heading={WITHDRAW}
+          body={RECOVERY_RESPONSE_WITHDRAW_CONFIRMATION}
+          confirmLabel={WITHDRAW}
+          confirmClassName="button button--danger"
+          onConfirm={() => {
+            void performWithdraw();
+          }}
+          onCancel={() => {
+            setConfirmWithdraw(false);
+          }}
+        />
       ) : null}
     </article>
   );

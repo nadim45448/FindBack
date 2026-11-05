@@ -34,19 +34,26 @@
  * requirements.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+
+import { ConfirmationDialog } from './confirmation-dialog';
 
 import {
   DELETE_CONFIRMATION_COPY,
+  withdrawalBlockMessage,
   WITHDRAW_CONFIRMATION_COPY,
+  type ReporterActionAvailability,
   type ReporterActionPlan,
+  type ReportStatus,
+  type ReportType,
 } from '@/domain/listings';
 
 import {
   ADMINISTRATOR_ONLY_WORKFLOW,
-  CANCEL,
   DELETE,
   EDIT,
+  LOST_OWNER_AWAITING_RETURN_CALLOUT,
+  LOST_OWNER_VERIFICATION_PENDING_CALLOUT,
   REPORT_CLOSED_CANNOT_EDIT,
   REPORT_HAS_INTERACTION_CANNOT_DELETE,
   WITHDRAW,
@@ -55,9 +62,81 @@ import {
 /**
  * The reporter actions surface's props.
  */
+/**
+ * Callout copy shown under “You reported this item.”
+ *
+ * **Long delete-block reasons belong here,** not beside a disabled Delete
+ * button in the action row — mockup `04-item-detail-reporter` shows Edit
+ * and Withdraw only once someone has interacted.
+ */
+export function reporterCalloutNotice(
+  plan: ReporterActionPlan,
+  context?: {
+    readonly status: ReportStatus;
+    readonly type: ReportType;
+    readonly hasMatchConfirmed?: boolean;
+  },
+): string | null {
+  const parts: string[] = [];
+
+  if (plan.administratorOnly) {
+    parts.push(ADMINISTRATOR_ONLY_WORKFLOW);
+  } else if (context?.type === 'Lost' && context.status === 'Verification Pending') {
+    parts.push(
+      context.hasMatchConfirmed
+        ? LOST_OWNER_AWAITING_RETURN_CALLOUT
+        : LOST_OWNER_VERIFICATION_PENDING_CALLOUT,
+    );
+  } else if (plan.delete.kind === 'Blocked' && plan.delete.reason === 'InteractionExists') {
+    parts.push(REPORT_HAS_INTERACTION_CANNOT_DELETE);
+  }
+
+  if (plan.edit.kind === 'Blocked') {
+    parts.push(reporterBlockMessage('edit', plan.edit));
+  }
+
+  if (plan.withdraw.kind === 'Blocked' && !plan.administratorOnly) {
+    const verificationExplained =
+      context?.type === 'Lost' && context.status === 'Verification Pending';
+
+    if (!verificationExplained) {
+      parts.push(reporterBlockMessage('withdraw', plan.withdraw));
+    }
+  }
+
+  if (parts.length === 0) {
+    return null;
+  }
+
+  return parts.join(' ');
+}
+
+/** Whether the toolbar shows a Delete control (including disabled). */
+export function showsDeleteInReporterToolbar(plan: ReporterActionPlan): boolean {
+  if (plan.delete.kind === 'Permitted') {
+    return true;
+  }
+
+  // **§10.4: once someone has interacted, Delete is never shown** — the
+  // remedy is Withdraw, and a disabled Delete with the wrong reason only
+  // clutters the toolbar.
+  if (plan.delete.kind === 'Blocked' && plan.delete.reason === 'InteractionExists') {
+    return false;
+  }
+
+  return plan.delete.kind === 'Blocked';
+}
+
 export interface ReportActionsSurfaceProps {
   /** The plan the domain produced. */
   readonly plan: ReporterActionPlan;
+  /**
+   * Reporter callout mode — mockup `04-item-detail-reporter`.
+   *
+   * **Only enabled actions render as buttons.** Block reasons live in the
+   * callout note, not beside disabled controls in the action row.
+   */
+  readonly calloutOnly?: boolean | undefined;
   /** The edit handler. */
   readonly onEdit?: (() => void) | undefined;
   /** The delete handler. */
@@ -71,6 +150,7 @@ export interface ReportActionsSurfaceProps {
  */
 export function ReportActionsSurface({
   plan,
+  calloutOnly = false,
   onEdit,
   onDelete,
   onWithdraw,
@@ -78,64 +158,55 @@ export function ReportActionsSurface({
   const [confirming, setConfirming] = useState<'delete' | 'withdraw' | null>(null);
 
   return (
-    <div className="button-row">
+    <div className="reporter-toolbar-actions button-row">
       {plan.edit.kind === 'Permitted' ? (
         <button
           type="button"
-          className="button button--secondary"
+          className="button button--secondary button--sm"
           onClick={() => {
             onEdit?.();
           }}
         >
           {EDIT}
         </button>
-      ) : (
-        <BlockedAction label={EDIT} reason={REPORT_CLOSED_CANNOT_EDIT} />
+      ) : calloutOnly ? null : (
+        <BlockedAction label={EDIT} reason={reporterBlockMessage('edit', plan.edit)} />
       )}
 
       {/*
         **Delete and Withdraw are alternatives.** §10.4: once a Claim
         (Found) or RR (Lost) exists, "the reporter must use Withdraw
-        instead". So when delete is blocked by an interaction, Withdraw is
-        the action offered — and the plan has already decided that.
+        instead". The callout carries that explanation; the row offers
+        Edit and Withdraw like the mockup reporter toolbar.
       */}
-      {plan.delete.kind === 'Permitted' ? (
-        <button
-          type="button"
-          className="button button--danger"
-          onClick={() => {
-            setConfirming('delete');
-          }}
-        >
-          {DELETE}
-        </button>
-      ) : plan.withdraw.kind === 'Permitted' ? (
-        <BlockedAction
-          label={DELETE}
-          reason={
-            plan.delete.kind === 'Blocked' && plan.delete.reason === 'InteractionExists'
-              ? REPORT_HAS_INTERACTION_CANNOT_DELETE
-              : REPORT_CLOSED_CANNOT_EDIT
-          }
-        />
-      ) : (
-        <BlockedAction label={DELETE} reason={REPORT_CLOSED_CANNOT_EDIT} />
-      )}
+      {showsDeleteInReporterToolbar(plan) ? (
+        plan.delete.kind === 'Permitted' ? (
+          <button
+            type="button"
+            className="button button--danger button--sm"
+            onClick={() => {
+              setConfirming('delete');
+            }}
+          >
+            {DELETE}
+          </button>
+        ) : calloutOnly ? null : (
+          <BlockedAction label={DELETE} reason={reporterBlockMessage('delete', plan.delete)} />
+        )
+      ) : null}
 
       {plan.withdraw.kind === 'Permitted' ? (
         <button
           type="button"
-          className="button button--secondary"
+          className="button button--tertiary button--sm"
           onClick={() => {
             setConfirming('withdraw');
           }}
         >
           {WITHDRAW}
         </button>
-      ) : plan.administratorOnly ? (
-        <BlockedAction label={WITHDRAW} reason={ADMINISTRATOR_ONLY_WORKFLOW} />
-      ) : (
-        <BlockedAction label={WITHDRAW} reason={REPORT_CLOSED_CANNOT_EDIT} />
+      ) : calloutOnly || plan.administratorOnly ? null : (
+        <BlockedAction label={WITHDRAW} reason={reporterBlockMessage('withdraw', plan.withdraw)} />
       )}
 
       {confirming === 'delete' ? (
@@ -178,6 +249,32 @@ export function ReportActionsSurface({
  * the point: a disabled button with no explanation tells the member
  * nothing they can act on.
  */
+function reporterBlockMessage(
+  action: 'edit' | 'delete' | 'withdraw',
+  availability: ReporterActionAvailability,
+): string {
+  if (availability.kind === 'Permitted') {
+    return '';
+  }
+
+  switch (availability.reason) {
+    case 'TerminalStatus':
+      return action === 'edit'
+        ? REPORT_CLOSED_CANNOT_EDIT
+        : withdrawalBlockMessage('TerminalStatus');
+    case 'InteractionExists':
+      return REPORT_HAS_INTERACTION_CANNOT_DELETE;
+    case 'ClaimApproved':
+      return withdrawalBlockMessage('ClaimApproved');
+    case 'MatchConfirmed':
+      return ADMINISTRATOR_ONLY_WORKFLOW;
+    default: {
+      const unreachable: never = availability.reason;
+      throw new Error(`Unhandled reporter action block reason: ${String(unreachable)}`);
+    }
+  }
+}
+
 function BlockedAction({
   label,
   reason,
@@ -186,154 +283,13 @@ function BlockedAction({
   readonly reason: string;
 }): React.JSX.Element {
   return (
-    <span className="button-row">
-      <button type="button" className="button button--secondary" disabled>
+    <span className="reporter-action-blocked">
+      <button type="button" className="button button--secondary button--sm" disabled>
         {label}
       </button>
 
-      <span className="field__helper">{reason}</span>
+      <span className="reporter-action-blocked__reason field__helper">{reason}</span>
     </span>
-  );
-}
-
-/**
- * The confirmation dialog.
- *
- * **The focus is trapped while it is open, Escape dismisses it as a
- * cancel, and closing returns focus to the element that opened it.**
- *
- * The trigger's focus is captured on open — before the dialog renders —
- * because by the time the effect runs, the trigger may have been blurred
- * by the click.
- */
-function ConfirmationDialog({
-  heading,
-  body,
-  confirmLabel,
-  onConfirm,
-  onCancel,
-}: {
-  readonly heading: string;
-  readonly body: string;
-  readonly confirmLabel: string;
-  readonly onConfirm: () => void;
-  readonly onCancel: () => void;
-}): React.JSX.Element {
-  const dialogRef = useRef<HTMLDivElement | null>(null);
-  const confirmRef = useRef<HTMLButtonElement | null>(null);
-  const restoreFocusTo = useRef<HTMLElement | null>(null);
-
-  /**
-   * Capture the trigger and move focus into the dialog.
-   *
-   * **The active element is captured before the effect runs,** so the
-   * element that opened the dialog is the one focus returns to.
-   */
-  useEffect(() => {
-    restoreFocusTo.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-
-    confirmRef.current?.focus();
-  }, []);
-
-  /**
-   * The focus trap.
-   *
-   * **Tab and Shift+Tab cycle within the dialog.** The dialog is modal, so
-   * focus must not escape it while it is open — a keyboard user who tabs
-   * past the last control would otherwise land on the page behind an
-   * overlay they cannot see.
-   */
-  const trapFocus = useCallback((event: React.KeyboardEvent<HTMLDivElement>): void => {
-    if (event.key !== 'Tab') {
-      return;
-    }
-
-    const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    );
-
-    if (!focusable || focusable.length === 0) {
-      return;
-    }
-
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-
-    if (first === undefined || last === undefined) {
-      return;
-    }
-
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  }, []);
-
-  /**
-   * Escape dismisses the dialog as a cancel.
-   *
-   * **The listener is on the dialog itself,** so an Escape elsewhere on
-   * the page does not close it.
-   */
-  const onKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLDivElement>): void => {
-      if (event.key === 'Escape') {
-        event.stopPropagation();
-        onCancel();
-      }
-    },
-    [onCancel],
-  );
-
-  /**
-   * Return focus to the trigger when the dialog closes.
-   */
-  useEffect(
-    () => () => {
-      restoreFocusTo.current?.focus();
-    },
-    [],
-  );
-
-  return (
-    <div className="modal-backdrop">
-      <div
-        ref={dialogRef}
-        className="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-heading"
-        onKeyDown={(event) => {
-          onKeyDown(event);
-          trapFocus(event);
-        }}
-      >
-        <h2 className="modal__heading" id="modal-heading">
-          {heading}
-        </h2>
-
-        <p className="modal__body">{body}</p>
-
-        <p className="button-row">
-          <button
-            ref={confirmRef}
-            type="button"
-            className="button button--primary"
-            onClick={onConfirm}
-          >
-            {confirmLabel}
-          </button>
-
-          <button type="button" className="button button--tertiary" onClick={onCancel}>
-            {CANCEL}
-          </button>
-        </p>
-      </div>
-    </div>
   );
 }
 

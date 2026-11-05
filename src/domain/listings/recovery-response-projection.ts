@@ -55,7 +55,7 @@ export interface RecoveryResponseRow {
 export function projectRecoveryResponses(
   rows: readonly RecoveryResponseRow[],
   columns: readonly ProjectionColumn[],
-  ownResponseId: string | null,
+  ownResponseIds: readonly string[] | null,
 ): readonly ProjectedRecoveryResponse[] {
   if (
     !columns.includes('recoveryResponder') &&
@@ -68,7 +68,8 @@ export function projectRecoveryResponses(
   const isAdministrator = columns.includes('administrator');
 
   return rows.map((row) => {
-    const isOwn = ownResponseId !== null && row.id === ownResponseId;
+    const isOwn =
+      ownResponseIds !== null && ownResponseIds.length > 0 && ownResponseIds.includes(row.id);
 
     const projected: {
       responseId: string;
@@ -128,14 +129,14 @@ export function projectRecoveryResponses(
 export function visibleResponseIds(
   rows: readonly RecoveryResponseRow[],
   columns: readonly ProjectionColumn[],
-  ownResponseId: string | null,
+  ownResponseIds: readonly string[] | null,
 ): readonly string[] {
   if (columns.includes('administrator') || columns.includes('lostReportOwner')) {
     return rows.map((row) => row.id);
   }
 
-  if (columns.includes('recoveryResponder') && ownResponseId !== null) {
-    return rows.filter((row) => row.id === ownResponseId).map((row) => row.id);
+  if (columns.includes('recoveryResponder') && ownResponseIds !== null && ownResponseIds.length > 0) {
+    return rows.filter((row) => ownResponseIds.includes(row.id)).map((row) => row.id);
   }
 
   return [];

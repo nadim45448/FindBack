@@ -79,6 +79,7 @@ export * from './report-projection';
 export * from './report-relationship';
 export * from './report-status';
 export * from './report-status-view';
+export * from './report-display-status';
 export * from './report-type';
 export * from './report-withdrawal-decision';
 export * from './report';

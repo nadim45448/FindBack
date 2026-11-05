@@ -84,9 +84,14 @@ export default async function ClaimFormPage({
   const earliest = new Date(today);
   earliest.setUTCDate(earliest.getUTCDate() - 365);
 
+  const report = projection.report;
+  const itemMeta = [report.campusArea, report.date].filter(Boolean).join(' · ');
+
   return (
     <ClaimFormPanel
       reportId={id}
+      itemName={report.name}
+      itemMeta={itemMeta.length > 0 ? itemMeta : undefined}
       minDate={earliest.toISOString().slice(0, 10)}
       maxDate={today.toISOString().slice(0, 10)}
     />

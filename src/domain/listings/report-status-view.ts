@@ -146,8 +146,11 @@ export function defaultStatusViewFor(
  *
  * **An explicit filter is the caller's choice, and it is never widened.**
  * When the caller names statuses, those are the statuses — the default view
- * does not reappear underneath. The exception is the `mine` partition, whose
- * statuses are never restricted at all.
+ * does not reappear underneath.
+ *
+ * **The `mine` partition's default is the full lifecycle view** (see
+ * `defaultStatusViewFor`), but an explicit status filter on My Reports still
+ * narrows the set like any other partition.
  *
  * ## The participation partitions have **no report status view**
  *
@@ -171,6 +174,10 @@ export function resolveStatusView(
   requested: readonly ReportStatus[] | null,
 ): readonly ReportStatus[] {
   if (partition === 'mine') {
+    if (requested !== null) {
+      return requested;
+    }
+
     return administratorStatusView();
   }
 

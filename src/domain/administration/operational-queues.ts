@@ -37,8 +37,11 @@
  * |---|---|
  * | Pending Registrations | accounts in `Pending` |
  * | Pending Claims | Found reports' Claims in `Pending` |
- * | Items Awaiting Return | Found reports in `Claim Approved` |
- * | Items in Verification | Lost reports in `Verification Pending` |
+ * | Items Awaiting Return | Found reports in `Claim Approved`, and Lost
+ *   reports in `Verification Pending` whose selected Recovery Response is
+ *   `Match Confirmed` (physical handoff not yet recorded) |
+ * | Items in Verification | Lost reports in `Verification Pending` whose
+ *   selected Recovery Response is still `Selected for Verification` |
  *
  * Pure — no I/O, no framework imports.
  */
@@ -118,20 +121,18 @@ export type QueueFilter =
   | { readonly kind: 'AccountStatus'; readonly status: 'Pending' }
   /** Claims in `Pending` against a report of the given type. */
   | { readonly kind: 'ClaimStatus'; readonly reportType: 'Found'; readonly status: 'Pending' }
-  /** Reports of the given type in the given status. */
-  | { readonly kind: 'ReportStatus'; readonly reportType: 'Found' | 'Lost'; readonly status: string };
+  /** Found `Claim Approved` plus Lost match-confirmed handoffs — §15.4. */
+  | { readonly kind: 'ItemsAwaitingReturn' }
+  /** Lost reports awaiting the owner's match determination — §15.5. */
+  | { readonly kind: 'LostItemsInVerification' };
 
 /** The membership filter of each queue. */
 export const OPERATIONAL_QUEUE_FILTERS: Readonly<Record<OperationalQueueId, QueueFilter>> =
   Object.freeze({
     'pending-registrations': { kind: 'AccountStatus', status: 'Pending' },
     'pending-claims': { kind: 'ClaimStatus', reportType: 'Found', status: 'Pending' },
-    'awaiting-return': { kind: 'ReportStatus', reportType: 'Found', status: 'Claim Approved' },
-    verifications: {
-      kind: 'ReportStatus',
-      reportType: 'Lost',
-      status: 'Verification Pending',
-    },
+    'awaiting-return': { kind: 'ItemsAwaitingReturn' },
+    verifications: { kind: 'LostItemsInVerification' },
   });
 
 /**
@@ -170,7 +171,7 @@ export const VERIFICATIONS_EMPTY_NOTE =
   'When a lost-item owner selects a recovery response for verification, the report appears here.';
 
 export const AWAITING_RETURN_EMPTY_NOTE =
-  'When an administrator approves a claim, the found item appears here until the physical return is recorded.';
+  'When a claim is approved or a lost-item match is confirmed, the item appears here until the physical return is recorded.';
 
 /**
  * The empty-state note for a queue.

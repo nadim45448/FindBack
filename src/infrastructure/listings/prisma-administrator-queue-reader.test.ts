@@ -139,7 +139,7 @@ describe('the administrator queue reader', () => {
     expect(rowStatement.values).toContain('Found');
   });
 
-  it('puts the report type in the awaiting-return predicate', async () => {
+  it('loads Found and Lost handoffs for Items Awaiting Return', async () => {
     const { client, statements } = recordingClient();
 
     await new PrismaAdministratorQueueReader(client as never).read(
@@ -147,13 +147,15 @@ describe('the administrator queue reader', () => {
       25,
     );
 
-    const rowStatement = statementOf(statements[0]);
+    const rendered = statements.map((statement) => statementOf(statement).values.join(' '));
 
-    // **A Lost report cannot appear in the Found-side queue,** because the
-    // report's type is in the predicate.
-    expect(rowStatement.values).toContain('Found');
-    expect(rowStatement.values).not.toContain('Lost');
-    expect(rowStatement.values).toContain('Claim Approved');
+    // **Found `Claim Approved` and Lost `Match Confirmed` both belong here.**
+    expect(rendered.some((sql) => sql.includes('Found') && sql.includes('Claim Approved'))).toBe(
+      true,
+    );
+    expect(
+      rendered.some((sql) => sql.includes('Lost') && sql.includes('Match Confirmed')),
+    ).toBe(true);
   });
 
   it('puts the Lost type in the verification predicate', async () => {
@@ -170,6 +172,7 @@ describe('the administrator queue reader', () => {
     expect(rowStatement.values).toContain('Lost');
     expect(rowStatement.values).not.toContain('Found');
     expect(rowStatement.values).toContain('Verification Pending');
+    expect(rowStatement.values).toContain('Selected for Verification');
   });
 
   it('joins the approved Claim in the awaiting-return query', async () => {

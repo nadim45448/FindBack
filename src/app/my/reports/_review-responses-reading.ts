@@ -19,7 +19,12 @@ export interface ReviewResponseRow {
   readonly canonicalStatus: string;
   readonly submittedAt: string;
   readonly campusArea: string | null;
+  readonly exactPlace: string | null;
+  readonly observedIdentifyingDetails: string | null;
+  readonly dateFound: string | null;
+  readonly responderDisplayName: string;
   readonly canSelect: boolean;
+  readonly isSelected: boolean;
   readonly detailHref: string;
 }
 
@@ -27,6 +32,7 @@ export interface ReviewResponsesReading {
   readonly reportId: string;
   readonly reportName: string;
   readonly reportStatus: string;
+  readonly selectedResponseId: string | null;
   readonly rows: readonly ReviewResponseRow[];
 }
 
@@ -59,19 +65,11 @@ export async function readReviewResponses(
   const reportStatus = projection?.report.status ?? ownedReport!.status;
   const reportName = projection?.report.name ?? ownedReport!.name ?? 'Lost report';
 
-  const projected = projection?.recoveryResponses ?? [];
-  const fallback =
-    projected.length === 0 ? await loadRecoveryResponsesForOwnerReview(reportId) : [];
+  const sources = await loadRecoveryResponsesForOwnerReview(reportId);
 
-  const sources =
-    projected.length > 0
-      ? projected.map((response) => ({
-          responseId: response.responseId,
-          status: response.status,
-          submittedAt: response.submittedAt,
-          campusArea: response.campusArea ?? null,
-        }))
-      : fallback;
+  const selectedResponseId =
+    sources.find((response) => response.status === 'Selected for Verification')
+      ?.responseId ?? null;
 
   const hasMatchConfirmed = sources.some((response) => response.status === 'Match Confirmed');
 
@@ -96,13 +94,21 @@ export async function readReviewResponses(
       hasMatchConfirmed,
     });
 
+    const isSelected =
+      selectedResponseId !== null && response.responseId === selectedResponseId;
+
     return {
       responseId: response.responseId,
       displayStatus,
       canonicalStatus,
       submittedAt: response.submittedAt,
       campusArea: response.campusArea,
+      exactPlace: response.exactPlace,
+      observedIdentifyingDetails: response.observedIdentifyingDetails,
+      dateFound: response.dateFound,
+      responderDisplayName: response.responderDisplayName,
       canSelect: decision.kind === 'Permitted',
+      isSelected,
       detailHref: `/my/reports/${reportId}/responses/${response.responseId}`,
     };
   });
@@ -111,6 +117,7 @@ export async function readReviewResponses(
     reportId,
     reportName,
     reportStatus,
+    selectedResponseId,
     rows,
   };
 }

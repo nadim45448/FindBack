@@ -38,7 +38,9 @@ import {
   buildClaimApprovedEvent,
   buildClaimAutoRejectedEvent,
   buildClaimRejectedByAdministratorEvent,
+  claimConcurrentDecisionMessage,
   claimDecisionBlockMessage,
+  claimDecisionConflictMessage,
   createClaimRejectionReason,
   decideClaimDecision,
   decideFoundReportTransition,
@@ -117,6 +119,19 @@ describe('the claim decision gate', () => {
     // The remedy is to read the recorded decision, so the message points
     // there rather than apologising or blaming.
     expect(claimDecisionBlockMessage('ClaimNotPending')).toContain('already been decided');
+  });
+
+  it('names auto-rejection when another claim was approved first', () => {
+    expect(
+      claimDecisionConflictMessage({ claimStatus: 'Rejected' }),
+    ).toContain('Another claim on this item was already approved');
+  });
+
+  it('names the item status when the workflow moved on — §6.4', () => {
+    expect(claimConcurrentDecisionMessage('Claim Approved')).toContain(
+      'already decided by another administrator',
+    );
+    expect(claimConcurrentDecisionMessage('Claim Approved')).toContain('Claim Approved');
   });
 
   it('refuses a block reason it does not know rather than answering for it', () => {

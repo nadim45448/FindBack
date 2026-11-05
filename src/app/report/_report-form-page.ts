@@ -86,6 +86,27 @@ export async function readReportForm(
  * **The minimum is the earliest day the report may be dated,** and **the
  * maximum is today** — the report's date may not be in the future.
  */
+/**
+ * Campus areas for a form, including a report's stored value when it is no
+ * longer in the active list.
+ *
+ * **The select must show what is stored**, or the member saves with a blank
+ * area and the validator refuses. The server still requires an active area
+ * when the value changes.
+ */
+export function campusAreasForForm(
+  activeAreas: readonly { readonly value: string; readonly label: string }[],
+  currentValue?: string | null,
+): readonly { readonly value: string; readonly label: string }[] {
+  const trimmed = currentValue?.trim() ?? '';
+
+  if (trimmed.length === 0 || activeAreas.some((area) => area.value === trimmed)) {
+    return activeAreas;
+  }
+
+  return [...activeAreas, { value: trimmed, label: trimmed }];
+}
+
 export function dateBounds(
   type: ReportType,
   today: Date,

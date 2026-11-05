@@ -70,7 +70,9 @@ import {
   buildClaimApprovedEvent,
   buildClaimAutoRejectedEvent,
   buildClaimRejectedByAdministratorEvent,
+  claimConcurrentDecisionMessage,
   claimDecisionBlockMessage,
+  claimDecisionConflictMessage,
   createClaimRejectionReason,
   decideClaimDecision,
   decideFoundReportTransition,
@@ -191,7 +193,7 @@ export class ClaimDecisionService {
     const decision = decideClaimDecision({ claimStatus: state.status });
 
     if (decision.kind === 'Blocked') {
-      throw this.refusal(decision.reason);
+      throw this.refusal(decision.reason, state.status);
     }
 
     // ── The write, in one transaction ─────────────────────────────────────
@@ -258,7 +260,7 @@ export class ClaimDecisionService {
     const reDecision = decideClaimDecision({ claimStatus: current.status });
 
     if (reDecision.kind === 'Blocked') {
-      throw this.refusal(reDecision.reason);
+      throw this.refusal(reDecision.reason, current.status, reportStatus);
     }
 
     // ── 6. The approval ───────────────────────────────────────────────────
@@ -286,9 +288,7 @@ export class ClaimDecisionService {
     });
 
     if (transition.kind === 'Refused') {
-      throw new ClaimDecisionConflictError(
-        'This item is no longer in a state that can accept a claim decision.',
-      );
+      throw new ClaimDecisionConflictError(claimConcurrentDecisionMessage(reportStatus));
     }
 
     let nextStatus: ReportStatus = reportStatus;
@@ -441,7 +441,7 @@ export class ClaimDecisionService {
     const decision = decideClaimDecision({ claimStatus: state.status });
 
     if (decision.kind === 'Blocked') {
-      throw this.refusal(decision.reason);
+      throw this.refusal(decision.reason, state.status);
     }
 
     // ── The write, in one transaction ─────────────────────────────────────
@@ -491,7 +491,7 @@ export class ClaimDecisionService {
     const reDecision = decideClaimDecision({ claimStatus: current.status });
 
     if (reDecision.kind === 'Blocked') {
-      throw this.refusal(reDecision.reason);
+      throw this.refusal(reDecision.reason, current.status, reportStatus);
     }
 
     // ── The rejection ────────────────────────────────────────────────────
@@ -529,9 +529,7 @@ export class ClaimDecisionService {
       });
 
       if (transition.kind === 'Refused') {
-        throw new ClaimDecisionConflictError(
-          'This item is no longer in a state that can accept a claim decision.',
-        );
+        throw new ClaimDecisionConflictError(claimConcurrentDecisionMessage(reportStatus));
       }
 
       if (transition.kind === 'Moved') {
@@ -639,12 +637,21 @@ export class ClaimDecisionService {
    * check catches the common case first, so this branch is the
    * belt-and-braces one.
    */
-  private refusal(reason: ClaimDecisionBlockReason): Error {
+  private refusal(
+    reason: ClaimDecisionBlockReason,
+    claimStatus?: ClaimDecisionState['status'],
+    reportStatus?: ReportStatus,
+  ): Error {
     if (reason === 'ClaimNotFound') {
       return new NotFoundError(claimDecisionBlockMessage(reason));
     }
 
-    return new ClaimDecisionConflictError(claimDecisionBlockMessage(reason));
+    const message =
+      claimStatus !== undefined
+        ? claimDecisionConflictMessage({ claimStatus, reportStatus })
+        : claimDecisionBlockMessage(reason);
+
+    return new ClaimDecisionConflictError(message);
   }
 }
 

@@ -86,9 +86,7 @@ export class ReportImageDeliveryService {
 
     const columns = resolveColumns(viewer, loaded.relationship);
 
-    // **The per-image rule, immediately before the read.** The columns
-    // grant the `image` *field* to a claimant and to a recovery responder;
-    // the delivery rule refuses them the *bytes*.
+    // **The per-image rule, immediately before the read.**
     if (!mayReceiveImage(viewer, loaded.relationship, columns)) {
       throw new NotFoundError('That image could not be found.');
     }

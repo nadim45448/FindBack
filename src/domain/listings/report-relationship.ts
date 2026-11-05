@@ -57,8 +57,21 @@ export interface ReportRelationship {
    * include them all so `/my/claims/:id` cannot disagree with the queue.
    */
   readonly claimIds: readonly string[];
-  /** The viewer's own Recovery Response id, if any. */
+  /**
+   * The viewer's primary Recovery Response id on this report, if any.
+   *
+   * **Live responses sort before terminal ones** — so item-detail CTAs
+   * point at the open response after a withdraw-and-resubmit.
+   */
   readonly recoveryResponseId: string | null;
+  /**
+   * Every Recovery Response id the viewer submitted on this report.
+   *
+   * **The responder may hold history** — a withdrawn response and a later
+   * live one — and visibility scopes to this full set so each id remains
+   * reachable from My recovery responses.
+   */
+  readonly recoveryResponseIds: readonly string[];
 }
 
 /** The fields a relationship is built from. */
@@ -70,6 +83,7 @@ export interface ReportRelationshipParams {
   readonly claimId?: string | null;
   readonly claimIds?: readonly string[] | null;
   readonly recoveryResponseId?: string | null;
+  readonly recoveryResponseIds?: readonly string[] | null;
 }
 
 /**
@@ -86,6 +100,15 @@ export function createReportRelationship(params: ReportRelationshipParams): Repo
     params.claimIds ??
     (params.claimId != null && params.claimId !== '' ? [params.claimId] : []);
 
+  const recoveryResponseIds =
+    params.recoveryResponseIds ??
+    (params.recoveryResponseId != null && params.recoveryResponseId !== ''
+      ? [params.recoveryResponseId]
+      : []);
+
+  const recoveryResponseId =
+    recoveryResponseIds[0] ?? params.recoveryResponseId ?? null;
+
   return {
     reportId: params.reportId,
     reportType: params.reportType,
@@ -93,9 +116,10 @@ export function createReportRelationship(params: ReportRelationshipParams): Repo
     viewerId,
     isReporter: viewerId !== null && viewerId === params.reporterId,
     hasClaim: viewerId !== null && claimIds.length > 0,
-    hasRecoveryResponse: viewerId !== null && params.recoveryResponseId != null,
+    hasRecoveryResponse: viewerId !== null && recoveryResponseIds.length > 0,
     claimId: claimIds[0] ?? params.claimId ?? null,
     claimIds,
-    recoveryResponseId: params.recoveryResponseId ?? null,
+    recoveryResponseId,
+    recoveryResponseIds,
   };
 }

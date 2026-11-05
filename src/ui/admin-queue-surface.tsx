@@ -63,6 +63,9 @@ import {
   COLUMN_OWNER,
   COLUMN_REGISTERED_AT,
   COLUMN_REPORT,
+  COLUMN_REPORT_STATUS,
+  COLUMN_REPORT_TYPE,
+  COLUMN_RECEIVER,
   COLUMN_ROLE,
   COLUMN_SELECTED_RESPONDER,
   COLUMN_SUBMITTED_AT,
@@ -461,7 +464,8 @@ export const PENDING_CLAIMS_COLUMNS: readonly QueueColumn[] = Object.freeze([
  */
 export const AWAITING_RETURN_COLUMNS: readonly QueueColumn[] = Object.freeze([
   { heading: COLUMN_ITEM },
-  { heading: COLUMN_CLAIMANT },
+  { heading: COLUMN_REPORT_TYPE },
+  { heading: COLUMN_RECEIVER },
   { heading: COLUMN_APPROVED_AT, sortable: true },
 ]);
 
@@ -470,6 +474,7 @@ export const AWAITING_RETURN_COLUMNS: readonly QueueColumn[] = Object.freeze([
  */
 export const VERIFICATIONS_COLUMNS: readonly QueueColumn[] = Object.freeze([
   { heading: COLUMN_REPORT },
+  { heading: COLUMN_REPORT_STATUS },
   { heading: COLUMN_OWNER },
   { heading: COLUMN_SELECTED_RESPONDER },
   { heading: COLUMN_VERIFICATION_STARTED_AT, sortable: true },

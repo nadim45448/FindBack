@@ -32,7 +32,7 @@ import { buildIdentityStack } from '@/infrastructure/accounts/identity-stack';
 
 import { ClaimDecisionConflictError } from '@/application/listings/claim-decision-service';
 
-import { NotFoundError, ValidationError } from '@/lib/errors';
+import { ConflictError, NotFoundError, ValidationError } from '@/lib/errors';
 
 /** The route's dynamic parameter. */
 export interface AdminRouteContext {
@@ -124,7 +124,7 @@ export function claimAdminErrorResponse(
   requestId: string,
   action: string,
 ): NextResponse {
-  if (error instanceof ClaimDecisionConflictError) {
+  if (error instanceof ClaimDecisionConflictError || error instanceof ConflictError) {
     log(requestId, action, 'denied');
 
     return NextResponse.json({ error: error.message }, { status: 409 });

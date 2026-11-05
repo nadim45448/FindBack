@@ -41,23 +41,25 @@ export function NativeDateField({
   onChange,
 }: NativeDateFieldProps): React.JSX.Element {
   return (
-    <input
-      id={id}
-      className={className}
-      type="date"
-      value={value}
-      min={min}
-      max={max}
-      required={required}
-      aria-required={ariaRequired}
-      aria-invalid={ariaInvalid}
-      aria-describedby={ariaDescribedBy}
-      onClick={(event) => {
-        openNativeDatePicker(event.currentTarget);
-      }}
-      onChange={(event) => {
-        onChange(event.target.value);
-      }}
-    />
+    <span className="date-field">
+      <input
+        id={id}
+        className={className}
+        type="date"
+        value={value}
+        min={min}
+        max={max}
+        required={required}
+        aria-required={ariaRequired}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedBy}
+        onClick={(event) => {
+          openNativeDatePicker(event.currentTarget);
+        }}
+        onChange={(event) => {
+          onChange(event.target.value);
+        }}
+      />
+    </span>
   );
 }

@@ -31,11 +31,32 @@
  * and cannot send a sixth.
  */
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import type { ReturnConfirmationSummary } from './admin-return-confirmation-model';
+
+import {
+  AWAITING_RETURN_BREADCRUMB_QUEUE,
+  CONFIRM_RETURN_DEFAULT_RECEIVER_FOUND,
+  CONFIRM_RETURN_DEFAULT_RECEIVER_LOST,
+  CONFIRM_RETURN_MATCHED_RESPONSE_SECTION,
+  CONFIRM_RETURN_PAGE_HEADING,
+  CONFIRM_RETURN_SUBSTITUTE_CHECKBOX,
+  CONFIRM_RETURN_SUBSTITUTE_SECTION,
+  CONFIRM_RETURN_WHAT_HAPPENS_HEADING,
+  CONFIRM_RETURN_WHAT_HAPPENS_ITEMS,
+  CONFIRM_RETURNED,
+  VERIFICATION_BACK_TO_QUEUE,
+  VIEW_AUDIT_TRAIL,
+} from './admin-copy';
+import { Breadcrumbs } from './breadcrumbs';
 import { csrfHeaders } from './csrf';
 import { CANCEL } from './member-copy';
+import { LOST_REPORT_AWAITING_RETURN_STATUS } from '@/domain/listings';
+
+import { StatusBadge } from './status-badge';
 
 /**
  * The return confirmation surface's props.
@@ -43,25 +64,31 @@ import { CANCEL } from './member-copy';
 export interface AdminReturnConfirmationSurfaceProps {
   /** The endpoint the confirmation is posted to. */
   readonly endpoint: string;
-  /** The heading above the confirmation. */
-  readonly heading: string;
-  /** Where the browser goes once the return is confirmed. */
-  readonly afterHref: string;
-  /** The detail lines shown above the confirmation. */
-  readonly details?: readonly { readonly label: string; readonly value: string }[] | undefined;
+  /** Where the browser goes once the return is confirmed or on cancel. */
+  readonly queueHref: string;
+  /** Item and default-receiver context from the server. */
+  readonly summary: ReturnConfirmationSummary;
+  /** Contextual audit trail for this report (§17.1). */
+  readonly auditHref: string;
 }
 
 /** The PRD's five relationships, in the PRD's order. */
 const RELATIONSHIPS = ['Friend', 'Family Member', 'Colleague', 'Classmate', 'Other'] as const;
+
+function defaultReceiverLede(reportType: 'Found' | 'Lost'): string {
+  return reportType === 'Found'
+    ? CONFIRM_RETURN_DEFAULT_RECEIVER_FOUND
+    : CONFIRM_RETURN_DEFAULT_RECEIVER_LOST;
+}
 
 /**
  * The administrator's return confirmation surface.
  */
 export function AdminReturnConfirmationSurface({
   endpoint,
-  heading,
-  afterHref,
-  details,
+  queueHref,
+  summary,
+  auditHref,
 }: AdminReturnConfirmationSurfaceProps): React.JSX.Element {
   const router = useRouter();
 
@@ -113,7 +140,7 @@ export function AdminReturnConfirmationSurface({
         return;
       }
 
-      router.push(afterHref);
+      router.push(`${auditHref}?from=return`);
       router.refresh();
     } catch {
       setFormError('Something went wrong on our side. Try again, or come back in a moment.');
@@ -121,20 +148,69 @@ export function AdminReturnConfirmationSurface({
     }
   }
 
-  return (
-    <div className="form-column">
-      <h1 className="hero__title">{heading}</h1>
+  const receiverRecorded = isSubstitute && name.trim() ? name.trim() : summary.defaultReceiverName;
 
-      {details && details.length > 0 ? (
-        <dl className="detail-list">
-          {details.map((detail) => (
-            <div key={detail.label} className="detail-list__row">
-              <dt>{detail.label}</dt>
-              <dd>{detail.value}</dd>
-            </div>
-          ))}
-        </dl>
-      ) : null}
+  return (
+    <div className="admin-console admin-confirm-return">
+      <Breadcrumbs
+        variant="compact"
+        crumbs={[
+          { label: AWAITING_RETURN_BREADCRUMB_QUEUE, href: queueHref },
+          { label: summary.itemName, href: null },
+        ]}
+      />
+
+      <div className="claim-admin-review__head admin-confirm-return__head">
+        <div className="admin-confirm-return__title-row">
+          <h1 className="hero__title">{CONFIRM_RETURN_PAGE_HEADING}</h1>
+          <StatusBadge status={LOST_REPORT_AWAITING_RETURN_STATUS} />
+        </div>
+
+        <div className="admin-confirm-return__head-actions">
+          <Link href={auditHref} className="button button--tertiary button--sm">
+            {VIEW_AUDIT_TRAIL}
+          </Link>
+
+          <Link href={queueHref} className="button button--secondary button--sm">
+            {VERIFICATION_BACK_TO_QUEUE}
+          </Link>
+        </div>
+      </div>
+
+      <section className="card admin-confirm-return__summary" aria-labelledby="confirm-return-summary">
+        <h2 id="confirm-return-summary" className="verification-admin-review__card-title">
+          {summary.itemName}
+        </h2>
+
+        <p className="verification-admin-review__meta">
+          {summary.reportType === 'Found' ? 'Found report' : 'Lost report'}
+          {' · Default receiver '}
+          <strong>{summary.defaultReceiverName}</strong>
+        </p>
+
+        {summary.matchedDetails && summary.matchedDetails.length > 0 ? (
+          <>
+            <hr className="verification-admin-review__divider" />
+
+            <h3 className="verification-admin-review__card-subtitle">
+              {CONFIRM_RETURN_MATCHED_RESPONSE_SECTION}
+            </h3>
+
+            <dl className="registration-review__details verification-admin-review__details">
+              {summary.matchedDetails.map((detail) => (
+                <div key={detail.label} className="registration-review__detail">
+                  <dt>{detail.label}</dt>
+                  <dd>{detail.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </>
+        ) : null}
+      </section>
+
+      <div className="banner banner--info admin-confirm-return__lede" role="status">
+        <p>{defaultReceiverLede(summary.reportType)}</p>
+      </div>
 
       {formError ? (
         <div className="error-summary" role="alert" tabIndex={-1} id="error-summary">
@@ -145,91 +221,110 @@ export function AdminReturnConfirmationSurface({
         </div>
       ) : null}
 
-      <div className="field">
-        <label className="field__label" htmlFor="isSubstitute">
-          <input
-            id="isSubstitute"
-            name="isSubstitute"
-            type="checkbox"
-            checked={isSubstitute}
-            onChange={(event) => setIsSubstitute(event.target.checked)}
-          />{' '}
-          The item went to somebody other than the person who had a right to it
-        </label>
-      </div>
+      <section className="card admin-confirm-return__form" aria-labelledby="confirm-return-form">
+        <h2 id="confirm-return-form" className="verification-admin-review__card-subtitle">
+          {CONFIRM_RETURN_SUBSTITUTE_SECTION}
+        </h2>
 
-      {isSubstitute ? (
-        <>
-          <div className="field">
-            <label className="field__label" htmlFor="substituteReceiverName">
-              Substitute receiver’s name
-            </label>
-
+        <div className="field">
+          <label className="field__label" htmlFor="isSubstitute">
             <input
-              id="substituteReceiverName"
-              name="substituteReceiverName"
-              className="input"
-              type="text"
-              maxLength={80}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-          </div>
+              id="isSubstitute"
+              name="isSubstitute"
+              type="checkbox"
+              checked={isSubstitute}
+              onChange={(event) => setIsSubstitute(event.target.checked)}
+            />{' '}
+            {CONFIRM_RETURN_SUBSTITUTE_CHECKBOX}
+          </label>
+        </div>
 
-          <div className="field">
-            <label className="field__label" htmlFor="relationship">
-              Relationship
-            </label>
+        {isSubstitute ? (
+          <div className="admin-confirm-return__substitute-fields">
+            <div className="field">
+              <label className="field__label" htmlFor="substituteReceiverName">
+                Substitute receiver’s name
+              </label>
 
-            <select
-              id="relationship"
-              name="relationship"
-              className="input"
-              value={relationship}
-              onChange={(event) => setRelationship(event.target.value)}
-            >
-              {RELATIONSHIPS.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="field">
-            <label className="field__label" htmlFor="authorizationAffirmation">
               <input
-                id="authorizationAffirmation"
-                name="authorizationAffirmation"
-                type="checkbox"
-                checked={authorized}
-                onChange={(event) => setAuthorized(event.target.checked)}
-              />{' '}
-              The default receiver authorized this substitute
-            </label>
+                id="substituteReceiverName"
+                name="substituteReceiverName"
+                className="input"
+                type="text"
+                maxLength={80}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field__label" htmlFor="relationship">
+                Relationship
+              </label>
+
+              <select
+                id="relationship"
+                name="relationship"
+                className="input"
+                value={relationship}
+                onChange={(event) => setRelationship(event.target.value)}
+              >
+                {RELATIONSHIPS.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="field">
+              <label className="field__label" htmlFor="authorizationAffirmation">
+                <input
+                  id="authorizationAffirmation"
+                  name="authorizationAffirmation"
+                  type="checkbox"
+                  checked={authorized}
+                  onChange={(event) => setAuthorized(event.target.checked)}
+                />{' '}
+                The default receiver authorized this substitute
+              </label>
+            </div>
           </div>
-        </>
-      ) : null}
+        ) : null}
 
-      <div className="button-row">
-        <button
-          type="button"
-          className="button button--primary"
-          disabled={submitting}
-          onClick={() => void confirm()}
-        >
-          Confirm Returned
-        </button>
+        <div className="admin-confirm-return__outcome" role="status">
+          <p className="banner__heading">{CONFIRM_RETURN_WHAT_HAPPENS_HEADING}</p>
+          <ul className="registration-review__info-list">
+            {CONFIRM_RETURN_WHAT_HAPPENS_ITEMS.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          <p className="admin-confirm-return__outcome-receiver">
+            Receiver recorded: <strong>{receiverRecorded}</strong>
+          </p>
+        </div>
 
-        <button
-          type="button"
-          className="button button--secondary"
-          disabled={submitting}
-          onClick={() => router.push(afterHref)}
-        >
-          {CANCEL}
-        </button>
-      </div>
+        <div className="form-actions admin-confirm-return__actions">
+          <button
+            type="button"
+            className="button button--tertiary"
+            disabled={submitting}
+            onClick={() => router.push(queueHref)}
+          >
+            {CANCEL}
+          </button>
+
+          <button
+            type="button"
+            className="button button--success"
+            disabled={submitting}
+            aria-label={`Confirm returned to ${receiverRecorded}`}
+            onClick={() => void confirm()}
+          >
+            {CONFIRM_RETURNED}
+          </button>
+        </div>
+      </section>
     </div>
   );
 }

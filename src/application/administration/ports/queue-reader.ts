@@ -66,8 +66,10 @@ export interface PendingClaimRow {
 export interface AwaitingReturnRow {
   readonly reportId: string;
   readonly itemName: string;
+  /** The default receiver — approved claimant (Found) or Lost-report owner. */
   readonly claimantName: string;
   readonly approvedAt: Date;
+  readonly reportType: 'Found' | 'Lost';
 }
 
 /**
@@ -91,6 +93,8 @@ export interface VerificationRow {
   readonly ownerUserId: string;
   readonly selectedResponderDisplayName: string | null;
   readonly verificationStartedAt: Date | null;
+  /** True when the selected recovery response is `Match Confirmed`. */
+  readonly hasMatchConfirmed: boolean;
 }
 
 /**

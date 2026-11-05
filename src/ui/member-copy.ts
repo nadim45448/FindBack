@@ -67,6 +67,12 @@ export const MY_REPORTS_HEADING = 'My Reports';
 /** The My reports page title — mockup `08-my-reports`. */
 export const MY_REPORTS_PAGE_TITLE = 'My reports';
 
+/** Edit report page — mockup `09-edit-report.html`. */
+export const REPORT_EDIT_HEADING = 'Edit report';
+
+export const REPORT_EDIT_LEDE =
+  "You can edit your report while it's still open. Sensitive fields remain hidden from other members until they have a relationship to this item.";
+
 /** My reports filter card heading. */
 export const MY_REPORTS_FILTER_LABEL = 'Filter';
 
@@ -516,6 +522,17 @@ export const REPORT_CLOSED_CANNOT_EDIT =
 export const REPORT_HAS_INTERACTION_CANNOT_DELETE =
   'Someone has responded to this report, so it can no longer be deleted. You can withdraw it instead, which closes it and keeps its history.';
 
+/** Lost-report owner callout once a response is selected for verification. */
+export const LOST_OWNER_VERIFICATION_PENDING_CALLOUT =
+  'You selected a recovery response for verification. An administrator will record your determination when you meet them. You can still edit this report or withdraw it if your situation changes.';
+
+/** Lost-report owner callout after the administrator recorded Match Confirmed. */
+export const LOST_OWNER_AWAITING_RETURN_CALLOUT =
+  'A match was confirmed. An administrator will confirm when the item is physically returned to you.';
+
+export const LOST_OWNER_RECOVERY_BODY_AWAITING_RETURN =
+  'A match was confirmed. An administrator will arrange the physical return with you.';
+
 /* -------------------------------------------------------------------------- */
 /* Item detail — §11.3                                                         */
 /* -------------------------------------------------------------------------- */
@@ -582,7 +599,7 @@ export const YOUR_LOST_REPORT = 'your Lost report';
  * §9.4 names the finder a member who reported a Found item. The label is
  * the item's, not the viewer's, because the finder is not the owner.
  */
-export const FINDER_TOOLBAR = 'You reported this item';
+export const FINDER_TOOLBAR = 'You reported this item.';
 
 /**
  * The label of the claimant's toolbar on a Found report.
@@ -649,8 +666,11 @@ export const RESPONSE_NOT_ELIGIBLE =
 /* The claim form and detail — §12.1, §12.2                                    */
 /* -------------------------------------------------------------------------- */
 
-/** The claim form's heading. */
-export const CLAIM_FORM_HEADING = 'Claim this item';
+/** The claim form's heading — mockup `11-submit-claim`. */
+export const CLAIM_FORM_HEADING = 'Submit a claim';
+
+/** Breadcrumb on the claim form. */
+export const CLAIM_FORM_BREADCRUMB = 'Submit a claim';
 
 /**
  * The claim form's one-line description.
@@ -658,7 +678,11 @@ export const CLAIM_FORM_HEADING = 'Claim this item';
  * §12.1 names the three fields; the description says what a claim is for.
  */
 export const CLAIM_FORM_DESCRIPTION =
-  'Tell the administrator who found this item that it is yours.';
+  'If this is your item, share enough detail so an administrator can confirm ownership. The reporter will see your reason and identifying details.';
+
+/** Help under identifying details on the claim form. */
+export const CLAIM_IDENTIFYING_DETAILS_HELP =
+  'Visible to the reporter of this item and administrators. Other members do not see this.';
 
 /** The `Reason` field's label. */
 export const CLAIM_REASON_LABEL = 'Reason';
@@ -710,6 +734,22 @@ export const CLAIM_ERROR_SUMMARY_HEADING = 'Check the form';
 export const CLAIM_SUBMITTED_BODY =
   'An administrator will review your claim and email you with the decision.';
 
+/** Shown on the claim detail immediately after a successful submission. */
+export const CLAIM_SUBMITTED_BANNER_HEADING = 'Your claim was submitted.';
+
+/** Pending claim banner — mockup `13-claim-detail`. */
+export const CLAIM_PENDING_BANNER_HEADING =
+  'Your claim is awaiting administrator review.';
+
+export const CLAIM_PENDING_BANNER_BODY =
+  'You and the reporter can post messages below to coordinate.';
+
+/** The claim detail breadcrumb queue label. */
+export const CLAIM_DETAIL_BREADCRUMB_QUEUE = 'My claims';
+
+/** Link from claim detail back to the Found listing. */
+export const VIEW_FOUND_ITEM = 'View item';
+
 /** The claim detail's heading. */
 export const CLAIM_DETAIL_HEADING = 'Your claim';
 
@@ -755,6 +795,9 @@ export const LOST_OWNER_RECOVERY_HEADING = 'Recovery responses on your report';
 export const LOST_OWNER_RECOVERY_BODY =
   'Other members submit recovery responses when they think they found your item. You cannot submit a response on your own lost report — review what others sent and choose one to verify if it looks like a match.';
 
+export const LOST_OWNER_RECOVERY_BODY_VERIFICATION_PENDING =
+  'You selected a response for verification. An administrator will record your determination when you meet them. Open review responses to see details and messages.';
+
 export const LOST_OWNER_RECOVERY_NONE =
   'No recovery responses yet. When someone submits one, you will get an email and can review them here.';
 
@@ -763,11 +806,48 @@ export const REVIEW_RECOVERY_RESPONSES = 'Review responses';
 export const REVIEW_RESPONSES_PAGE_TITLE = 'Review recovery responses';
 
 export const REVIEW_RESPONSES_LEDE =
-  'Compare responses side by side. Select one for verification when you are ready — the report moves to Verification Pending and an administrator will help confirm the match.';
+  'You see every recovery response submitted on your Lost report. Pick the one that looks like yours — an administrator will then record your determination when you meet them.';
+
+/** Page heading — mockup `21-review-responses.html`. */
+export function reviewResponsesPageHeading(reportName: string): string {
+  return `Review responses — ${reportName}`;
+}
+
+export const REVIEW_RESPONSES_SUMMARY_OPEN =
+  'Pick the recovery response that looks like yours. Once you select, an administrator will record your determination.';
+
+export const REVIEW_RESPONSES_SUMMARY_EMPTY =
+  'No recovery responses yet. Members who think they found your item can submit one from the Lost report page.';
+
+export const REVIEW_RESPONSES_SUMMARY_VERIFICATION_PENDING =
+  'Verification pending. You selected a response for verification. An administrator will help confirm the match.';
+
+export const REVIEW_RESPONSES_SUMMARY_RETURNED =
+  'This Lost report has been returned. The verification flow is closed.';
+
+export const REVIEW_RESPONSES_SUMMARY_CLOSED =
+  'This Lost report has been closed. The verification flow is closed.';
+
+export const REVIEW_RESPONSES_SELECTED_LABEL = 'Selected for verification';
+
+export const REVIEW_RESPONSES_META_WHERE = 'Where found';
+export const REVIEW_RESPONSES_META_OBSERVED = 'Observed';
+export const REVIEW_RESPONSES_META_DATE_FOUND = 'Date found';
+export const REVIEW_RESPONSES_META_SUBMITTED = 'Submitted';
 
 export const SELECT_FOR_VERIFICATION = 'Select for verification';
 
 export const VIEW_RESPONSE_AND_THREAD = 'View details and message';
+
+export const BACK_TO_REVIEW_RESPONSES = 'Back to review responses';
+
+/** Breadcrumb terminal crumb on recovery response + thread pages. */
+export function recoveryResponseThreadBreadcrumb(reportName: string): string {
+  return `${reportName} — thread`;
+}
+
+/** Section title when the Lost-report owner reads a response. */
+export const RECOVERY_RESPONSE_OWNER_SECTION_HEADING = 'Recovery response';
 
 export const RECOVERY_RESPONSES_ON_REPORT = 'Responses on this report';
 
@@ -781,7 +861,18 @@ export const RECOVERY_RESPONSE_FORM_HEADING = 'I may have found this item';
  * response is for.
  */
 export const RECOVERY_RESPONSE_FORM_DESCRIPTION =
-  'Tell the person who lost this item where you found it.';
+  'Tell the owner what you observed. They and an administrator will review responses and verify ownership.';
+
+/** Breadcrumb label on the recovery response submit form. */
+export const RECOVERY_RESPONSE_FORM_BREADCRUMB = 'I may have found this item';
+
+/** Detail title for a responder's recovery response — mockup `19-recovery-response-detail`. */
+export function recoveryResponseDetailTitle(reportName: string): string {
+  return `Recovery response on “${reportName}”`;
+}
+
+export const RECOVERY_RESPONSE_OBSERVED_DETAILS_HELPER =
+  'Visible to the Lost-report owner and administrators. Do not include your contact information.';
 
 /** The `Where found area` field's label. */
 export const WHERE_FOUND_AREA_LABEL = 'Where found area';
@@ -829,6 +920,8 @@ export const RECOVERY_RESPONSE_FIELD_ELEMENT_IDS: Readonly<Record<string, string
   campusArea: 'whereFoundArea',
   exactPlace: 'responseExactPlace',
   whereFoundExactPlace: 'responseExactPlace',
+  candidateImage: 'candidateImage',
+  image: 'candidateImage',
 });
 
 /** The recovery response form's error summary's heading. */
@@ -839,6 +932,10 @@ export const SUBMIT_RECOVERY_RESPONSE = 'Submit recovery response';
 
 /** The recovery response detail's heading. */
 export const RECOVERY_RESPONSE_DETAIL_HEADING = 'Your recovery response';
+
+/** Confirmation before a responder withdraws their recovery response. */
+export const RECOVERY_RESPONSE_WITHDRAW_CONFIRMATION =
+  'Withdraw this recovery response? This is final. You can submit a new one only while the Lost report is still open for responses.';
 
 /** The Lost-report owner's view of a response on their report. */
 export const RECOVERY_RESPONSE_OWNER_DETAIL_HEADING = 'Recovery response on your report';

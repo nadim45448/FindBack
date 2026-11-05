@@ -27,7 +27,12 @@ import {
   readSessionCookie,
 } from '@/app/api/_helpers';
 
-import { ConflictError, TerminalStateError } from '@/lib/errors';
+import {
+  ConflictError,
+  NotFoundError,
+  PermissionDeniedError,
+  TerminalStateError,
+} from '@/lib/errors';
 import { ImageRejectedError, ImageStorageError } from '@/application/listings/ports/image-store';
 import { CampusAreaUnavailableError } from '@/application/listings/ports/campus-area-reader';
 
@@ -204,6 +209,18 @@ export function reportLifecycleErrorResponse(
     log(requestId, action, 'denied');
 
     return NextResponse.json({ error: error.message, field: error.field }, { status: 400 });
+  }
+
+  if (error instanceof NotFoundError) {
+    log(requestId, action, 'denied');
+
+    return NextResponse.json({ error: error.message }, { status: 404 });
+  }
+
+  if (error instanceof PermissionDeniedError) {
+    log(requestId, action, 'denied');
+
+    return NextResponse.json({ error: error.message }, { status: 403 });
   }
 
   return errorResponse(error, requestId);

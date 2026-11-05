@@ -530,7 +530,8 @@ describe('the contextual audit trail surface', () => {
     );
 
     expect(container.querySelector('table')).not.toBeNull();
-    expect(container.querySelectorAll('th[scope="col"]').length).toBe(5);
+    expect(container.querySelectorAll('th[scope="col"]').length).toBe(6);
+    expect(container.querySelector('.audit-trail__timeline-dot')).not.toBeNull();
   });
 
   it('shows the actor, the verb, and the target', () => {
@@ -614,7 +615,7 @@ describe('the contextual audit trail surface', () => {
 
     expect(screen.getByRole('alert').textContent).toContain('Something went wrong.');
     expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Go back' })).toBeTruthy();
+    expect(screen.getAllByRole('link', { name: 'Go back' }).length).toBeGreaterThan(0);
   });
 });
 

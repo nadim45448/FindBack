@@ -156,6 +156,7 @@ export class AdministratorQueueQuery {
               itemName: row.itemName,
               claimantName: row.claimantName,
               approvedAt: row.approvedAt,
+              reportType: row.reportType,
             })),
           count: page.count,
         };
@@ -172,6 +173,7 @@ export class AdministratorQueueQuery {
               ownerUserId: row.ownerUserId,
               selectedResponderDisplayName: row.selectedResponderDisplayName,
               verificationStartedAt: row.verificationStartedAt,
+              hasMatchConfirmed: row.hasMatchConfirmed,
             })),
           count: page.count,
         };

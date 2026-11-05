@@ -35,6 +35,7 @@ import {
   OPERATIONAL_QUEUE_IDS,
   OPERATIONAL_QUEUE_LABELS,
   OPERATIONAL_QUEUE_ROUTES,
+  OPERATIONAL_QUEUE_SIDES,
   OPERATIONAL_QUEUES,
   presentationFor,
   queueEmptyCopy,
@@ -97,27 +98,19 @@ describe('the four operational queues', () => {
     });
 
     expect(OPERATIONAL_QUEUE_FILTERS['awaiting-return']).toEqual({
-      kind: 'ReportStatus',
-      reportType: 'Found',
-      status: 'Claim Approved',
+      kind: 'ItemsAwaitingReturn',
     });
 
     expect(OPERATIONAL_QUEUE_FILTERS.verifications).toEqual({
-      kind: 'ReportStatus',
-      reportType: 'Lost',
-      status: 'Verification Pending',
+      kind: 'LostItemsInVerification',
     });
   });
 
-  it('keeps the Found side and the Lost side apart', () => {
-    const found = OPERATIONAL_QUEUES.filter(
-      (queue) => 'reportType' in OPERATIONAL_QUEUE_FILTERS[queue],
-    ).map((queue) => (OPERATIONAL_QUEUE_FILTERS[queue] as { reportType: string }).reportType);
+  it('keeps the Found-side and Lost-side queues labelled separately', () => {
+    const sides = OPERATIONAL_QUEUES.map((queue) => OPERATIONAL_QUEUE_SIDES[queue]);
 
-    // **FR-34/FR-35 name the Found side and FR-50 names the Lost side.**
-    // A queue that lost its side would mix the two operations.
-    expect(found.filter((side) => side === 'Found')).toHaveLength(2);
-    expect(found.filter((side) => side === 'Lost')).toHaveLength(1);
+    expect(sides.filter((side) => side === 'Found')).toHaveLength(2);
+    expect(sides.filter((side) => side === 'Lost')).toHaveLength(1);
   });
 
   it('gives each queue its own empty-state copy', () => {
@@ -134,7 +127,7 @@ describe('the four operational queues', () => {
 
     expect(emptyStateNoteFor('pending-claims')).toBeNull();
     expect(emptyStateNoteFor('awaiting-return')).toBe(
-      'When an administrator approves a claim, the found item appears here until the physical return is recorded.',
+      'When a claim is approved or a lost-item match is confirmed, the item appears here until the physical return is recorded.',
     );
     expect(emptyStateNoteFor('verifications')).toBe(
       'When a lost-item owner selects a recovery response for verification, the report appears here.',

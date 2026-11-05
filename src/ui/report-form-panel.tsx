@@ -32,7 +32,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { csrfHeaders } from './csrf';
+import { csrfHeaders, readCsrfToken, useCsrfToken } from './csrf';
 import { ErrorSummary, useFocusFirstInvalidField } from './form-parts';
 import {
   ReportFormSurface,
@@ -97,6 +97,7 @@ export function ReportFormPanel({
   reportId,
 }: ReportFormPanelProps): React.JSX.Element {
   const router = useRouter();
+  useCsrfToken();
 
   // **Empty strings are omitted from RSC props,** so a server-side spread of
   // `EMPTY_REPORT_FORM_VALUES` does not reach the client — merge here instead.
@@ -149,6 +150,14 @@ export function ReportFormPanel({
     // **The submission attempt is what turns the error state on.** The form
     // is validated *after* the submit, never before it.
     setSubmitted(true);
+
+    if (!readCsrfToken()) {
+      setFailure(
+        'Your session is still loading. Wait a moment and try again.',
+      );
+      setSubmitting(false);
+      return;
+    }
 
     try {
       const response = editing

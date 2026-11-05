@@ -1,23 +1,20 @@
 /**
  * The shared reading for the report edit form — §10.2.
  *
- * ## The report is read through the projection
- *
- * **The edit form opens with the report's current values,** and those values
- * come from the FR-39 projection — not from a second read path. The reporter
- * holds the owner column, which grants the report's content fields, so the
- * projection carries them.
- *
- * **A member who may not edit this report sees the not-found page.** The
- * ownership check and the terminal-status block are the domain's — the
- * service decides — and the route does not re-derive them.
+ * **The report is read through the FR-39 projection** — the same path as
+ * item detail — and only the reporter receives an edit reading. A member
+ * who is not the reporter gets `null`, indistinguishable from a missing
+ * report.
  */
 
 import type { ActorContext } from '@/domain/accounts';
 
-import { buildListingsStack } from '@/infrastructure/listings/listings-stack';
+import type { VisibilityProjection } from '@/domain/listings';
 
 import type { ReportFormValues } from '@/ui/report-form-surface';
+
+import { reporterActionPlan } from '../../../_reporter-actions';
+import { readReportDetailForMember } from '../../_report-detail-reading';
 
 /**
  * The edit form's opening reading.
@@ -32,36 +29,45 @@ export interface ReportEditReading {
 }
 
 /**
+ * Build form values from the projection the detail read already fetched.
+ */
+export function reportFormValuesFromProjection(
+  projection: VisibilityProjection,
+): ReportFormValues {
+  const report = projection.report;
+
+  return {
+    name: report.name ?? '',
+    category: report.category ?? '',
+    description: report.description ?? '',
+    date: report.date ?? '',
+    campusArea: report.campusArea ?? '',
+    exactPlace: report.exactPlace ?? '',
+    identifyingDetails: report.identifyingDetails ?? '',
+  };
+}
+
+/**
  * Read a report's current values for the edit form.
  *
  * @returns the reading, or `null` when the report is not visible to this
- * member at all.
+ * member as its reporter.
  */
 export async function readReportForEdit(
   actor: ActorContext,
   reportId: string,
 ): Promise<ReportEditReading | null> {
-  const stack = buildListingsStack();
+  const detail = await readReportDetailForMember(actor, reportId);
 
-  const projection = await stack.details.show(actor, reportId).catch(() => null);
-
-  if (!projection) {
+  if (!detail || detail.plan === null) {
     return null;
   }
 
-  const report = projection.report;
+  const report = detail.projection.report;
 
   return {
-    reportId: projection.reportId,
+    reportId: detail.projection.reportId,
     type: report.type,
-    values: {
-      name: report.name ?? '',
-      category: report.category ?? '',
-      description: report.description ?? '',
-      date: report.date ?? '',
-      campusArea: report.campusArea ?? '',
-      exactPlace: report.exactPlace ?? '',
-      identifyingDetails: report.identifyingDetails ?? '',
-    },
+    values: reportFormValuesFromProjection(detail.projection),
   };
 }

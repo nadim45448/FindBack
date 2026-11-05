@@ -30,6 +30,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { csrfHeaders } from './csrf';
+import { NativeDateField } from './native-date-field';
 import { CANCEL, SUBMIT_REPORT } from './member-copy';
 import {
   CATEGORY_LABEL,
@@ -209,13 +210,13 @@ export function AdminReportEditSurface({
         <label className="field__label" htmlFor="adminDate">
           {DATE_LABEL}
         </label>
-        <input
+        <NativeDateField
           id="adminDate"
-          name="date"
-          className="input"
-          type="date"
+          className="input input--date"
           value={values.date}
-          onChange={(event) => change('date', event.target.value)}
+          min="2000-01-01"
+          max="2099-12-31"
+          onChange={(next) => change('date', next)}
         />
       </div>
 

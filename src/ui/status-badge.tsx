@@ -74,6 +74,7 @@ const STATUS_TONES: Readonly<Record<string, BadgeTone>> = Object.freeze({
   'Claim Requested': 'pending',
   'Claim Approved': 'active',
   'Verification Pending': 'pending',
+  'Awaiting return': 'active',
   Returned: 'neutral',
   Closed: 'neutral',
 

@@ -1,12 +1,5 @@
 /**
  * The per-image delivery rule — who may receive the image's **bytes**.
- *
- * **The load-bearing assertion is that the rule is narrower than the field
- * grant.** A claimant and a recovery responder both hold a column that
- * grants the `image` *field* — the reference appears in their projection —
- * and both are refused the *bytes*. That difference is the whole point of
- * this module, and a test that only checked the owner and the administrator
- * would not notice if it had been widened to match the field grant.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -84,12 +77,12 @@ describe('the image delivery columns', () => {
     ]);
   });
 
-  it('does not grant the bytes to the claimant column', () => {
-    expect(grantsImageDelivery(['unrelatedMember', 'claimant'])).toBe(false);
+  it('grants the bytes to a claimant browsing the Found report', () => {
+    expect(grantsImageDelivery(['unrelatedMember', 'claimant'])).toBe(true);
   });
 
-  it('does not grant the bytes to the recovery responder column', () => {
-    expect(grantsImageDelivery(['unrelatedMember', 'recoveryResponder'])).toBe(false);
+  it('grants the bytes to a recovery responder browsing the Lost report', () => {
+    expect(grantsImageDelivery(['unrelatedMember', 'recoveryResponder'])).toBe(true);
   });
 
   it('grants the bytes to an unrelated member browsing a report', () => {
@@ -114,10 +107,7 @@ describe('the per-image delivery decision', () => {
     ).toBe(true);
   });
 
-  it('refuses a claimant, even though their column grants the image field', () => {
-    // **The load-bearing assertion.** The claimant's column grants the
-    // `image` field — the reference is in their projection — and the bytes
-    // are refused. An image is not ownership evidence.
+  it('delivers to a claimant on the Found report', () => {
     const relationship = createReportRelationship({
       reportId: 'report-1',
       reportType: 'Found',
@@ -128,10 +118,10 @@ describe('the per-image delivery decision', () => {
 
     expect(
       mayReceiveImage(aMember(), relationship, ['unrelatedMember', 'claimant']),
-    ).toBe(false);
+    ).toBe(true);
   });
 
-  it('refuses a recovery responder, even though their column grants the image field', () => {
+  it('delivers to a recovery responder on the Lost report', () => {
     const relationship = createReportRelationship({
       reportId: 'report-1',
       reportType: 'Lost',
@@ -142,7 +132,7 @@ describe('the per-image delivery decision', () => {
 
     expect(
       mayReceiveImage(aMember(), relationship, ['unrelatedMember', 'recoveryResponder']),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it('delivers to the member who authored the report', () => {
@@ -152,8 +142,6 @@ describe('the per-image delivery decision', () => {
   });
 
   it('delivers to the administrator', () => {
-    // **The administrator's authority follows from the role**, not from a
-    // relationship to the report.
     const administrator = aMember({ accountId: VIEWER_ID, isAdministrator: true });
 
     expect(
@@ -162,8 +150,6 @@ describe('the per-image delivery decision', () => {
   });
 
   it('refuses an owner column resolved for a report the viewer did not author', () => {
-    // **The relationship is checked as well as the columns.** A column set
-    // resolved for a different report must not authorise this one.
     expect(
       mayReceiveImage(aMember(), anUnrelatedRelationship(), ['foundReportOwner']),
     ).toBe(false);

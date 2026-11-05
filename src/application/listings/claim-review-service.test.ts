@@ -36,6 +36,7 @@ const FACTS: ClaimReviewFacts = {
     category: 'Wallet',
     date: '2026-10-28',
     campusArea: 'library',
+    hasItemImage: true,
   },
   competingClaims: [],
 };
@@ -66,7 +67,9 @@ describe('the claim review service', () => {
     const screen = await harness.service.review({ claimId: 'claim-1' });
 
     expect(screen.claimId).toBe('claim-1');
+    expect(screen.reportId).toBe('report-1');
     expect(screen.claimStatus).toBe('Pending');
+    expect(screen.item.hasItemImage).toBe(true);
     expect(screen.reason).toBe('It is my brown leather wallet.');
     expect(screen.identifyingDetails).toBe('Blue cardholder with a dent.');
     expect(screen.dateLost).toBe('2026-10-20');

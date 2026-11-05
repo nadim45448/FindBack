@@ -4,7 +4,10 @@ import { AdminAccessScreen } from '@/ui/admin-access-screen';
 import {
   AdminVerificationSurface,
   type VerificationCandidate,
+  type VerificationReportSummary,
 } from '@/ui/admin-verification-surface';
+import { contextualAuditHref } from '@/ui/admin-contextual-audit-href';
+import { VERIFICATION_REVIEW_HEADING } from '@/ui/admin-copy';
 
 import { prisma } from '@/infrastructure/db/prisma';
 import { buildListingsStack } from '@/infrastructure/listings/listings-stack';
@@ -13,7 +16,9 @@ import type { ActorContext } from '@/domain/accounts';
 
 import { loadRecoveryResponsesForAdminVerification } from '../_recovery-responses-for-verification';
 
+import { readContextualReportAuditTrail } from '../../_audit-page';
 import { buildAdminStack, resolveAdminAccess } from '../../_admin-page';
+import { formatTimestamp } from '../../_queue-page';
 
 export const metadata: Metadata = {
   title: 'Verification review',
@@ -21,27 +26,6 @@ export const metadata: Metadata = {
 
 /**
  * The Lost-side verification screen — `/admin/lost/:id` (FR-45).
- *
- * ## The queue's action reaches here
- *
- * §15.5's Items in Verification queue's action reaches *"the Lost-side
- * verification screen"*, and that screen is this page.
- *
- * ## The determination names the owner, not the administrator
- *
- * FR-45: the Lost report's **owner** determines whether a candidate is
- * their item; the administrator **records** the determination. So the
- * page reads the report's owner from the verification queue — the queue
- * that put this report here — and sends the owner's id. **The
- * administrator's own id is never sent**, because the domain refuses a
- * determination from anybody but the owner.
- *
- * ## The candidates come from the visibility projection
- *
- * The candidates are read through the same `ReportDetailService` the
- * member-facing detail page uses, so the administrator sees the responses
- * the owner would see — and the projection applies the FR-39 columns, so
- * nothing is read that the administrator is not entitled to.
  */
 export default async function LostVerificationPage({
   params,
@@ -55,13 +39,17 @@ export default async function LostVerificationPage({
   }
 
   const { id } = await params;
-  const owner = await readOwner(id, access.userId);
-  const candidates = await readCandidates(id, access.userId, access.displayName);
 
-  if (owner === null) {
+  const [context, candidates, auditResult] = await Promise.all([
+    readVerificationContext(id, access.userId),
+    readCandidates(id, access.userId, access.displayName),
+    readContextualReportAuditTrail(id, 'Lost', access.userId),
+  ]);
+
+  if (context === null) {
     return (
-      <div className="form-column">
-        <h1 className="hero__title">Manage verification</h1>
+      <div className="admin-console">
+        <h1 className="hero__title">{VERIFICATION_REVIEW_HEADING}</h1>
 
         <div className="banner banner--info" role="status">
           <p>Something went wrong on our side. Try again, or come back in a moment.</p>
@@ -76,43 +64,51 @@ export default async function LostVerificationPage({
     <AdminVerificationSurface
       key={surfaceKey || id}
       reportId={id}
-      determinedByUserId={owner.ownerUserId}
-      heading="Manage verification"
-      reportName={owner.reportName}
+      determinedByUserId={context.ownerUserId}
+      summary={context.summary}
       candidates={candidates}
       afterHref="/admin/verifications"
+      auditHref={contextualAuditHref('Lost', id)}
+      auditTrail={{
+        rows: auditResult.rows,
+        hasMore: auditResult.hasMore,
+        error: auditResult.error,
+      }}
     />
   );
 }
 
-/**
- * The report's owner, as the verification queue reports it.
- */
-interface ReportOwner {
-  readonly reportName: string;
+interface VerificationContext {
   readonly ownerUserId: string;
+  readonly summary: VerificationReportSummary;
 }
 
-/**
- * Read the report's owner from the verification queue.
- *
- * **The queue is where the report was found.** It carries the owner by
- * id, and the queue's membership rule is the report's own — so the row
- * that puts the report in the queue is the row that names its owner.
- */
-async function readOwner(reportId: string, userId: string): Promise<ReportOwner | null> {
+function formatReportDate(value: Date): string {
+  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(value);
+}
+
+async function readVerificationContext(
+  reportId: string,
+  userId: string,
+): Promise<VerificationContext | null> {
   try {
     const stack = buildAdminStack();
     const queue = await stack.queues.read({ userId, isAdministrator: true }, 'verifications');
 
-    if (queue.queue !== 'verifications') {
-      return null;
-    }
+    let ownerDisplayName: string | null = null;
+    let ownerUserId: string | null = null;
+    let verificationStartedLabel: string | null = null;
+    let reportNameFromQueue: string | null = null;
 
-    const row = queue.rows.find((candidate) => candidate.reportId === reportId);
+    if (queue.queue === 'verifications') {
+      const row = queue.rows.find((candidate) => candidate.reportId === reportId);
 
-    if (row) {
-      return { reportName: row.reportName, ownerUserId: row.ownerUserId };
+      if (row) {
+        ownerDisplayName = row.ownerDisplayName;
+        ownerUserId = row.ownerUserId;
+        reportNameFromQueue = row.reportName;
+        verificationStartedLabel = formatTimestamp(row.verificationStartedAt);
+      }
     }
 
     const report = await prisma.report.findFirst({
@@ -121,32 +117,51 @@ async function readOwner(reportId: string, userId: string): Promise<ReportOwner 
         type: 'Lost',
         status: 'Verification Pending',
       },
-      select: { id: true, name: true, reporterId: true },
+      select: {
+        name: true,
+        category: true,
+        campusArea: true,
+        date: true,
+        reporterId: true,
+        reporter: { select: { displayName: true } },
+      },
     });
 
     if (!report) {
       return null;
     }
 
-    return { reportName: report.name, ownerUserId: report.reporterId };
+    const resolvedOwnerId = ownerUserId ?? report.reporterId;
+    const resolvedOwnerName =
+      ownerDisplayName ?? report.reporter.displayName ?? 'Report owner';
+
+    const summary: VerificationReportSummary = {
+      name: reportNameFromQueue ?? report.name,
+      category: report.category,
+      campusArea: report.campusArea,
+      dateLabel: formatReportDate(report.date),
+      ownerDisplayName: resolvedOwnerName,
+      verificationStartedLabel,
+    };
+
+    return { ownerUserId: resolvedOwnerId, summary };
   } catch {
     return null;
   }
 }
 
-/**
- * Read the report's recovery responses through the visibility projection.
- *
- * **The actor is the administrator reading the page.** The projection
- * applies the FR-39 columns to that actor, so the administrator sees the
- * responses the owner would see — and nothing the administrator is not
- * entitled to.
- */
 async function readCandidates(
   reportId: string,
   userId: string,
   displayName: string | null,
 ): Promise<readonly VerificationCandidate[]> {
+  const mapCandidate = (
+    response: Omit<VerificationCandidate, 'submittedAtLabel'> & { submittedAt: string },
+  ): VerificationCandidate => ({
+    ...response,
+    submittedAtLabel: formatTimestamp(new Date(response.submittedAt)),
+  });
+
   try {
     const stack = buildListingsStack();
     const actor: ActorContext = {
@@ -159,22 +174,55 @@ async function readCandidates(
 
     const projection = await stack.details.show(actor, reportId);
 
-    const fromProjection = projection.recoveryResponses.map((response) => ({
-      responseId: response.responseId,
-      status: response.status,
-      campusArea: response.campusArea ?? '',
-      exactPlace: response.whereFoundExactPlace ?? '',
-      observedIdentifyingDetails: response.observedIdentifyingDetails ?? '',
-      dateFound: response.dateFound ?? '',
-      submittedAt: response.submittedAt,
-    }));
+    const fromProjection = projection.recoveryResponses.map((response) =>
+      mapCandidate({
+        responseId: response.responseId,
+        status: response.status,
+        campusArea: response.campusArea ?? '',
+        exactPlace: response.whereFoundExactPlace ?? '',
+        observedIdentifyingDetails: response.observedIdentifyingDetails ?? '',
+        dateFound: response.dateFound ?? '',
+        submittedAt: response.submittedAt,
+        hasCandidateImage: response.candidateImageRef !== undefined,
+      }),
+    );
 
     if (fromProjection.length > 0) {
-      return fromProjection;
+      return enrichCandidateImageFlags(reportId, fromProjection);
     }
 
     return loadRecoveryResponsesForAdminVerification(reportId);
   } catch {
     return loadRecoveryResponsesForAdminVerification(reportId);
   }
+}
+
+/**
+ * The visibility projection omits `candidateImageRef` when null; the image
+ * route still needs a boolean on the admin screen.
+ */
+async function enrichCandidateImageFlags(
+  reportId: string,
+  candidates: readonly VerificationCandidate[],
+): Promise<readonly VerificationCandidate[]> {
+  const needsLookup = candidates.some((candidate) => !candidate.hasCandidateImage);
+
+  if (!needsLookup) {
+    return candidates;
+  }
+
+  const rows = await prisma.recoveryResponse.findMany({
+    where: { reportId },
+    select: { id: true, candidateImageRef: true },
+  });
+
+  const imageByResponseId = new Map(
+    rows.map((row) => [row.id, Boolean(row.candidateImageRef)] as const),
+  );
+
+  return candidates.map((candidate) => ({
+    ...candidate,
+    hasCandidateImage:
+      candidate.hasCandidateImage || (imageByResponseId.get(candidate.responseId) ?? false),
+  }));
 }

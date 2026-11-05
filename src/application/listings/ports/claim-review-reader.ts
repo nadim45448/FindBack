@@ -53,6 +53,8 @@ export interface ReviewItemFacts {
   /** The calendar day, as `YYYY-MM-DD`. */
   readonly date: string;
   readonly campusArea: string;
+  /** Whether the Found report has a stored listing photo the administrator may view. */
+  readonly hasItemImage: boolean;
 }
 
 /**

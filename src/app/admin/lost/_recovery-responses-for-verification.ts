@@ -2,6 +2,8 @@ import { prisma } from '@/infrastructure/db/prisma';
 
 import type { VerificationCandidate } from '@/ui/admin-verification-surface';
 
+import { formatTimestamp } from '../_queue-page';
+
 /**
  * Load recovery responses for the Lost-side verification screen.
  *
@@ -23,17 +25,27 @@ export async function loadRecoveryResponsesForAdminVerification(
       observedIdentifyingDetails: true,
       dateFound: true,
       submittedAt: true,
+      candidateImageRef: true,
     },
     orderBy: { submittedAt: 'asc' },
   });
 
-  return rows.map((row) => ({
-    responseId: row.id,
-    status: row.status,
-    campusArea: row.campusArea ?? '',
-    exactPlace: row.whereFoundExactPlace ?? '',
-    observedIdentifyingDetails: row.observedIdentifyingDetails ?? '',
-    dateFound: row.dateFound ?? '',
-    submittedAt: row.submittedAt.toISOString(),
-  }));
+  return rows.map((row) => {
+    const submittedAt = row.submittedAt ?? new Date(0);
+
+    return {
+      responseId: row.id,
+      status: row.status,
+      campusArea: row.campusArea ?? '',
+      exactPlace: row.whereFoundExactPlace ?? '',
+      observedIdentifyingDetails: row.observedIdentifyingDetails ?? '',
+      dateFound:
+        row.dateFound instanceof Date
+          ? row.dateFound.toISOString().slice(0, 10)
+          : (row.dateFound ?? ''),
+      submittedAt: submittedAt.toISOString(),
+      submittedAtLabel: formatTimestamp(submittedAt),
+      hasCandidateImage: Boolean(row.candidateImageRef),
+    };
+  });
 }

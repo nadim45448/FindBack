@@ -18,10 +18,13 @@ export async function readRecoveryResponseSummariesForReports(
     _count: { _all: true },
   });
 
-  const summaries: Record<string, { submitted: number; inProgress: number }> = {};
+  const summaries: Record<
+    string,
+    { submitted: number; inProgress: number; hasMatchConfirmed: boolean }
+  > = {};
 
   for (const id of reportIds) {
-    summaries[id] = { submitted: 0, inProgress: 0 };
+    summaries[id] = { submitted: 0, inProgress: 0, hasMatchConfirmed: false };
   }
 
   for (const row of rows) {
@@ -40,6 +43,10 @@ export async function readRecoveryResponseSummariesForReports(
       row.status === 'Match Confirmed'
     ) {
       entry.inProgress += count;
+    }
+
+    if (row.status === 'Match Confirmed' && count > 0) {
+      entry.hasMatchConfirmed = true;
     }
   }
 

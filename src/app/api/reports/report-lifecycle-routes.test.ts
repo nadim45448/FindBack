@@ -20,9 +20,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { ConflictError } from '@/lib/errors';
-import { TerminalStateError } from '@/lib/errors';
-import { ValidationError } from '@/lib/errors';
+import { ConflictError, NotFoundError, PermissionDeniedError, TerminalStateError, ValidationError } from '@/lib/errors';
 
 import { WithdrawalRefusedError } from '@/application/listings/report-withdrawal-service';
 
@@ -307,6 +305,32 @@ describe('the reporter\'s edit route', () => {
     const request = receivedRequest as { actor: { actorId: string } };
 
     expect(request.actor.actorId).toBe(ACTOR_ID);
+  });
+
+  it('returns a 404 when the report does not exist', async () => {
+    signIn();
+    outcome = new NotFoundError('No report with that id.');
+
+    const response = await edit(jsonRequest({ name: 'New name' }), CONTEXT);
+
+    expect(response.status).toBe(404);
+
+    const notFoundBody = (await response.json()) as { error: string };
+
+    expect(notFoundBody.error).toBe('No report with that id.');
+  });
+
+  it('returns a 403 when the actor is not the reporter', async () => {
+    signIn();
+    outcome = new PermissionDeniedError('You do not have access to this.');
+
+    const response = await edit(jsonRequest({ name: 'New name' }), CONTEXT);
+
+    expect(response.status).toBe(403);
+
+    const deniedBody = (await response.json()) as { error: string };
+
+    expect(deniedBody.error).toBe('You do not have access to this.');
   });
 
   it('drops a status the body tried to set', async () => {

@@ -3,7 +3,6 @@ import type { Metadata } from 'next';
 import { AdminAccessScreen } from '@/ui/admin-access-screen';
 import {
   CLAIM_APPROVE_HEADING,
-  CLAIM_NO_LONGER_PENDING,
   CLAIM_REJECT_HEADING,
   CLAIM_REVIEW_HEADING,
 } from '@/ui/admin-copy';
@@ -14,8 +13,16 @@ import {
 
 import { buildListingsStack } from '@/infrastructure/listings/listings-stack';
 
+import { claimDecisionConflictMessage } from '@/domain/listings';
 import type { ClaimReviewScreen } from '@/domain/listings';
 
+import { NotFoundError } from '@/lib/errors';
+
+import { ADMIN_CLAIM_ACTION_FAILED } from '@/ui/admin-copy';
+
+import { contextualAuditHref } from '@/ui/admin-contextual-audit-href';
+
+import { readContextualReportAuditTrail } from '../../_audit-page';
 import { resolveAdminAccess } from '../../_admin-page';
 import { formatTimestamp } from '../../_queue-page';
 
@@ -60,12 +67,18 @@ export default async function ClaimReviewPage({
   let screen: ClaimReviewScreen | null = null;
   let decisionAvailable = false;
 
+  let loadError: string | null = null;
+
   try {
     const stack = buildListingsStack();
     screen = await stack.claimReviews.review({ claimId: id });
     decisionAvailable = stack.claimReviews.offersDecision(screen);
-  } catch {
+  } catch (error) {
     screen = null;
+    loadError =
+      error instanceof NotFoundError
+        ? error.message
+        : ADMIN_CLAIM_ACTION_FAILED;
   }
 
   if (!screen) {
@@ -74,7 +87,7 @@ export default async function ClaimReviewPage({
         <h1 className="hero__title">{CLAIM_REVIEW_HEADING}</h1>
 
         <div className="banner banner--info" role="status">
-          <p>Something went wrong on our side. Try again, or come back in a moment.</p>
+          <p>{loadError ?? ADMIN_CLAIM_ACTION_FAILED}</p>
         </div>
       </div>
     );
@@ -88,16 +101,25 @@ export default async function ClaimReviewPage({
         </h1>
 
         <div className="banner banner--info" role="status">
-          <p>{CLAIM_NO_LONGER_PENDING}</p>
+          <p>{claimDecisionConflictMessage({ claimStatus: screen.claimStatus })}</p>
         </div>
       </div>
     );
   }
 
+  const auditHref = contextualAuditHref('Found', screen.reportId);
+  const auditResult = await readContextualReportAuditTrail(
+    screen.reportId,
+    'Found',
+    access.userId,
+  );
+
   return (
     <ClaimAdminReviewSurface
       mode={mode}
       claimId={screen.claimId}
+      reportId={screen.reportId}
+      hasItemImage={screen.item.hasItemImage}
       claimStatus={screen.claimStatus}
       claimantDisplayName={screen.claimantDisplayName}
       claimantEmail={screen.claimantEmail}
@@ -112,6 +134,12 @@ export default async function ClaimReviewPage({
       competingClaimCount={screen.competingClaimCount}
       decisionAvailable={decisionAvailable}
       afterHref="/admin/claims"
+      auditHref={auditHref}
+      auditTrail={{
+        rows: auditResult.rows,
+        hasMore: auditResult.hasMore,
+        error: auditResult.error,
+      }}
     />
   );
 }

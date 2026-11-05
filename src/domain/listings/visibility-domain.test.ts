@@ -402,7 +402,7 @@ describe('the Recovery Response projector', () => {
     const projected = projectRecoveryResponses(
       rows,
       ['unrelatedMember', 'recoveryResponder'],
-      'response-1',
+      ['response-1'],
     );
 
     expect(projected).toHaveLength(1);
@@ -420,8 +420,33 @@ describe('the Recovery Response projector', () => {
 
   it('scopes the visible Response ids to the responder', () => {
     expect(
-      visibleResponseIds(rows, ['unrelatedMember', 'recoveryResponder'], 'response-1'),
+      visibleResponseIds(rows, ['unrelatedMember', 'recoveryResponder'], ['response-1']),
     ).toEqual(['response-1']);
+  });
+
+  it('includes every own Response id for a responder with history', () => {
+    const multi = [
+      ...rows,
+      {
+        id: 'response-2',
+        reportId: 'report-1',
+        responderId: 'responder-1',
+        status: 'Withdrawn',
+        submittedAt: '2026-10-23T09:00:00.000Z',
+        campusArea: 'library',
+        whereFoundExactPlace: 'Desk 3',
+        observedIdentifyingDetails: 'Blue tag',
+        dateFound: '2026-10-22',
+        candidateImageRef: null,
+      },
+    ] as const;
+
+    expect(
+      visibleResponseIds(multi, ['unrelatedMember', 'recoveryResponder'], [
+        'response-1',
+        'response-2',
+      ]),
+    ).toEqual(['response-1', 'response-2']);
   });
 
   it('scopes the visible Response ids to none for a claimant', () => {

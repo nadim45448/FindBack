@@ -15,10 +15,13 @@ export const metadata: Metadata = {
  */
 export default async function ItemAuditPage({
   params,
+  searchParams,
 }: {
   readonly params: Promise<{ readonly id: string }>;
+  readonly searchParams: Promise<{ readonly from?: string }>;
 }): Promise<React.JSX.Element> {
   const { id } = await params;
+  const query = await searchParams;
 
-  return renderAuditPage(id, 'Found');
+  return renderAuditPage(id, 'Found', { afterReturn: query.from === 'return' });
 }
