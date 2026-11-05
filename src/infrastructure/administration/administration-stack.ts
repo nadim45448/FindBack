@@ -35,6 +35,7 @@ import {
   AdministratorDashboardQuery,
   AdministratorQueueQuery,
   ContextualAuditQuery,
+  ItemTrackQuery,
   StorageUsageQuery,
 } from '@/application/administration';
 
@@ -46,6 +47,7 @@ import { BlobImageQuotaReader } from '@/infrastructure/listings/blob-image-quota
 import { PrismaAdministratorQueueReader } from '@/infrastructure/listings/prisma-administrator-queue-reader';
 
 import { PrismaAdministrationContextReader } from './prisma-administration-context-reader';
+import { PrismaItemTrackReader } from './prisma-item-track-reader';
 
 /**
  * The administrator surface's wiring.
@@ -67,6 +69,8 @@ export interface AdministrationStack {
    * bands and the refusal cannot disagree.
    */
   readonly storage: StorageUsageQuery;
+  /** Returned handoffs and per-report case files. */
+  readonly track: ItemTrackQuery;
   /**
    * The surfaces' context — the actor display names and the report name.
    *
@@ -109,6 +113,7 @@ export function buildAdministrationStack(): AdministrationStack {
     queues: new AdministratorQueueQuery(queueReader),
     audit: new ContextualAuditQuery(trail),
     storage: new StorageUsageQuery(new BlobImageQuotaReader()),
+    track: new ItemTrackQuery(new PrismaItemTrackReader(prisma)),
     context: new PrismaAdministrationContextReader(prisma),
   };
 }

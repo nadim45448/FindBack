@@ -487,3 +487,31 @@ export const ADMIN_NAV_ITEMS = Object.freeze([
   'Awaiting return',
   'In verification',
 ] as const);
+
+/** Handoff history — not one of the four operational queues. */
+export const ADMIN_NAV_RETURNED = 'Returned items';
+
+export const ADMIN_RETURNED_HEADING = 'Returned items';
+
+export const ADMIN_RETURNED_LEDE =
+  'Physical handoffs recorded on the system. Open a row to see who reported the item, who received it, and every claim or recovery response on that report.';
+
+export const ADMIN_RETURNED_EMPTY = 'No returned items yet.';
+
+export const COLUMN_REPORTER = 'Reporter';
+
+export const COLUMN_RETURNED_AT = 'Returned';
+
+export const VIEW_RECORD = 'View record';
+
+export const ADMIN_TRACK_HEADING = 'Item record';
+
+export const ADMIN_TRACK_REPORTER_HEADING = 'Who reported';
+
+export const ADMIN_TRACK_RETURN_HEADING = 'Return confirmation';
+
+export const ADMIN_TRACK_RECEIVER_HEADING = 'Who received the item';
+
+export const ADMIN_TRACK_CLAIMS_HEADING = 'Claims on this item';
+
+export const ADMIN_TRACK_RESPONSES_HEADING = 'Recovery responses on this item';

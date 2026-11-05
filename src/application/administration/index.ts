@@ -16,5 +16,6 @@
 export * from './administrator-dashboard-query';
 export * from './administrator-queue-query';
 export * from './contextual-audit-query';
+export * from './item-track-query';
 export * from './storage-usage-query';
 export * from './ports';

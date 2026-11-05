@@ -3132,6 +3132,49 @@ p {
   text-decoration: underline;
 }
 
+.admin-track-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.admin-track-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--font-body-sm);
+}
+
+.admin-track-table th {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 2px solid var(--border-default);
+  color: var(--on-surface-variant);
+  font: var(--font-label-caps);
+  letter-spacing: var(--tracking-label-caps);
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.admin-track-table td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+
+.admin-item-track__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.admin-item-track__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
 .verification-admin-review__card-title {
   margin: 0 0 var(--space-2);
   font: var(--font-title-md);

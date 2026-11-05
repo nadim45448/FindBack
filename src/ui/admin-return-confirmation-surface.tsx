@@ -70,6 +70,8 @@ export interface AdminReturnConfirmationSurfaceProps {
   readonly summary: ReturnConfirmationSummary;
   /** Contextual audit trail for this report (§17.1). */
   readonly auditHref: string;
+  /** Case file after a successful confirmation. */
+  readonly trackHref: string;
 }
 
 /** The PRD's five relationships, in the PRD's order. */
@@ -89,6 +91,7 @@ export function AdminReturnConfirmationSurface({
   queueHref,
   summary,
   auditHref,
+  trackHref,
 }: AdminReturnConfirmationSurfaceProps): React.JSX.Element {
   const router = useRouter();
 
@@ -140,7 +143,7 @@ export function AdminReturnConfirmationSurface({
         return;
       }
 
-      router.push(`${auditHref}?from=return`);
+      router.push(trackHref);
       router.refresh();
     } catch {
       setFormError('Something went wrong on our side. Try again, or come back in a moment.');

@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { AdminAccessScreen } from '@/ui/admin-access-screen';
 import { contextualAuditHref } from '@/ui/admin-contextual-audit-href';
+import { adminItemTrackHref } from '@/ui/admin-track-href';
 import { AdminReturnConfirmationSurface } from '@/ui/admin-return-confirmation-surface';
 import { VERIFICATION_BACK_TO_QUEUE } from '@/ui/admin-copy';
 
@@ -82,6 +83,7 @@ export default async function LostConfirmReturnPage({
       endpoint={`/api/admin/reports/${id}/confirm-returned`}
       queueHref={QUEUE_HREF}
       auditHref={contextualAuditHref(summary.reportType, id)}
+      trackHref={adminItemTrackHref(summary.reportType, id)}
       summary={summary}
     />
   );

@@ -31,7 +31,7 @@
  */
 
 import type { ClaimStatus } from './claim-status';
-import type { ReportStatus } from './found-report-status';
+import type { ReportStatus } from './report-status';
 
 import { ValidationError } from '@/lib/errors';
 

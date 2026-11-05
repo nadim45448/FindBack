@@ -51,7 +51,12 @@ import { BrandMark } from './brand-mark';
 import { DisclosureMenu } from './disclosure-menu';
 import { greetingName, initials } from './greeting';
 import { ThemeToggle } from './theme-toggle';
-import { ADMIN_NAV_DASHBOARD, ADMIN_NAV_ITEMS, ADMIN_NAV_LABEL } from './admin-copy';
+import {
+  ADMIN_NAV_DASHBOARD,
+  ADMIN_NAV_ITEMS,
+  ADMIN_NAV_LABEL,
+  ADMIN_NAV_RETURNED,
+} from './admin-copy';
 import { LOG_OUT } from './copy';
 
 /**
@@ -125,6 +130,21 @@ export function AdminTopbar({ displayName, onSignOut }: AdminTopbarProps): React
               </li>
             );
           })}
+          <li>
+            <Link
+              href="/admin/returned"
+              className="topbar__link"
+              aria-current={
+                pathname === '/admin/returned' ||
+                pathname.startsWith('/admin/items/') ||
+                pathname.includes('/track')
+                  ? 'page'
+                  : undefined
+              }
+            >
+              {ADMIN_NAV_RETURNED}
+            </Link>
+          </li>
         </ul>
       </nav>
 

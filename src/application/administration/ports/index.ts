@@ -12,4 +12,5 @@
  * this module reads them rather than redefining them.
  */
 
+export * from './item-track-reader';
 export * from './queue-reader';

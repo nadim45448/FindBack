@@ -98,7 +98,7 @@ function routePathFor(file: string): string {
 }
 
 describe('the administrator route tree', () => {
-  it('has the thirteen administrator pages', () => {
+  it('has the administrator pages including handoff tracking', () => {
     const routes = filesUnder(APP_ROOT)
       .map(routePathFor)
       .filter((route) => route.startsWith('/admin'))
@@ -110,13 +110,16 @@ describe('the administrator route tree', () => {
       '/admin/awaiting-return/:id',
       '/admin/claims',
       '/admin/claims/:id',
+      '/admin/items/:id',
       '/admin/items/:id/audit',
       '/admin/lost/:id',
       '/admin/lost/:id/audit',
       '/admin/lost/:id/return',
+      '/admin/lost/:id/track',
       '/admin/registrations',
       '/admin/registrations/:id',
       '/admin/reports/:id/edit',
+      '/admin/returned',
       '/admin/storage',
       '/admin/verifications',
     ]);
